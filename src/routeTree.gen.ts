@@ -19,6 +19,7 @@ import { Route as BusinessIdRouteImport } from './routes/business.$id'
 import { Route as BrowseCategoryRouteImport } from './routes/browse.$category'
 import { Route as AuthenticatedPostRequirementRouteImport } from './routes/_authenticated/post-requirement'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedBusinessOnboardingRouteImport } from './routes/_authenticated/business/onboarding'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -70,6 +71,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBusinessOnboardingRoute =
+  AuthenticatedBusinessOnboardingRouteImport.update({
+    id: '/business/onboarding',
+    path: '/business/onboarding',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
   '/browse/': typeof BrowseIndexRoute
+  '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -92,6 +100,7 @@ export interface FileRoutesByTo {
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
   '/browse': typeof BrowseIndexRoute
+  '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -105,6 +114,7 @@ export interface FileRoutesById {
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
   '/browse/': typeof BrowseIndexRoute
+  '/_authenticated/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/browse/$category'
     | '/business/$id'
     | '/browse/'
+    | '/business/onboarding'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/browse/$category'
     | '/business/$id'
     | '/browse'
+    | '/business/onboarding'
   id:
     | '__root__'
     | '/'
@@ -141,6 +153,7 @@ export interface FileRouteTypes {
     | '/browse/$category'
     | '/business/$id'
     | '/browse/'
+    | '/_authenticated/business/onboarding'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -226,17 +239,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/business/onboarding': {
+      id: '/_authenticated/business/onboarding'
+      path: '/business/onboarding'
+      fullPath: '/business/onboarding'
+      preLoaderRoute: typeof AuthenticatedBusinessOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPostRequirementRoute: typeof AuthenticatedPostRequirementRoute
+  AuthenticatedBusinessOnboardingRoute: typeof AuthenticatedBusinessOnboardingRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPostRequirementRoute: AuthenticatedPostRequirementRoute,
+  AuthenticatedBusinessOnboardingRoute: AuthenticatedBusinessOnboardingRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -255,3 +277,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

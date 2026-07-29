@@ -99,11 +99,11 @@ function Onboarding() {
         .insert({ business_id: business.id, address: form.address, city: form.city, state: form.state, is_primary: true });
     }
     if (form.panIndia || form.delivery.length) {
-      await supabase.from("delivery_areas").insert(
+      const areas: { business_id: string; city: string | null; is_pan_india: boolean }[] =
         form.panIndia
-          ? [{ business_id: business.id, is_pan_india: true }]
-          : form.delivery.map((city) => ({ business_id: business.id, city })),
-      );
+          ? [{ business_id: business.id, city: null, is_pan_india: true }]
+          : form.delivery.map((city) => ({ business_id: business.id, city, is_pan_india: false }));
+      await supabase.from("delivery_areas").insert(areas);
     }
     await supabase.from("subscriptions").insert({ business_id: business.id, plan: "base", status: "active" });
 
