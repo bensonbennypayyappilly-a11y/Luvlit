@@ -6,7 +6,7 @@ import { getCategories, getBusinesses } from "@/lib/public.functions";
 
 type Search = { city?: string; q?: string };
 
-export const Route = createFileRoute("/browse")({
+export const Route = createFileRoute("/browse/")({
   validateSearch: (search: Record<string, unknown>): Search => ({
     city: typeof search.city === "string" ? search.city : undefined,
     q: typeof search.q === "string" ? search.q : undefined,
