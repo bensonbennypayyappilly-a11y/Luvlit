@@ -10,11 +10,35 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as FindInfluencerRouteImport } from './routes/find-influencer'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BrowseIndexRouteImport } from './routes/browse.index'
+import { Route as BusinessIdRouteImport } from './routes/business.$id'
+import { Route as BrowseCategoryRouteImport } from './routes/browse.$category'
+import { Route as AuthenticatedPostRequirementRouteImport } from './routes/_authenticated/post-requirement'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedBusinessSetupStaffRouteImport } from './routes/_authenticated/business/setup-staff'
+import { Route as AuthenticatedBusinessOnboardingRouteImport } from './routes/_authenticated/business/onboarding'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FindInfluencerRoute = FindInfluencerRouteImport.update({
+  id: '/find-influencer',
+  path: '/find-influencer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -22,31 +46,138 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BrowseIndexRoute = BrowseIndexRouteImport.update({
+  id: '/browse/',
+  path: '/browse/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BusinessIdRoute = BusinessIdRouteImport.update({
+  id: '/business/$id',
+  path: '/business/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrowseCategoryRoute = BrowseCategoryRouteImport.update({
+  id: '/browse/$category',
+  path: '/browse/$category',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPostRequirementRoute =
+  AuthenticatedPostRequirementRouteImport.update({
+    id: '/post-requirement',
+    path: '/post-requirement',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBusinessSetupStaffRoute =
+  AuthenticatedBusinessSetupStaffRouteImport.update({
+    id: '/business/setup-staff',
+    path: '/business/setup-staff',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBusinessOnboardingRoute =
+  AuthenticatedBusinessOnboardingRouteImport.update({
+    id: '/business/onboarding',
+    path: '/business/onboarding',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/find-influencer': typeof FindInfluencerRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/post-requirement': typeof AuthenticatedPostRequirementRoute
+  '/browse/$category': typeof BrowseCategoryRoute
+  '/business/$id': typeof BusinessIdRoute
+  '/browse/': typeof BrowseIndexRoute
+  '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
+  '/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/find-influencer': typeof FindInfluencerRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/post-requirement': typeof AuthenticatedPostRequirementRoute
+  '/browse/$category': typeof BrowseCategoryRoute
+  '/business/$id': typeof BusinessIdRoute
+  '/browse': typeof BrowseIndexRoute
+  '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
+  '/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/find-influencer': typeof FindInfluencerRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/post-requirement': typeof AuthenticatedPostRequirementRoute
+  '/browse/$category': typeof BrowseCategoryRoute
+  '/business/$id': typeof BusinessIdRoute
+  '/browse/': typeof BrowseIndexRoute
+  '/_authenticated/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
+  '/_authenticated/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sitemap.xml'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/find-influencer'
+    | '/sitemap.xml'
+    | '/dashboard'
+    | '/post-requirement'
+    | '/browse/$category'
+    | '/business/$id'
+    | '/browse/'
+    | '/business/onboarding'
+    | '/business/setup-staff'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sitemap.xml'
-  id: '__root__' | '/' | '/sitemap.xml'
+  to:
+    | '/'
+    | '/auth'
+    | '/find-influencer'
+    | '/sitemap.xml'
+    | '/dashboard'
+    | '/post-requirement'
+    | '/browse/$category'
+    | '/business/$id'
+    | '/browse'
+    | '/business/onboarding'
+    | '/business/setup-staff'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/find-influencer'
+    | '/sitemap.xml'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/post-requirement'
+    | '/browse/$category'
+    | '/business/$id'
+    | '/browse/'
+    | '/_authenticated/business/onboarding'
+    | '/_authenticated/business/setup-staff'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  FindInfluencerRoute: typeof FindInfluencerRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  BrowseCategoryRoute: typeof BrowseCategoryRoute
+  BusinessIdRoute: typeof BusinessIdRoute
+  BrowseIndexRoute: typeof BrowseIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +189,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/find-influencer': {
+      id: '/find-influencer'
+      path: '/find-influencer'
+      fullPath: '/find-influencer'
+      preLoaderRoute: typeof FindInfluencerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -65,23 +217,85 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/browse/': {
+      id: '/browse/'
+      path: '/browse'
+      fullPath: '/browse/'
+      preLoaderRoute: typeof BrowseIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/business/$id': {
+      id: '/business/$id'
+      path: '/business/$id'
+      fullPath: '/business/$id'
+      preLoaderRoute: typeof BusinessIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/browse/$category': {
+      id: '/browse/$category'
+      path: '/browse/$category'
+      fullPath: '/browse/$category'
+      preLoaderRoute: typeof BrowseCategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/post-requirement': {
+      id: '/_authenticated/post-requirement'
+      path: '/post-requirement'
+      fullPath: '/post-requirement'
+      preLoaderRoute: typeof AuthenticatedPostRequirementRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/business/setup-staff': {
+      id: '/_authenticated/business/setup-staff'
+      path: '/business/setup-staff'
+      fullPath: '/business/setup-staff'
+      preLoaderRoute: typeof AuthenticatedBusinessSetupStaffRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/business/onboarding': {
+      id: '/_authenticated/business/onboarding'
+      path: '/business/onboarding'
+      fullPath: '/business/onboarding'
+      preLoaderRoute: typeof AuthenticatedBusinessOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedPostRequirementRoute: typeof AuthenticatedPostRequirementRoute
+  AuthenticatedBusinessOnboardingRoute: typeof AuthenticatedBusinessOnboardingRoute
+  AuthenticatedBusinessSetupStaffRoute: typeof AuthenticatedBusinessSetupStaffRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedPostRequirementRoute: AuthenticatedPostRequirementRoute,
+  AuthenticatedBusinessOnboardingRoute: AuthenticatedBusinessOnboardingRoute,
+  AuthenticatedBusinessSetupStaffRoute: AuthenticatedBusinessSetupStaffRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  FindInfluencerRoute: FindInfluencerRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  BrowseCategoryRoute: BrowseCategoryRoute,
+  BusinessIdRoute: BusinessIdRoute,
+  BrowseIndexRoute: BrowseIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
