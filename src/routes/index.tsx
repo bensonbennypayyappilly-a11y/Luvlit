@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "Browse small businesses, brands and influencers by category and city. Book appointments and post requirements to get quotes.",
+          "LuvLit connects you with small businesses, brands and influencers across India — browse by category and city, book appointments, and request quotes.",
       },
     ],
   }),

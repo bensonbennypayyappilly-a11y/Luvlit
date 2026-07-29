@@ -78,21 +78,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "LuvLit — India's marketplace for small businesses" },
+      { title: "LuvLit — Discover India's Small Businesses & Brands" },
       {
         name: "description",
         content:
-          "Discover small businesses, brands and influencers across India by category and city.",
+          "LuvLit connects you with small businesses, brands and influencers across India — browse by category and city, book appointments, and request quotes.",
       },
       { name: "author", content: "LuvLit" },
-      { property: "og:title", content: "LuvLit — India's marketplace for small businesses" },
+      { property: "og:title", content: "LuvLit — Discover India's Small Businesses & Brands" },
       {
         property: "og:description",
         content:
-          "Discover small businesses, brands and influencers across India by category and city.",
+          "LuvLit connects you with small businesses, brands and influencers across India — browse by category and city, book appointments, and request quotes.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "LuvLit — Discover India's Small Businesses & Brands" },
+      { name: "twitter:description", content: "LuvLit connects you with small businesses, brands and influencers across India — browse by category and city, book appointments, and request quotes." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8aa7dce3-74ed-4234-bed9-0c00f49b1029/id-preview-ff899fdb--5e0b0d79-7845-4c5a-8e08-d267b3fc9893.lovable.app-1785306133659.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8aa7dce3-74ed-4234-bed9-0c00f49b1029/id-preview-ff899fdb--5e0b0d79-7845-4c5a-8e08-d267b3fc9893.lovable.app-1785306133659.png" },
     ],
     links: [
       {
