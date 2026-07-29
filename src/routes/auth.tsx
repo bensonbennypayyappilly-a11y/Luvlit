@@ -58,15 +58,6 @@ function AuthPage() {
     }
   }
 
-  async function google() {
-    const { lovable } = await import("@/integrations/lovable/index");
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) setError("Google sign-in failed. Please try again.");
-    else if (!result.redirected) navigate({ to: search.redirect ?? "/dashboard" });
-  }
-
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
@@ -124,13 +115,6 @@ function AuthPage() {
             {mode === "signup" ? "Create account" : "Sign in"}
           </button>
         </form>
-
-        <button
-          onClick={google}
-          className="mt-4 w-full rounded-md border border-accent px-7 py-3.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-soft"
-        >
-          Continue with Google
-        </button>
 
         <p className="mt-8 text-sm text-muted-foreground">
           {mode === "signup" ? "Already have an account?" : "New to LuvLit?"}{" "}
