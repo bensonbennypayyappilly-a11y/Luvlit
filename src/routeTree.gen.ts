@@ -19,6 +19,7 @@ import { Route as BusinessIdRouteImport } from './routes/business.$id'
 import { Route as BrowseCategoryRouteImport } from './routes/browse.$category'
 import { Route as AuthenticatedPostRequirementRouteImport } from './routes/_authenticated/post-requirement'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedBusinessSetupStaffRouteImport } from './routes/_authenticated/business/setup-staff'
 import { Route as AuthenticatedBusinessOnboardingRouteImport } from './routes/_authenticated/business/onboarding'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -71,6 +72,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBusinessSetupStaffRoute =
+  AuthenticatedBusinessSetupStaffRouteImport.update({
+    id: '/business/setup-staff',
+    path: '/business/setup-staff',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBusinessOnboardingRoute =
   AuthenticatedBusinessOnboardingRouteImport.update({
     id: '/business/onboarding',
@@ -89,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/business/$id': typeof BusinessIdRoute
   '/browse/': typeof BrowseIndexRoute
   '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
+  '/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -101,6 +109,7 @@ export interface FileRoutesByTo {
   '/business/$id': typeof BusinessIdRoute
   '/browse': typeof BrowseIndexRoute
   '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
+  '/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -115,6 +124,7 @@ export interface FileRoutesById {
   '/business/$id': typeof BusinessIdRoute
   '/browse/': typeof BrowseIndexRoute
   '/_authenticated/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
+  '/_authenticated/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/business/$id'
     | '/browse/'
     | '/business/onboarding'
+    | '/business/setup-staff'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/business/$id'
     | '/browse'
     | '/business/onboarding'
+    | '/business/setup-staff'
   id:
     | '__root__'
     | '/'
@@ -154,6 +166,7 @@ export interface FileRouteTypes {
     | '/business/$id'
     | '/browse/'
     | '/_authenticated/business/onboarding'
+    | '/_authenticated/business/setup-staff'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -239,6 +252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/business/setup-staff': {
+      id: '/_authenticated/business/setup-staff'
+      path: '/business/setup-staff'
+      fullPath: '/business/setup-staff'
+      preLoaderRoute: typeof AuthenticatedBusinessSetupStaffRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/business/onboarding': {
       id: '/_authenticated/business/onboarding'
       path: '/business/onboarding'
@@ -253,12 +273,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPostRequirementRoute: typeof AuthenticatedPostRequirementRoute
   AuthenticatedBusinessOnboardingRoute: typeof AuthenticatedBusinessOnboardingRoute
+  AuthenticatedBusinessSetupStaffRoute: typeof AuthenticatedBusinessSetupStaffRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPostRequirementRoute: AuthenticatedPostRequirementRoute,
   AuthenticatedBusinessOnboardingRoute: AuthenticatedBusinessOnboardingRoute,
+  AuthenticatedBusinessSetupStaffRoute: AuthenticatedBusinessSetupStaffRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -277,3 +299,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
