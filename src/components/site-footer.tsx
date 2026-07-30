@@ -1,17 +1,33 @@
 import { Link } from "@tanstack/react-router";
 
-const columns = [
+type FooterLink = { label: string; to: string; search?: Record<string, string> };
+
+const columns: { title: string; links: FooterLink[] }[] = [
   {
     title: "Discover",
-    links: ["Browse categories", "Featured businesses", "Find an influencer", "Cities"],
+    links: [
+      { label: "Browse categories", to: "/browse" },
+      { label: "Cities", to: "/cities" },
+      { label: "Post a requirement", to: "/post-requirement" },
+    ],
   },
   {
     title: "For businesses",
-    links: ["List your business", "Featured placement", "Leads & requirements", "Pricing"],
+    links: [
+      { label: "List your business", to: "/auth" },
+      { label: "Pricing & featured placement", to: "/pricing" },
+      { label: "Find an influencer", to: "/dashboard/find-influencer" },
+      { label: "Leads & requirements", to: "/dashboard/leads" },
+    ],
   },
   {
     title: "Company",
-    links: ["About LuvLit", "Contact", "Privacy", "Terms"],
+    links: [
+      { label: "About LuvLit", to: "/about" },
+      { label: "Contact", to: "/contact" },
+      { label: "Privacy", to: "/privacy" },
+      { label: "Terms", to: "/terms" },
+    ],
   },
 ];
 
@@ -37,12 +53,12 @@ export function SiteFooter() {
               </h3>
               <ul className="mt-5 space-y-3">
                 {column.links.map((link) => (
-                  <li key={link}>
+                  <li key={link.label}>
                     <Link
-                      to="/"
+                      to={link.to}
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      {link}
+                      {link.label}
                     </Link>
                   </li>
                 ))}
