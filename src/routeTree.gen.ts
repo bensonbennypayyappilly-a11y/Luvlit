@@ -20,6 +20,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InfluencerIndexRouteImport } from './routes/influencer.index'
 import { Route as BrowseIndexRouteImport } from './routes/browse.index'
 import { Route as BusinessIdRouteImport } from './routes/business.$id'
 import { Route as BrowseCategoryRouteImport } from './routes/browse.$category'
@@ -82,6 +83,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InfluencerIndexRoute = InfluencerIndexRouteImport.update({
+  id: '/influencer/',
+  path: '/influencer/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrowseIndexRoute = BrowseIndexRouteImport.update({
   id: '/browse/',
   path: '/browse/',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
   '/browse/': typeof BrowseIndexRoute
+  '/influencer/': typeof InfluencerIndexRoute
   '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
   '/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
 }
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
   '/browse': typeof BrowseIndexRoute
+  '/influencer': typeof InfluencerIndexRoute
   '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
   '/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
 }
@@ -177,6 +185,7 @@ export interface FileRoutesById {
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
   '/browse/': typeof BrowseIndexRoute
+  '/influencer/': typeof InfluencerIndexRoute
   '/_authenticated/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
   '/_authenticated/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
 }
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/browse/$category'
     | '/business/$id'
     | '/browse/'
+    | '/influencer/'
     | '/business/onboarding'
     | '/business/setup-staff'
   fileRoutesByTo: FileRoutesByTo
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/browse/$category'
     | '/business/$id'
     | '/browse'
+    | '/influencer'
     | '/business/onboarding'
     | '/business/setup-staff'
   id:
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/browse/$category'
     | '/business/$id'
     | '/browse/'
+    | '/influencer/'
     | '/_authenticated/business/onboarding'
     | '/_authenticated/business/setup-staff'
   fileRoutesById: FileRoutesById
@@ -256,6 +268,7 @@ export interface RootRouteChildren {
   BrowseCategoryRoute: typeof BrowseCategoryRoute
   BusinessIdRoute: typeof BusinessIdRoute
   BrowseIndexRoute: typeof BrowseIndexRoute
+  InfluencerIndexRoute: typeof InfluencerIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -335,6 +348,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/influencer/': {
+      id: '/influencer/'
+      path: '/influencer'
+      fullPath: '/influencer/'
+      preLoaderRoute: typeof InfluencerIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/browse/': {
@@ -421,6 +441,7 @@ const rootRouteChildren: RootRouteChildren = {
   BrowseCategoryRoute: BrowseCategoryRoute,
   BusinessIdRoute: BusinessIdRoute,
   BrowseIndexRoute: BrowseIndexRoute,
+  InfluencerIndexRoute: InfluencerIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
