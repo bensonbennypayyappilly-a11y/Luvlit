@@ -28,6 +28,7 @@ import { Route as BusinessIdRouteImport } from './routes/business.$id'
 import { Route as BrowseCategoryRouteImport } from './routes/browse.$category'
 import { Route as AuthenticatedPostRequirementRouteImport } from './routes/_authenticated/post-requirement'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDashboardFindInfluencerRouteImport } from './routes/_authenticated/dashboard/find-influencer'
 import { Route as AuthenticatedBusinessSetupStaffRouteImport } from './routes/_authenticated/business/setup-staff'
 import { Route as AuthenticatedBusinessOnboardingRouteImport } from './routes/_authenticated/business/onboarding'
 
@@ -126,6 +127,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDashboardFindInfluencerRoute =
+  AuthenticatedDashboardFindInfluencerRouteImport.update({
+    id: '/find-influencer',
+    path: '/find-influencer',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedBusinessSetupStaffRoute =
   AuthenticatedBusinessSetupStaffRouteImport.update({
     id: '/business/setup-staff',
@@ -150,7 +157,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/post-requirement': typeof AuthenticatedPostRequirementRoute
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
@@ -160,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/influencer/': typeof InfluencerIndexRoute
   '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
   '/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
+  '/dashboard/find-influencer': typeof AuthenticatedDashboardFindInfluencerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -172,7 +180,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/post-requirement': typeof AuthenticatedPostRequirementRoute
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
@@ -182,6 +190,7 @@ export interface FileRoutesByTo {
   '/influencer': typeof InfluencerIndexRoute
   '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
   '/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
+  '/dashboard/find-influencer': typeof AuthenticatedDashboardFindInfluencerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -196,7 +205,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
-  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/post-requirement': typeof AuthenticatedPostRequirementRoute
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
@@ -206,6 +215,7 @@ export interface FileRoutesById {
   '/influencer/': typeof InfluencerIndexRoute
   '/_authenticated/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
   '/_authenticated/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
+  '/_authenticated/dashboard/find-influencer': typeof AuthenticatedDashboardFindInfluencerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/influencer/'
     | '/business/onboarding'
     | '/business/setup-staff'
+    | '/dashboard/find-influencer'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -252,6 +263,7 @@ export interface FileRouteTypes {
     | '/influencer'
     | '/business/onboarding'
     | '/business/setup-staff'
+    | '/dashboard/find-influencer'
   id:
     | '__root__'
     | '/'
@@ -275,6 +287,7 @@ export interface FileRouteTypes {
     | '/influencer/'
     | '/_authenticated/business/onboarding'
     | '/_authenticated/business/setup-staff'
+    | '/_authenticated/dashboard/find-influencer'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -432,6 +445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dashboard/find-influencer': {
+      id: '/_authenticated/dashboard/find-influencer'
+      path: '/find-influencer'
+      fullPath: '/dashboard/find-influencer'
+      preLoaderRoute: typeof AuthenticatedDashboardFindInfluencerRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/business/setup-staff': {
       id: '/_authenticated/business/setup-staff'
       path: '/business/setup-staff'
@@ -449,15 +469,30 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedDashboardRouteChildren {
+  AuthenticatedDashboardFindInfluencerRoute: typeof AuthenticatedDashboardFindInfluencerRoute
+}
+
+const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
+  {
+    AuthenticatedDashboardFindInfluencerRoute:
+      AuthenticatedDashboardFindInfluencerRoute,
+  }
+
+const AuthenticatedDashboardRouteWithChildren =
+  AuthenticatedDashboardRoute._addFileChildren(
+    AuthenticatedDashboardRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
   AuthenticatedPostRequirementRoute: typeof AuthenticatedPostRequirementRoute
   AuthenticatedBusinessOnboardingRoute: typeof AuthenticatedBusinessOnboardingRoute
   AuthenticatedBusinessSetupStaffRoute: typeof AuthenticatedBusinessSetupStaffRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
   AuthenticatedPostRequirementRoute: AuthenticatedPostRequirementRoute,
   AuthenticatedBusinessOnboardingRoute: AuthenticatedBusinessOnboardingRoute,
   AuthenticatedBusinessSetupStaffRoute: AuthenticatedBusinessSetupStaffRoute,
