@@ -61,7 +61,7 @@ export type PublicInfluencer = {
   follower_count: number | null;
   engagement_rate: number | null;
   categories: string[];
-  rate_card: Record<string, unknown> | null;
+  rate_card: Record<string, string | number | null> | null;
   is_verified: boolean;
 };
 
