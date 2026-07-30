@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 
-export const Route = createFileRoute("/_authenticated/dashboard")({
+export const Route = createFileRoute("/_authenticated/dashboard/")({
   head: () => ({
     meta: [
       { title: "Your dashboard — LuvLit" },
@@ -46,6 +46,12 @@ function Dashboard() {
         {isBusiness && (
           <div className="surface-card mt-10 flex flex-wrap items-center justify-between gap-4 p-8">
             <p className="text-muted-foreground">You have a business account.</p>
+            <Link
+              to="/dashboard/find-influencer"
+              className="rounded-md border border-accent px-6 py-3 text-sm font-medium text-accent-foreground hover:bg-accent-soft"
+            >
+              Find an influencer
+            </Link>
             <Link
               to="/business/onboarding"
               className="rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground"

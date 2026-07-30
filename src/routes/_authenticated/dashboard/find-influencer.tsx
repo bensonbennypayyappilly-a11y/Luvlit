@@ -4,33 +4,30 @@ import { useQuery } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { getInfluencers, getCategories } from "@/lib/public.functions";
-import { CITIES } from "@/lib/constants";
+import { useCities } from "@/hooks/use-cities";
 
-export const Route = createFileRoute("/find-influencer")({
+export const Route = createFileRoute("/_authenticated/dashboard/find-influencer")({
   head: () => ({
     meta: [
       { title: "Find an influencer for your brand — LuvLit" },
       {
         name: "description",
         content:
-          "Browse verified Indian creators by category, city and follower range, and reach out directly about collaborations.",
+          "Browse reviewed Indian creators by category, city and follower range, and reach out directly about collaborations.",
       },
       { property: "og:title", content: "Find an influencer for your brand — LuvLit" },
       {
         property: "og:description",
-        content: "Verified Indian creators, filterable by category, city and reach.",
+        content: "Reviewed Indian creators, filterable by category, city and reach.",
       },
     ],
-  }),
-  loader: async () => ({
-    influencers: await getInfluencers({ data: {} }),
-    categories: await getCategories(),
   }),
   component: FindInfluencer,
 });
 
 function FindInfluencer() {
-  const initial = Route.useLoaderData();
+  const cities = useCities();
+  const { data: categories } = useQuery({ queryKey: ["categories"], queryFn: () => getCategories() });
   const [filters, setFilters] = useState<{
     category?: string;
     city?: string;
@@ -40,14 +37,15 @@ function FindInfluencer() {
   const { data: influencers } = useQuery({
     queryKey: ["influencers", filters],
     queryFn: () => getInfluencers({ data: filters }),
-    initialData: initial.influencers,
   });
+
+  const select = "rounded-md border border-border bg-card px-4 py-3 text-sm";
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-20">
-        <p className="eyebrow">For brands</p>
+        <p className="eyebrow">Business tools</p>
         <h1 className="mt-4 text-4xl md:text-5xl">Find an influencer</h1>
         <p className="mt-4 max-w-xl text-muted-foreground">
           Every creator here has been reviewed and approved by our team.
@@ -55,25 +53,28 @@ function FindInfluencer() {
 
         <div className="mt-10 flex flex-wrap gap-3">
           <select
-            className="rounded-md border border-border bg-card px-4 py-3 text-sm"
+            className={select}
+            aria-label="Category"
             onChange={(e) => setFilters({ ...filters, category: e.target.value || undefined })}
           >
             <option value="">All categories</option>
-            {initial.categories.map((c) => (
+            {(categories ?? []).map((c) => (
               <option key={c.id}>{c.name}</option>
             ))}
           </select>
           <select
-            className="rounded-md border border-border bg-card px-4 py-3 text-sm"
+            className={select}
+            aria-label="City"
             onChange={(e) => setFilters({ ...filters, city: e.target.value || undefined })}
           >
             <option value="">All cities</option>
-            {CITIES.map((c) => (
+            {cities.map((c) => (
               <option key={c}>{c}</option>
             ))}
           </select>
           <select
-            className="rounded-md border border-border bg-card px-4 py-3 text-sm"
+            className={select}
+            aria-label="Minimum following"
             onChange={(e) =>
               setFilters({ ...filters, minFollowers: Number(e.target.value) || undefined })
             }
@@ -101,6 +102,12 @@ function FindInfluencer() {
                 {i.follower_count?.toLocaleString("en-IN")} followers
                 {i.city ? ` · ${i.city}` : ""}
               </p>
+              {i.rate_card && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Rates listed
+                  {typeof i.rate_card.reel === "number" ? ` · Reel ₹${i.rate_card.reel}` : ""}
+                </p>
+              )}
               {i.is_verified && <p className="eyebrow mt-4">Verified stats</p>}
             </article>
           ))}

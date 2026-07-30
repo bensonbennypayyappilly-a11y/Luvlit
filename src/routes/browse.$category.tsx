@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { BusinessCard } from "@/components/business-card";
 import { getBusinesses } from "@/lib/public.functions";
 import { CITIES } from "@/lib/constants";
+import type { PublicBusiness } from "@/lib/public.types";
 
 type Search = { city?: string };
 
@@ -33,7 +34,7 @@ export const Route = createFileRoute("/browse/$category")({
 });
 
 function BrowseCategory() {
-  const businesses = Route.useLoaderData();
+  const businesses = Route.useLoaderData() as PublicBusiness[];
   const { category } = Route.useParams();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();

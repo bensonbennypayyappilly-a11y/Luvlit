@@ -1,4 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
+import type {
+  BusinessDetail,
+  CategoryRow,
+  CityRow,
+  PublicBusiness,
+  PublicInfluencer,
+  StaffAvailability,
+} from "./public.types";
 
 export type BusinessFilters = {
   category?: string;
@@ -6,20 +14,35 @@ export type BusinessFilters = {
   q?: string;
 };
 
-export const getCategories = createServerFn({ method: "GET" }).handler(async () => {
-  const { publicClient } = await import("./supabase-public.server");
-  const { data, error } = await publicClient()
-    .from("categories")
-    .select("id,name")
-    .eq("is_approved", true)
-    .order("name");
-  if (error) throw new Error(error.message);
-  return data ?? [];
-});
+export const getCategories = createServerFn({ method: "GET" }).handler(
+  async (): Promise<CategoryRow[]> => {
+    const { publicClient } = await import("./supabase-public.server");
+    const { data, error } = await publicClient()
+      .from("categories")
+      .select("id,name")
+      .eq("is_approved", true)
+      .order("name");
+    if (error) throw new Error(error.message);
+    return (data ?? []) as CategoryRow[];
+  },
+);
+
+export const getCities = createServerFn({ method: "GET" }).handler(
+  async (): Promise<CityRow[]> => {
+    const { publicClient } = await import("./supabase-public.server");
+    const { data, error } = await publicClient()
+      .from("cities")
+      .select("id,name,state")
+      .eq("is_active", true)
+      .order("name");
+    if (error) throw new Error(error.message);
+    return (data ?? []) as CityRow[];
+  },
+);
 
 export const getBusinesses = createServerFn({ method: "GET" })
   .inputValidator((input: BusinessFilters) => input ?? {})
-  .handler(async ({ data: filters }) => {
+  .handler(async ({ data: filters }): Promise<PublicBusiness[]> => {
     const { publicClient } = await import("./supabase-public.server");
     const { data, error } = await publicClient()
       .from("businesses")
@@ -34,32 +57,30 @@ export const getBusinesses = createServerFn({ method: "GET" })
     const city = filters.city?.trim();
     const q = filters.q?.trim().toLowerCase();
 
-    const rows = (data ?? []).filter((b) => {
+    const rows = ((data ?? []) as unknown as Omit<PublicBusiness, "featured">[]).filter((b) => {
       if (filters.category && !(b.categories ?? []).includes(filters.category)) return false;
       if (q && !`${b.name} ${b.description ?? ""}`.toLowerCase().includes(q)) return false;
       if (city) {
         const inLocation = (b.locations ?? []).some((l) => l.city === city);
-        const inDelivery = (b.delivery_areas ?? []).some(
-          (d) => d.is_pan_india || d.city === city,
-        );
+        const inDelivery = (b.delivery_areas ?? []).some((d) => d.is_pan_india || d.city === city);
         if (!inLocation && !inDelivery) return false;
       }
       return true;
     });
 
-    const isFeatured = (b: (typeof rows)[number]) =>
-      (b.featured_placements ?? []).some(
-        (f) => f.end_date >= today && (f.scope === "all_india" || (!!city && f.city === city)),
-      );
-
     return rows
-      .map((b) => ({ ...b, featured: isFeatured(b) }))
+      .map((b) => ({
+        ...b,
+        featured: (b.featured_placements ?? []).some(
+          (f) => f.end_date >= today && (f.scope === "all_india" || (!!city && f.city === city)),
+        ),
+      }))
       .sort((a, b) => Number(b.featured) - Number(a.featured));
   });
 
 export const getBusinessById = createServerFn({ method: "GET" })
   .inputValidator((input: { id: string }) => input)
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<BusinessDetail> => {
     const { publicClient } = await import("./supabase-public.server");
     const client = publicClient();
     const { data: business, error } = await client
@@ -71,7 +92,7 @@ export const getBusinessById = createServerFn({ method: "GET" })
       .eq("is_live", true)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return business;
+    return (business ?? null) as unknown as BusinessDetail;
   });
 
 export const getInfluencers = createServerFn({ method: "GET" })
@@ -79,7 +100,7 @@ export const getInfluencers = createServerFn({ method: "GET" })
     (input: { category?: string; city?: string; minFollowers?: number; ratesOnly?: boolean }) =>
       input ?? {},
   )
-  .handler(async ({ data: filters }) => {
+  .handler(async ({ data: filters }): Promise<PublicInfluencer[]> => {
     const { publicClient } = await import("./supabase-public.server");
     const { data, error } = await publicClient()
       .from("influencer_profiles")
@@ -90,7 +111,7 @@ export const getInfluencers = createServerFn({ method: "GET" })
       .order("follower_count", { ascending: false });
     if (error) throw new Error(error.message);
 
-    return (data ?? []).filter((i) => {
+    return ((data ?? []) as unknown as PublicInfluencer[]).filter((i) => {
       if (filters.category && !(i.categories ?? []).includes(filters.category)) return false;
       if (filters.city && i.city !== filters.city) return false;
       if (filters.minFollowers && (i.follower_count ?? 0) < filters.minFollowers) return false;
@@ -101,7 +122,7 @@ export const getInfluencers = createServerFn({ method: "GET" })
 
 export const getStaffAvailability = createServerFn({ method: "GET" })
   .inputValidator((input: { businessId: string }) => input)
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<StaffAvailability> => {
     const { publicClient } = await import("./supabase-public.server");
     const client = publicClient();
     const { data: staff } = await client
@@ -119,5 +140,33 @@ export const getStaffAvailability = createServerFn({ method: "GET" })
       .order("date")
       .order("start_time")
       .limit(600);
-    return { staff: staff ?? [], slots: slots ?? [] };
+    return {
+      staff: (staff ?? []) as StaffAvailability["staff"],
+      slots: (slots ?? []) as StaffAvailability["slots"],
+    };
+  });
+
+/** Public influencer application status lookup by the email/phone used to apply. */
+export const getInfluencerApplicationStatus = createServerFn({ method: "POST" })
+  .inputValidator((input: { contact: string }) => ({ contact: String(input.contact ?? "").trim() }))
+  .handler(async ({ data }): Promise<{ found: boolean; status?: string; submitted_at?: string }> => {
+    const contact = data.contact.replace(/[,()]/g, "");
+    if (!contact || contact.length > 255) return { found: false };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .or(`email.eq.${contact},phone.eq.${contact}`)
+      .limit(1);
+    const profileId = profiles?.[0]?.id;
+    if (!profileId) return { found: false };
+    const { data: rows } = await supabaseAdmin
+      .from("influencer_profiles")
+      .select("approval_status,submitted_at")
+      .eq("user_id", profileId)
+      .order("submitted_at", { ascending: false })
+      .limit(1);
+    const row = rows?.[0];
+    if (!row) return { found: false };
+    return { found: true, status: row.approval_status, submitted_at: row.submitted_at };
   });

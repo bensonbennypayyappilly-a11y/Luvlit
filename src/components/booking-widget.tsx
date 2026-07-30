@@ -25,19 +25,17 @@ export function BookingWidget({ businessId, accent }: { businessId: string; acce
   async function book(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const { error: slotError } = await supabase
-      .from("slots")
-      .update({ status: "booked" })
-      .eq("id", slotId)
-      .eq("status", "open");
-    if (slotError) return setError("That slot was just taken. Please pick another.");
-    const { error: bookingError } = await supabase.from("bookings").insert({
-      slot_id: slotId,
-      business_id: businessId,
-      customer_name: name,
-      customer_phone: phone,
+    const { error: rpcError } = await supabase.rpc("book_slot", {
+      _slot_id: slotId,
+      _customer_name: name,
+      _customer_phone: phone,
     });
-    if (bookingError) return setError(bookingError.message);
+    if (rpcError)
+      return setError(
+        rpcError.message.includes("Slot unavailable")
+          ? "That slot was just taken. Please pick another."
+          : rpcError.message,
+      );
     setDone(true);
   }
 

@@ -3,8 +3,9 @@ import { useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { BusinessCard } from "@/components/business-card";
-import { getCategories, getBusinesses } from "@/lib/public.functions";
-import { CITIES } from "@/lib/constants";
+import { FaqSection } from "@/components/faq-section";
+import { getCategories, getBusinesses, getCities } from "@/lib/public.functions";
+import type { CategoryRow, CityRow, PublicBusiness } from "@/lib/public.types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,21 +22,29 @@ export const Route = createFileRoute("/")({
         content:
           "LuvLit connects you with small businesses, brands and influencers across India — browse by category and city, book appointments, and request quotes.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   loader: async () => ({
     categories: await getCategories(),
     featured: await getBusinesses({ data: {} }),
+    cities: await getCities(),
   }),
   component: Index,
 });
 
 function Index() {
-  const { categories, featured } = Route.useLoaderData();
+  const { categories, featured, cities } = Route.useLoaderData() as {
+    categories: CategoryRow[];
+    featured: PublicBusiness[];
+    cities: CityRow[];
+  };
   const [city, setCity] = useState("");
   const [q, setQ] = useState("");
   const featuredList = featured.filter((b) => b.featured).slice(0, 6);
   const recent = featured.slice(0, 6);
+  const place = city || "India";
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -67,8 +76,8 @@ function Index() {
               aria-label="Select your city"
             >
               <option value="">All of India</option>
-              {CITIES.map((c) => (
-                <option key={c}>{c}</option>
+              {cities.map((c) => (
+                <option key={c.id}>{c.name}</option>
               ))}
             </select>
             <input
@@ -104,10 +113,11 @@ function Index() {
                 key={category.id}
                 to="/browse/$category"
                 params={{ category: category.name }}
+                search={city ? { city } : undefined}
                 className="surface-card group p-7 transition-colors hover:border-accent"
               >
                 <h3 className="text-xl">{category.name}</h3>
-                <p className="mt-3 text-sm text-muted-foreground">Explore across India</p>
+                <p className="mt-3 text-sm text-muted-foreground">Explore across {place}</p>
               </Link>
             ))}
           </div>
@@ -147,6 +157,8 @@ function Index() {
             </Link>
           </div>
         </section>
+
+        <FaqSection />
       </main>
 
       <SiteFooter />

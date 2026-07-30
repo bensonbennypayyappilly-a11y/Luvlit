@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { BusinessCard } from "@/components/business-card";
 import { getCategories, getBusinesses } from "@/lib/public.functions";
+import type { CategoryRow, PublicBusiness } from "@/lib/public.types";
 
 type Search = { city?: string; q?: string };
 
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/browse/")({
 });
 
 function BrowseIndex() {
-  const { categories, businesses } = Route.useLoaderData();
+  const { categories, businesses } = Route.useLoaderData() as { categories: CategoryRow[]; businesses: PublicBusiness[] };
   const search = Route.useSearch();
 
   return (
