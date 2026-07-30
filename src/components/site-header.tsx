@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 
 const navItems = [
-  { label: "Browse", to: "/browse" },
-  { label: "Find an Influencer", to: "/find-influencer" },
-  { label: "Post a Requirement", to: "/post-requirement" },
+  { label: "Browse", to: "/browse" as const },
+  { label: "Post a Requirement", to: "/post-requirement" as const },
+  { label: "Are you an influencer?", to: "/influencer" as const },
 ];
 
 export function SiteHeader() {
