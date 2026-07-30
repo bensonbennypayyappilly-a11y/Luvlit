@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -26,6 +27,11 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBusinessSetupStaffRouteImport } from './routes/_authenticated/business/setup-staff'
 import { Route as AuthenticatedBusinessOnboardingRouteImport } from './routes/_authenticated/business/onboarding'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/post-requirement': typeof AuthenticatedPostRequirementRoute
   '/browse/$category': typeof BrowseCategoryRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/post-requirement': typeof AuthenticatedPostRequirementRoute
   '/browse/$category': typeof BrowseCategoryRoute
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/post-requirement': typeof AuthenticatedPostRequirementRoute
   '/browse/$category': typeof BrowseCategoryRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
     | '/dashboard'
     | '/post-requirement'
     | '/browse/$category'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
     | '/dashboard'
     | '/post-requirement'
     | '/browse/$category'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
     | '/_authenticated/dashboard'
     | '/_authenticated/post-requirement'
     | '/browse/$category'
@@ -227,6 +239,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TermsRoute: typeof TermsRoute
   BrowseCategoryRoute: typeof BrowseCategoryRoute
   BusinessIdRoute: typeof BusinessIdRoute
   BrowseIndexRoute: typeof BrowseIndexRoute
@@ -234,6 +247,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -376,6 +396,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermsRoute: TermsRoute,
   BrowseCategoryRoute: BrowseCategoryRoute,
   BusinessIdRoute: BusinessIdRoute,
   BrowseIndexRoute: BrowseIndexRoute,
