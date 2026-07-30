@@ -15,6 +15,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as FindInfluencerRouteImport } from './routes/find-influencer'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CitiesRouteImport } from './routes/cities'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -55,6 +56,11 @@ const FindInfluencerRoute = FindInfluencerRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CitiesRoute = CitiesRouteImport.update({
+  id: '/cities',
+  path: '/cities',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/cities': typeof CitiesRoute
   '/contact': typeof ContactRoute
   '/find-influencer': typeof FindInfluencerRoute
   '/pricing': typeof PricingRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/cities': typeof CitiesRoute
   '/contact': typeof ContactRoute
   '/find-influencer': typeof FindInfluencerRoute
   '/pricing': typeof PricingRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/cities': typeof CitiesRoute
   '/contact': typeof ContactRoute
   '/find-influencer': typeof FindInfluencerRoute
   '/pricing': typeof PricingRoute
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/cities'
     | '/contact'
     | '/find-influencer'
     | '/pricing'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/cities'
     | '/contact'
     | '/find-influencer'
     | '/pricing'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/auth'
+    | '/cities'
     | '/contact'
     | '/find-influencer'
     | '/pricing'
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
+  CitiesRoute: typeof CitiesRoute
   ContactRoute: typeof ContactRoute
   FindInfluencerRoute: typeof FindInfluencerRoute
   PricingRoute: typeof PricingRoute
@@ -287,6 +300,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cities': {
+      id: '/cities'
+      path: '/cities'
+      fullPath: '/cities'
+      preLoaderRoute: typeof CitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -391,6 +411,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
+  CitiesRoute: CitiesRoute,
   ContactRoute: ContactRoute,
   FindInfluencerRoute: FindInfluencerRoute,
   PricingRoute: PricingRoute,
