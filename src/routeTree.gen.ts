@@ -22,6 +22,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InfluencerIndexRouteImport } from './routes/influencer.index'
 import { Route as BrowseIndexRouteImport } from './routes/browse.index'
+import { Route as InfluencerOnboardingRouteImport } from './routes/influencer.onboarding'
 import { Route as BusinessIdRouteImport } from './routes/business.$id'
 import { Route as BrowseCategoryRouteImport } from './routes/browse.$category'
 import { Route as AuthenticatedPostRequirementRouteImport } from './routes/_authenticated/post-requirement'
@@ -93,6 +94,11 @@ const BrowseIndexRoute = BrowseIndexRouteImport.update({
   path: '/browse/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InfluencerOnboardingRoute = InfluencerOnboardingRouteImport.update({
+  id: '/influencer/onboarding',
+  path: '/influencer/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BusinessIdRoute = BusinessIdRouteImport.update({
   id: '/business/$id',
   path: '/business/$id',
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/post-requirement': typeof AuthenticatedPostRequirementRoute
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
+  '/influencer/onboarding': typeof InfluencerOnboardingRoute
   '/browse/': typeof BrowseIndexRoute
   '/influencer/': typeof InfluencerIndexRoute
   '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/post-requirement': typeof AuthenticatedPostRequirementRoute
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
+  '/influencer/onboarding': typeof InfluencerOnboardingRoute
   '/browse': typeof BrowseIndexRoute
   '/influencer': typeof InfluencerIndexRoute
   '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
@@ -184,6 +192,7 @@ export interface FileRoutesById {
   '/_authenticated/post-requirement': typeof AuthenticatedPostRequirementRoute
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
+  '/influencer/onboarding': typeof InfluencerOnboardingRoute
   '/browse/': typeof BrowseIndexRoute
   '/influencer/': typeof InfluencerIndexRoute
   '/_authenticated/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/post-requirement'
     | '/browse/$category'
     | '/business/$id'
+    | '/influencer/onboarding'
     | '/browse/'
     | '/influencer/'
     | '/business/onboarding'
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
     | '/post-requirement'
     | '/browse/$category'
     | '/business/$id'
+    | '/influencer/onboarding'
     | '/browse'
     | '/influencer'
     | '/business/onboarding'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/_authenticated/post-requirement'
     | '/browse/$category'
     | '/business/$id'
+    | '/influencer/onboarding'
     | '/browse/'
     | '/influencer/'
     | '/_authenticated/business/onboarding'
@@ -267,6 +279,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   BrowseCategoryRoute: typeof BrowseCategoryRoute
   BusinessIdRoute: typeof BusinessIdRoute
+  InfluencerOnboardingRoute: typeof InfluencerOnboardingRoute
   BrowseIndexRoute: typeof BrowseIndexRoute
   InfluencerIndexRoute: typeof InfluencerIndexRoute
 }
@@ -364,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BrowseIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/influencer/onboarding': {
+      id: '/influencer/onboarding'
+      path: '/influencer/onboarding'
+      fullPath: '/influencer/onboarding'
+      preLoaderRoute: typeof InfluencerOnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/business/$id': {
       id: '/business/$id'
       path: '/business/$id'
@@ -440,6 +460,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   BrowseCategoryRoute: BrowseCategoryRoute,
   BusinessIdRoute: BusinessIdRoute,
+  InfluencerOnboardingRoute: InfluencerOnboardingRoute,
   BrowseIndexRoute: BrowseIndexRoute,
   InfluencerIndexRoute: InfluencerIndexRoute,
 }
