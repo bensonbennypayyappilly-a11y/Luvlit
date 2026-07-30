@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { getBusinessById } from "@/lib/public.functions";
 import { EcoBadge } from "@/components/eco-badge";
 import { BookingWidget } from "@/components/booking-widget";
+import type { BusinessDetail } from "@/lib/public.types";
 
 export const Route = createFileRoute("/business/$id")({
   loader: async ({ params }) => getBusinessById({ data: { id: params.id } }),
@@ -47,7 +48,7 @@ function embedUrl(url: string) {
 }
 
 function BusinessProfile() {
-  const business = Route.useLoaderData();
+  const business = Route.useLoaderData() as BusinessDetail;
   if (!business) return <Shell>This business page isn't available.</Shell>;
 
   const accent = business.brand_accent_color || "#173D2E";

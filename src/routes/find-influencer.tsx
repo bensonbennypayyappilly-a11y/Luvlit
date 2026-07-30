@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { getInfluencers, getCategories } from "@/lib/public.functions";
 import { CITIES } from "@/lib/constants";
+import type { CategoryRow, PublicInfluencer } from "@/lib/public.types";
 
 export const Route = createFileRoute("/find-influencer")({
   head: () => ({
@@ -30,7 +31,7 @@ export const Route = createFileRoute("/find-influencer")({
 });
 
 function FindInfluencer() {
-  const initial = Route.useLoaderData();
+  const initial = Route.useLoaderData() as { categories: CategoryRow[]; influencers: PublicInfluencer[] };
   const [filters, setFilters] = useState<{
     category?: string;
     city?: string;

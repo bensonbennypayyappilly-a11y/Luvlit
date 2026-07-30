@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { BusinessCard } from "@/components/business-card";
 import { getCategories, getBusinesses } from "@/lib/public.functions";
 import { CITIES } from "@/lib/constants";
+import type { CategoryRow, PublicBusiness } from "@/lib/public.types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { categories, featured } = Route.useLoaderData();
+  const { categories, featured } = Route.useLoaderData() as { categories: CategoryRow[]; featured: PublicBusiness[] };
   const [city, setCity] = useState("");
   const [q, setQ] = useState("");
   const featuredList = featured.filter((b) => b.featured).slice(0, 6);
