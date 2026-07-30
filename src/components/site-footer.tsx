@@ -17,7 +17,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { label: "List your business", to: "/auth" },
       { label: "Pricing & featured placement", to: "/pricing" },
       { label: "Find an influencer", to: "/dashboard/find-influencer" },
-      { label: "Leads & requirements", to: "/dashboard/leads" },
+      { label: "Post a requirement", to: "/post-requirement" },
     ],
   },
   {
