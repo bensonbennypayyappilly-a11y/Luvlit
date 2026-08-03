@@ -1,0 +1,217 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export const Route = createFileRoute("/_authenticated/admin/")({
+  head: () => ({
+    meta: [
+      { title: "Admin — LuvLit" },
+      { name: "description", content: "Review businesses, categories and subscriptions." },
+      { property: "og:title", content: "Admin — LuvLit" },
+      { property: "og:description", content: "LuvLit admin overview." },
+    ],
+  }),
+  component: AdminIndex,
+});
+
+const PLAN_PRICE: Record<string, number> = {
+  base: 199,
+  featured_city: 499,
+  featured_all_india: 999,
+};
+
+function AdminIndex() {
+  const queryClient = useQueryClient();
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [merging, setMerging] = useState<string | null>(null);
+
+  const { data: businesses } = useQuery({
+    queryKey: ["admin-businesses"],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("businesses")
+          .select("id,name,created_at")
+          .eq("is_live", true)
+          .order("created_at", { ascending: false })
+          .limit(20)
+      ).data ?? [],
+  });
+
+  const { data: categories } = useQuery({
+    queryKey: ["admin-pending-categories"],
+    queryFn: async () =>
+      (
+        await supabase.from("categories").select("*").eq("is_approved", false).order("created_at")
+      ).data ?? [],
+  });
+
+  const { data: approvedCategories } = useQuery({
+    queryKey: ["admin-approved-categories"],
+    queryFn: async () =>
+      (await supabase.from("categories").select("id,name").eq("is_approved", true).order("name"))
+        .data ?? [],
+  });
+
+  const { data: subscriptions } = useQuery({
+    queryKey: ["admin-subscriptions"],
+    queryFn: async () =>
+      (await supabase.from("subscriptions").select("plan,status")).data ?? [],
+  });
+
+  async function approveCategory(id: string) {
+    await supabase.from("categories").update({ is_approved: true }).eq("id", id);
+    queryClient.invalidateQueries({ queryKey: ["admin-pending-categories"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-approved-categories"] });
+  }
+
+  async function renameCategory(id: string) {
+    if (!renameValue.trim()) return;
+    await supabase.from("categories").update({ name: renameValue.trim() }).eq("id", id);
+    setRenaming(null);
+    setRenameValue("");
+    queryClient.invalidateQueries({ queryKey: ["admin-pending-categories"] });
+  }
+
+  async function mergeCategory(id: string, targetName: string) {
+    await supabase.from("categories").update({ is_approved: true, name: targetName }).eq("id", id);
+    setMerging(null);
+    queryClient.invalidateQueries({ queryKey: ["admin-pending-categories"] });
+  }
+
+  const planCounts: Record<string, { active: number; total: number }> = {};
+  for (const s of subscriptions ?? []) {
+    planCounts[s.plan] ??= { active: 0, total: 0 };
+    planCounts[s.plan].total += 1;
+    if (s.status === "active") planCounts[s.plan].active += 1;
+  }
+  const monthlyRevenue = Object.entries(planCounts).reduce(
+    (sum, [plan, c]) => sum + c.active * (PLAN_PRICE[plan] ?? 0),
+    0,
+  );
+
+  return (
+    <div>
+      <p className="eyebrow">Admin</p>
+      <h1 className="mt-4 text-4xl">Overview</h1>
+
+      <div className="mt-8">
+        <Link
+          to="/admin/influencer-approvals"
+          className="rounded-md border border-accent px-6 py-3 text-sm font-medium text-accent-foreground hover:bg-accent-soft"
+        >
+          Influencer approvals →
+        </Link>
+      </div>
+
+      <section className="mt-14">
+        <h2 className="hairline pt-10 text-2xl">Revenue & subscriptions</h2>
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="surface-card p-6">
+            <p className="eyebrow">Estimated monthly revenue</p>
+            <p className="mt-2 text-2xl">₹{monthlyRevenue.toLocaleString("en-IN")}</p>
+          </div>
+          {Object.entries(planCounts).map(([plan, c]) => (
+            <div key={plan} className="surface-card p-6">
+              <p className="eyebrow">{plan.replace(/_/g, " ")}</p>
+              <p className="mt-2 text-2xl">{c.active} active</p>
+              <p className="mt-1 text-sm text-muted-foreground">{c.total} total</p>
+            </div>
+          ))}
+          {!subscriptions?.length && <p className="text-muted-foreground">No subscriptions yet.</p>}
+        </div>
+      </section>
+
+      <section className="mt-14">
+        <h2 className="hairline pt-10 text-2xl">Recently live businesses</h2>
+        <div className="mt-6 space-y-3">
+          {(businesses ?? []).map((b) => (
+            <Link
+              key={b.id}
+              to="/business/$id"
+              params={{ id: b.id }}
+              className="surface-card flex items-center justify-between p-5 hover:border-accent"
+            >
+              <span>{b.name}</span>
+              <span className="text-sm text-muted-foreground">
+                {new Date(b.created_at).toLocaleDateString()}
+              </span>
+            </Link>
+          ))}
+          {!businesses?.length && <p className="text-muted-foreground">No live businesses yet.</p>}
+        </div>
+      </section>
+
+      <section className="mt-14">
+        <h2 className="hairline pt-10 text-2xl">Pending category suggestions</h2>
+        <div className="mt-6 space-y-4">
+          {(categories ?? []).map((c) => (
+            <div key={c.id} className="surface-card p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {renaming === c.id ? (
+                  <input
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
+                ) : (
+                  <p>{c.name}</p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  {renaming === c.id ? (
+                    <button
+                      onClick={() => renameCategory(c.id)}
+                      className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+                    >
+                      Save name
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setRenaming(c.id);
+                        setRenameValue(c.name);
+                      }}
+                      className="rounded-md border border-border px-4 py-2 text-sm hover:border-accent"
+                    >
+                      Rename
+                    </button>
+                  )}
+                  <button
+                    onClick={() => approveCategory(c.id)}
+                    className="rounded-md border border-accent px-4 py-2 text-sm text-accent-foreground hover:bg-accent-soft"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => setMerging(merging === c.id ? null : c.id)}
+                    className="rounded-md border border-border px-4 py-2 text-sm hover:border-accent"
+                  >
+                    Merge into…
+                  </button>
+                </div>
+              </div>
+              {merging === c.id && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {(approvedCategories ?? []).map((ac) => (
+                    <button
+                      key={ac.id}
+                      onClick={() => mergeCategory(c.id, ac.name)}
+                      className="rounded-full border border-border px-3 py-1.5 text-xs hover:border-accent"
+                    >
+                      {ac.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+          {!categories?.length && (
+            <p className="text-muted-foreground">No pending category suggestions.</p>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}

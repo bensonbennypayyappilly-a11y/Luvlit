@@ -75,7 +75,9 @@ export type Database = {
           categories: string[]
           contact_email: string | null
           created_at: string
+          deleted_at: string | null
           description: string | null
+          hero_image_url: string | null
           id: string
           instagram_url: string | null
           is_eco_friendly: boolean
@@ -94,7 +96,9 @@ export type Database = {
           categories?: string[]
           contact_email?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
+          hero_image_url?: string | null
           id?: string
           instagram_url?: string | null
           is_eco_friendly?: boolean
@@ -113,7 +117,9 @@ export type Database = {
           categories?: string[]
           contact_email?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
+          hero_image_url?: string | null
           id?: string
           instagram_url?: string | null
           is_eco_friendly?: boolean
@@ -322,6 +328,7 @@ export type Database = {
           business_id: string | null
           categories: string[]
           city: string | null
+          deleted_at: string | null
           display_name: string
           engagement_rate: number | null
           follower_count: number | null
@@ -338,6 +345,7 @@ export type Database = {
           business_id?: string | null
           categories?: string[]
           city?: string | null
+          deleted_at?: string | null
           display_name: string
           engagement_rate?: number | null
           follower_count?: number | null
@@ -354,6 +362,7 @@ export type Database = {
           business_id?: string | null
           categories?: string[]
           city?: string | null
+          deleted_at?: string | null
           display_name?: string
           engagement_rate?: number | null
           follower_count?: number | null
@@ -493,6 +502,7 @@ export type Database = {
           conversation_id: string
           created_at: string
           id: string
+          read_at: string | null
           sender_id: string
           sender_type: string
         }
@@ -501,6 +511,7 @@ export type Database = {
           conversation_id: string
           created_at?: string
           id?: string
+          read_at?: string | null
           sender_id: string
           sender_type: string
         }
@@ -509,6 +520,7 @@ export type Database = {
           conversation_id?: string
           created_at?: string
           id?: string
+          read_at?: string | null
           sender_id?: string
           sender_type?: string
         }
@@ -525,6 +537,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          deleted_at: string | null
           email: string | null
           id: string
           name: string | null
@@ -533,6 +546,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           id: string
           name?: string | null
@@ -541,6 +555,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           id?: string
           name?: string | null
@@ -750,6 +765,7 @@ export type Database = {
         Returns: undefined
       }
       owns_business: { Args: { _business_id: string }; Returns: boolean }
+      soft_delete_account: { Args: never; Returns: undefined }
     }
     Enums: {
       account_role: "business" | "customer"

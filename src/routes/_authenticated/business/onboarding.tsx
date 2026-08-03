@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { MediaUploader } from "@/components/media-uploader";
 import { ACCENT_COLORS, BUSINESS_TYPES, CITIES, ECO_CATEGORIES } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/business/onboarding")({
@@ -33,6 +34,8 @@ function Onboarding() {
 
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [businessId, setBusinessId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -48,8 +51,9 @@ function Onboarding() {
     whatsapp: "",
     contact_email: "",
     instagram_url: "",
-    main_video_url: "",
-    shorts: "",
+    hero_image_url: null as string | null,
+    main_video_url: null as string | null,
+    shorts: [] as (string | null)[],
     accent: ACCENT_COLORS[0].value,
   });
 
@@ -58,15 +62,60 @@ function Onboarding() {
   const toggle = (list: string[], value: string) =>
     list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 
-  async function finish() {
+  /** Creates the business row (once) so media uploads can target its storage folder. */
+  async function ensureBusiness() {
+    if (businessId) return businessId;
     setError(null);
     const { data: userData } = await supabase.auth.getUser();
-    const ownerId = userData.user!.id;
-
+    const ownerId = userData.user?.id;
+    if (!ownerId) {
+      setError("You need to be signed in to continue.");
+      return null;
+    }
     const { data: business, error: businessError } = await supabase
       .from("businesses")
       .insert({
         owner_id: ownerId,
+        name: form.name || "Untitled business",
+        description: form.description,
+        categories: form.categories,
+        business_types: form.business_types,
+        is_eco_friendly: showEco ? form.is_eco_friendly : false,
+        brand_accent_color: form.accent,
+        is_live: false,
+      })
+      .select("id")
+      .single();
+    if (businessError || !business) {
+      setError(businessError?.message ?? "Could not save.");
+      return null;
+    }
+    setBusinessId(business.id);
+    return business.id;
+  }
+
+  async function goNext() {
+    setError(null);
+    if (step === steps.length - 1) return finish();
+    // Create the business row right before the media step so uploads have a valid folder.
+    if (step === steps.length - 2 && !businessId) {
+      setSaving(true);
+      const id = await ensureBusiness();
+      setSaving(false);
+      if (!id) return;
+    }
+    setStep(step + 1);
+  }
+
+  async function finish() {
+    setError(null);
+    const id = await ensureBusiness();
+    if (!id) return;
+    setSaving(true);
+
+    const { error: businessError } = await supabase
+      .from("businesses")
+      .update({
         name: form.name,
         description: form.description,
         categories: form.categories,
@@ -75,38 +124,38 @@ function Onboarding() {
         whatsapp: form.whatsapp,
         contact_email: form.contact_email,
         instagram_url: form.instagram_url,
+        hero_image_url: form.hero_image_url,
         main_video_url: form.main_video_url,
-        short_video_urls: form.shorts
-          .split(/[\n,]/)
-          .map((s) => s.trim())
-          .filter(Boolean)
-          .slice(0, 3),
+        short_video_urls: form.shorts.filter((s): s is string => !!s).slice(0, 3),
         brand_accent_color: form.accent,
         is_live: true,
       })
-      .select("id")
-      .single();
-    if (businessError || !business) return setError(businessError?.message ?? "Could not save.");
+      .eq("id", id);
+    if (businessError) {
+      setSaving(false);
+      return setError(businessError.message);
+    }
 
     if (form.newCategory.trim()) {
       await supabase
         .from("categories")
-        .insert({ name: form.newCategory.trim(), is_approved: false, suggested_by_business_id: business.id });
+        .insert({ name: form.newCategory.trim(), is_approved: false, suggested_by_business_id: id });
     }
     if (form.city) {
       await supabase
         .from("locations")
-        .insert({ business_id: business.id, address: form.address, city: form.city, state: form.state, is_primary: true });
+        .insert({ business_id: id, address: form.address, city: form.city, state: form.state, is_primary: true });
     }
     if (form.panIndia || form.delivery.length) {
       const areas: { business_id: string; city: string | null; is_pan_india: boolean }[] =
         form.panIndia
-          ? [{ business_id: business.id, city: null, is_pan_india: true }]
-          : form.delivery.map((city) => ({ business_id: business.id, city, is_pan_india: false }));
+          ? [{ business_id: id, city: null, is_pan_india: true }]
+          : form.delivery.map((city) => ({ business_id: id, city, is_pan_india: false }));
       await supabase.from("delivery_areas").insert(areas);
     }
-    await supabase.from("subscriptions").insert({ business_id: business.id, plan: "base", status: "active" });
+    await supabase.from("subscriptions").insert({ business_id: id, plan: "base", status: "active" });
 
+    setSaving(false);
     navigate({ to: form.business_types.includes("appointment") ? "/business/setup-staff" : "/dashboard" });
   }
 
@@ -257,7 +306,6 @@ function Onboarding() {
               ["whatsapp", "WhatsApp number"],
               ["contact_email", "Email"],
               ["instagram_url", "Instagram link"],
-              ["main_video_url", "Main video link"],
             ] as const
           ).map(([key, label]) => (
             <input
@@ -268,14 +316,48 @@ function Onboarding() {
               className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
             />
           ))}
-          <textarea
-            rows={3}
-            value={form.shorts}
-            onChange={(e) => set({ shorts: e.target.value })}
-            placeholder="Up to 3 short video links (Reels / Shorts), one per line"
-            className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
+        </div>
+      ),
+    },
+    {
+      title: "Add your photo & videos",
+      body: businessId ? (
+        <div className="space-y-6">
+          <p className="text-sm text-muted-foreground">
+            Upload a hero image, up to 3 short videos (max 60s / 50MB each) and one main feature
+            video (max 3 min / 150MB). These play directly on your page.
+          </p>
+          <MediaUploader
+            businessId={businessId}
+            kind="hero"
+            value={form.hero_image_url}
+            onChange={(path) => set({ hero_image_url: path })}
+          />
+          <div className="space-y-4">
+            <p className="text-sm font-medium">Short videos (up to 3)</p>
+            {[0, 1, 2].map((i) => (
+              <MediaUploader
+                key={i}
+                businessId={businessId}
+                kind="short"
+                value={form.shorts[i] ?? null}
+                onChange={(path) => {
+                  const shorts = [...form.shorts];
+                  shorts[i] = path;
+                  set({ shorts });
+                }}
+              />
+            ))}
+          </div>
+          <MediaUploader
+            businessId={businessId}
+            kind="main"
+            value={form.main_video_url}
+            onChange={(path) => set({ main_video_url: path })}
           />
         </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Saving your business…</p>
       ),
     },
     {
@@ -322,10 +404,11 @@ function Onboarding() {
             </button>
           )}
           <button
-            onClick={() => (step === steps.length - 1 ? finish() : setStep(step + 1))}
-            className="rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground"
+            onClick={goNext}
+            disabled={saving}
+            className="rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
           >
-            {step === steps.length - 1 ? "Publish my page" : "Continue"}
+            {saving ? "Saving…" : step === steps.length - 1 ? "Publish my page" : "Continue"}
           </button>
         </div>
       </main>

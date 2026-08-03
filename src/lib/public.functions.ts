@@ -92,7 +92,30 @@ export const getBusinessById = createServerFn({ method: "GET" })
       .eq("is_live", true)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return (business ?? null) as unknown as BusinessDetail;
+    if (!business) return null;
+
+    const isPath = (v: unknown): v is string => typeof v === "string" && v.length > 0 && !/^https?:\/\//i.test(v);
+    const b = business as unknown as Record<string, unknown>;
+    const paths: string[] = [];
+    if (isPath(b.hero_image_url)) paths.push(b.hero_image_url);
+    if (isPath(b.main_video_url)) paths.push(b.main_video_url);
+    const shorts = Array.isArray(b.short_video_urls) ? (b.short_video_urls as string[]) : [];
+    for (const s of shorts) if (isPath(s)) paths.push(s);
+
+    if (paths.length) {
+      const { data: signed } = await client.storage
+        .from("business-media")
+        .createSignedUrls(paths, 60 * 60 * 24 * 7);
+      const map = new Map<string, string>();
+      (signed ?? []).forEach((s) => {
+        if (s.path && s.signedUrl) map.set(s.path, s.signedUrl);
+      });
+      if (isPath(b.hero_image_url)) b.hero_image_url = map.get(b.hero_image_url) ?? b.hero_image_url;
+      if (isPath(b.main_video_url)) b.main_video_url = map.get(b.main_video_url) ?? b.main_video_url;
+      if (shorts.length) b.short_video_urls = shorts.map((s) => (isPath(s) ? map.get(s) ?? s : s));
+    }
+
+    return b as unknown as BusinessDetail;
   });
 
 export const getInfluencers = createServerFn({ method: "GET" })
