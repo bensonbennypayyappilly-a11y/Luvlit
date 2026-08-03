@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 
-const NAV = [
+const NAV: { to: string; label: string; exact?: boolean }[] = [
   { to: "/business/dashboard", label: "Overview", exact: true },
   { to: "/business/dashboard/appointments", label: "Appointments" },
   { to: "/business/dashboard/products", label: "Products" },
@@ -10,7 +10,8 @@ const NAV = [
   { to: "/business/dashboard/profile", label: "Profile & Media" },
   { to: "/business/dashboard/featured", label: "Featured Placement" },
   { to: "/business/dashboard/billing", label: "Billing" },
-] as const;
+];
+
 
 export function BusinessDashboardSidebar({ businessName }: { businessName: string }) {
   const [open, setOpen] = useState(false);
