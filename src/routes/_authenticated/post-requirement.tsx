@@ -33,30 +33,111 @@ function PostRequirement() {
   const [form, setForm] = useState({ category: "", description: "", city: "", budget: "" });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [matchedCount, setMatchedCount] = useState<number | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
     const { data: userData } = await supabase.auth.getUser();
-    const { data: business } = await supabase
+    const { data: ownBusiness } = await supabase
       .from("businesses")
       .select("id")
       .eq("owner_id", userData.user!.id)
+      .is("deleted_at", null)
       .maybeSingle();
 
-    const { error: insertError } = await supabase.from("requirements").insert({
-      posted_by_type: business ? "business" : "customer",
-      posted_by_user_id: userData.user!.id,
-      posted_by_business_id: business?.id ?? null,
-      category: form.category,
-      description: form.description,
-      city: form.city || null,
-      budget: form.budget ? Number(form.budget) : null,
+    const posterType = ownBusiness ? "business" : "customer";
+    const posterId = ownBusiness ? ownBusiness.id : userData.user!.id;
+
+    const { data: requirement, error: insertError } = await supabase
+      .from("requirements")
+      .insert({
+        posted_by_type: posterType,
+        posted_by_user_id: userData.user!.id,
+        posted_by_business_id: ownBusiness?.id ?? null,
+        category: form.category,
+        description: form.description,
+        city: form.city || null,
+        budget: form.budget ? Number(form.budget) : null,
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !requirement) {
+      setBusy(false);
+      return setError(insertError?.message ?? "Could not post requirement.");
+    }
+
+    // Find matching live businesses: same category AND (location in that city OR delivery area for that city OR pan-India delivery).
+    let matches: { id: string }[] = [];
+    let query = supabase
+      .from("businesses")
+      .select("id,locations(city),delivery_areas(city,is_pan_india)")
+      .eq("is_live", true)
+      .is("deleted_at", null)
+      .contains("categories", [form.category]);
+    if (ownBusiness) query = query.neq("id", ownBusiness.id);
+    const { data: candidates } = await query;
+
+    matches = (candidates ?? []).filter((b: any) => {
+      if (!form.city) return true;
+      const inCity = (b.locations ?? []).some((l: any) => l.city === form.city);
+      const delivers = (b.delivery_areas ?? []).some(
+        (d: any) => d.is_pan_india || d.city === form.city,
+      );
+      return inCity || delivers;
     });
+
+    if (matches.length) {
+      await supabase.from("leads").insert(
+        matches.map((m) => ({
+          requirement_id: requirement.id,
+          matched_business_id: m.id,
+          status: "new",
+        })),
+      );
+      await supabase.from("conversations").insert(
+        matches.map((m) => ({
+          party_a_id: posterId,
+          party_a_type: posterType,
+          party_b_id: m.id,
+          party_b_type: "business",
+          requirement_id: requirement.id,
+        })),
+      );
+    }
+
     setBusy(false);
-    if (insertError) return setError(insertError.message);
-    navigate({ to: "/dashboard" });
+    setMatchedCount(matches.length);
+  }
+
+  if (matchedCount !== null) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <SiteHeader />
+        <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-20 text-center">
+          <p className="eyebrow">Requirement posted</p>
+          <h1 className="mt-4 text-4xl">
+            {matchedCount > 0
+              ? `Matched with ${matchedCount} business${matchedCount === 1 ? "" : "es"}`
+              : "No matches yet"}
+          </h1>
+          <p className="mt-4 text-muted-foreground">
+            {matchedCount > 0
+              ? "They can now respond with a quote — check your conversations soon."
+              : "We couldn't find a matching business right now, but your requirement is live and new businesses can still respond."}
+          </p>
+          <button
+            onClick={() => navigate({ to: "/dashboard" })}
+            className="mt-8 rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground"
+          >
+            Go to dashboard
+          </button>
+        </main>
+        <SiteFooter />
+      </div>
+    );
   }
 
   return (

@@ -42,6 +42,7 @@ export type BusinessDetail = {
   instagram_url: string | null;
   whatsapp: string | null;
   contact_email: string | null;
+  hero_image_url: string | null;
   main_video_url: string | null;
   short_video_urls: string[];
   brand_accent_color: string | null;

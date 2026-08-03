@@ -49,7 +49,7 @@ function AuthPage() {
       });
       setBusy(false);
       if (error) return setError(error.message);
-      navigate({ to: role === "business" ? "/business/onboarding" : "/dashboard" });
+      navigate({ to: "/verify-email", search: { role } });
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setBusy(false);
