@@ -89,8 +89,8 @@ function Index() {
       <main className="flex-1">
         {/* Cinematic hero */}
         <section className="relative isolate overflow-hidden">
-          <div className="absolute inset-0 -z-10">
-            <AmbientHeroVideo className="ken-burns h-full w-full object-cover" />
+          <div className="absolute inset-0 -z-10 bg-primary">
+            <AmbientHeroVideo className="ken-burns hidden h-full w-full object-cover md:block" />
             <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/60 to-background" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,transparent,oklch(0.221_0.006_56/0.55))]" />
           </div>
