@@ -47,7 +47,7 @@ export const getBusinesses = createServerFn({ method: "GET" })
     const { data, error } = await publicClient()
       .from("businesses")
       .select(
-        "id,name,description,categories,business_types,is_eco_friendly,brand_accent_color,locations(city,state,is_primary),delivery_areas(city,is_pan_india),featured_placements(scope,city,end_date)",
+        "id,name,description,hero_image_url,categories,business_types,is_eco_friendly,brand_accent_color,locations(city,state,is_primary),delivery_areas(city,is_pan_india),featured_placements(scope,city,end_date)",
       )
       .eq("is_live", true)
       .order("created_at", { ascending: false });
@@ -68,8 +68,25 @@ export const getBusinesses = createServerFn({ method: "GET" })
       return true;
     });
 
+    // Thumbnails live in a private bucket as object paths; resolve them to signed URLs.
+    const isPath = (v: unknown): v is string =>
+      typeof v === "string" && v.length > 0 && !/^https?:\/\//i.test(v);
+    const thumbPaths = rows.map((b) => b.hero_image_url).filter(isPath);
+    const signedMap = new Map<string, string>();
+    if (thumbPaths.length) {
+      const { data: signed } = await publicClient()
+        .storage.from("business-media")
+        .createSignedUrls(Array.from(new Set(thumbPaths)), 60 * 60 * 24 * 7);
+      (signed ?? []).forEach((s) => {
+        if (s.path && s.signedUrl) signedMap.set(s.path, s.signedUrl);
+      });
+    }
+
     return rows
       .map((b) => ({
+        hero_image_url: isPath(b.hero_image_url)
+          ? signedMap.get(b.hero_image_url) ?? null
+          : b.hero_image_url ?? null,
         ...b,
         featured: (b.featured_placements ?? []).some(
           (f) => f.end_date >= today && (f.scope === "all_india" || (!!city && f.city === city)),
