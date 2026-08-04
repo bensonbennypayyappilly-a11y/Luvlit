@@ -84,10 +84,10 @@ export const getBusinesses = createServerFn({ method: "GET" })
 
     return rows
       .map((b) => ({
+        ...b,
         hero_image_url: isPath(b.hero_image_url)
           ? signedMap.get(b.hero_image_url) ?? null
           : b.hero_image_url ?? null,
-        ...b,
         featured: (b.featured_placements ?? []).some(
           (f) => f.end_date >= today && (f.scope === "all_india" || (!!city && f.city === city)),
         ),
