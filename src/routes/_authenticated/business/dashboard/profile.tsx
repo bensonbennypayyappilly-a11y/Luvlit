@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
+import { MediaUploader } from "@/components/media-uploader";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/profile")({
   head: () => ({
@@ -18,6 +20,9 @@ export const Route = createFileRoute("/_authenticated/business/dashboard/profile
 function ProfilePage() {
   const { data: business } = useDashboardBusiness();
   const businessId = business?.id ?? null;
+  const queryClient = useQueryClient();
+  const [thumb, setThumb] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
 
   const { data: full } = useQuery({
     queryKey: ["dashboard-profile-full", businessId],
@@ -32,6 +37,22 @@ function ProfilePage() {
       ).data,
   });
 
+  useEffect(() => {
+    if (full) setThumb(full.hero_image_url ?? null);
+  }, [full]);
+
+  async function saveThumb(path: string | null) {
+    setThumb(path);
+    if (!businessId) return;
+    setStatus("Saving…");
+    const { error } = await supabase
+      .from("businesses")
+      .update({ hero_image_url: path })
+      .eq("id", businessId);
+    setStatus(error ? error.message : "Thumbnail updated — it now shows on your listing card.");
+    if (!error) await queryClient.invalidateQueries({ queryKey: ["dashboard-profile-full", businessId] });
+  }
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -43,6 +64,25 @@ function ProfilePage() {
           Edit profile & media
         </Link>
       </div>
+
+      {businessId && (
+        <div className="mt-6">
+          <p className="text-sm font-medium">Listing thumbnail</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            This image is the cover on your card in browse & search results, and the hero on your
+            own page. Landscape works best.
+          </p>
+          <div className="mt-4">
+            <MediaUploader
+              businessId={businessId}
+              kind="hero"
+              value={thumb}
+              onChange={(path) => void saveThumb(path)}
+            />
+          </div>
+          {status && <p className="mt-2 text-xs text-muted-foreground">{status}</p>}
+        </div>
+      )}
 
       {full && (
         <div className="surface-card mt-6 space-y-4 p-6 text-sm">

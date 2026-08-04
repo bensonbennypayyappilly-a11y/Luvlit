@@ -4,7 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 export const MEDIA_BUCKET = "business-media";
 
 export const MEDIA_LIMITS = {
-  hero: { maxBytes: 10 * 1024 * 1024, maxSeconds: 0, accept: "image/*", label: "Hero image" },
+  hero: {
+    maxBytes: 10 * 1024 * 1024,
+    maxSeconds: 0,
+    accept: "image/*",
+    label: "Listing thumbnail & page hero",
+  },
   short: {
     maxBytes: 50 * 1024 * 1024,
     maxSeconds: 60,
