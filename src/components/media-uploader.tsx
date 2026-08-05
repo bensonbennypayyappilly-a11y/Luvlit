@@ -4,11 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 export const MEDIA_BUCKET = "business-media";
 
 export const MEDIA_LIMITS = {
+  logo: {
+    maxBytes: 2 * 1024 * 1024,
+    maxSeconds: 0,
+    accept: "image/*",
+    label: "Business logo (small image, max 2MB)",
+  },
   hero: {
-    maxBytes: 10 * 1024 * 1024,
+    maxBytes: 20 * 1024 * 1024,
     maxSeconds: 0,
     accept: "image/*",
     label: "Listing thumbnail & page hero",
+  },
+  gallery: {
+    maxBytes: 10 * 1024 * 1024,
+    maxSeconds: 0,
+    accept: "image/*",
+    label: "Gallery photo",
   },
   short: {
     maxBytes: 50 * 1024 * 1024,
@@ -17,10 +29,10 @@ export const MEDIA_LIMITS = {
     label: "Short video (max 60s)",
   },
   main: {
-    maxBytes: 150 * 1024 * 1024,
+    maxBytes: 20 * 1024 * 1024,
     maxSeconds: 180,
     accept: "video/*",
-    label: "Main video (max 3 min)",
+    label: "Main video (max 20MB)",
   },
 } as const;
 
