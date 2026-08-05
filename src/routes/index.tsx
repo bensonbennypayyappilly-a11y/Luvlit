@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { BusinessCard } from "@/components/business-card";
 import { FaqSection } from "@/components/faq-section";
 import { Reveal } from "@/components/reveal";
-import { AmbientHeroVideo, HeroVideoModal } from "@/components/hero-video";
+import heroImage from "@/assets/luvlit-hero.jpg";
 import { getCategories, getBusinesses, getCities } from "@/lib/public.functions";
 import type { CategoryRow, CityRow, PublicBusiness } from "@/lib/public.types";
 
@@ -90,7 +90,7 @@ function Index() {
         {/* Cinematic hero */}
         <section className="relative isolate overflow-hidden">
           <div className="absolute inset-0 -z-10 bg-primary">
-            <AmbientHeroVideo className="ken-burns hidden h-full w-full object-cover md:block" />
+            <img src={heroImage} alt="Indian small-business artisans on LuvLit" width={1920} height={1088} className="h-full w-full object-cover grayscale" />
             <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/60 to-background" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,transparent,oklch(0.221_0.006_56/0.55))]" />
           </div>
@@ -369,7 +369,6 @@ function Index() {
       </main>
 
       <SiteFooter />
-      <HeroVideoModal open={videoOpen} onClose={() => setVideoOpen(false)} />
     </div>
   );
 }
