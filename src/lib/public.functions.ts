@@ -119,9 +119,12 @@ export const getBusinessById = createServerFn({ method: "GET" })
     const b = business as unknown as Record<string, unknown>;
     const paths: string[] = [];
     if (isPath(b.hero_image_url)) paths.push(b.hero_image_url);
+    if (isPath(b.logo_url)) paths.push(b.logo_url);
     if (isPath(b.main_video_url)) paths.push(b.main_video_url);
     const shorts = Array.isArray(b.short_video_urls) ? (b.short_video_urls as string[]) : [];
     for (const s of shorts) if (isPath(s)) paths.push(s);
+    const gallery = Array.isArray(b.gallery_urls) ? (b.gallery_urls as string[]) : [];
+    for (const g of gallery) if (isPath(g)) paths.push(g);
 
     if (paths.length) {
       const { data: signed } = await client.storage
@@ -132,8 +135,10 @@ export const getBusinessById = createServerFn({ method: "GET" })
         if (s.path && s.signedUrl) map.set(s.path, s.signedUrl);
       });
       if (isPath(b.hero_image_url)) b.hero_image_url = map.get(b.hero_image_url) ?? b.hero_image_url;
+      if (isPath(b.logo_url)) b.logo_url = map.get(b.logo_url) ?? b.logo_url;
       if (isPath(b.main_video_url)) b.main_video_url = map.get(b.main_video_url) ?? b.main_video_url;
       if (shorts.length) b.short_video_urls = shorts.map((s) => (isPath(s) ? map.get(s) ?? s : s));
+      if (gallery.length) b.gallery_urls = gallery.map((g) => (isPath(g) ? map.get(g) ?? g : g));
     }
 
     return b as unknown as BusinessDetail;
