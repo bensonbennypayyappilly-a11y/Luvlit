@@ -78,18 +78,24 @@ export function BookingWidget({ businessId, accent }: { businessId: string; acce
         ))}
       </select>
       <div className="flex flex-wrap gap-2">
-        {openSlots.map((s) => (
-          <button
-            type="button"
-            key={s.id}
-            onClick={() => setSlotId(s.id)}
-            className={`rounded-md border px-3 py-2 text-xs ${
-              slotId === s.id ? "border-accent bg-accent-soft" : "border-border"
-            }`}
-          >
-            {s.date} · {String(s.start_time).slice(0, 5)}
-          </button>
-        ))}
+        {openSlots.map((s) => {
+          const remaining = Math.max(0, (s.capacity ?? 1) - (s.booked_count ?? 0));
+          return (
+            <button
+              type="button"
+              key={s.id}
+              onClick={() => setSlotId(s.id)}
+              className={`rounded-md border px-3 py-2 text-xs ${
+                slotId === s.id ? "border-accent bg-accent-soft" : "border-border"
+              }`}
+            >
+              {s.date} · {String(s.start_time).slice(0, 5)}
+              <span className="ml-1 text-muted-foreground">
+                · {remaining} left
+              </span>
+            </button>
+          );
+        })}
         {openSlots.length === 0 && (
           <p className="text-sm text-muted-foreground">No open slots right now.</p>
         )}

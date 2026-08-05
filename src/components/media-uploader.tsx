@@ -4,11 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 export const MEDIA_BUCKET = "business-media";
 
 export const MEDIA_LIMITS = {
+  logo: {
+    maxBytes: 2 * 1024 * 1024,
+    maxSeconds: 0,
+    accept: "image/*",
+    label: "Business logo (small image, max 2MB)",
+  },
   hero: {
-    maxBytes: 10 * 1024 * 1024,
+    maxBytes: 20 * 1024 * 1024,
     maxSeconds: 0,
     accept: "image/*",
     label: "Listing thumbnail & page hero",
+  },
+  gallery: {
+    maxBytes: 10 * 1024 * 1024,
+    maxSeconds: 0,
+    accept: "image/*",
+    label: "Gallery photo",
   },
   short: {
     maxBytes: 50 * 1024 * 1024,
@@ -17,10 +29,10 @@ export const MEDIA_LIMITS = {
     label: "Short video (max 60s)",
   },
   main: {
-    maxBytes: 150 * 1024 * 1024,
+    maxBytes: 20 * 1024 * 1024,
     maxSeconds: 180,
     accept: "video/*",
-    label: "Main video (max 3 min)",
+    label: "Main video (max 20MB)",
   },
 } as const;
 
@@ -63,22 +75,50 @@ function readDuration(file: File) {
   });
 }
 
+const IMAGE_KINDS: MediaKind[] = ["logo", "hero", "gallery"];
+
+/** Downscale + re-encode large images in the browser so we never upload raw 20MB JPEGs. */
+async function compressImage(file: File, maxEdge: number, quality = 0.82): Promise<File> {
+  if (!file.type.startsWith("image/") || file.type === "image/gif") return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1 && file.size < 1_200_000) return file;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", quality));
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}
+
 type Props = {
   businessId: string;
   kind: MediaKind;
   value: string | null;
   onChange: (path: string | null) => void;
+  label?: string;
 };
 
-export function MediaUploader({ businessId, kind, value, onChange }: Props) {
+export function MediaUploader({ businessId, kind, value, onChange, label }: Props) {
   const limits = MEDIA_LIMITS[kind];
   const previewUrl = useMediaUrl(value);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
 
   const upload = useCallback(
-    async (file: File) => {
+    async (input: File) => {
       setError(null);
+      let file = input;
+      if (IMAGE_KINDS.includes(kind)) {
+        file = await compressImage(input, kind === "logo" ? 600 : 2200);
+      }
       if (file.size > limits.maxBytes) {
         return setError(
           `That file is ${(file.size / 1024 / 1024).toFixed(1)}MB — the limit is ${
@@ -116,7 +156,7 @@ export function MediaUploader({ businessId, kind, value, onChange }: Props) {
   return (
     <div className="rounded-lg border border-border bg-card p-5">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm font-medium">{limits.label}</p>
+        <p className="text-sm font-medium">{label ?? limits.label}</p>
         {value && (
           <button
             type="button"
@@ -130,8 +170,16 @@ export function MediaUploader({ businessId, kind, value, onChange }: Props) {
 
       {previewUrl && (
         <div className="mt-4 overflow-hidden rounded-md border border-border">
-          {kind === "hero" ? (
-            <img src={previewUrl} alt="Uploaded preview" className="h-44 w-full object-cover" />
+          {IMAGE_KINDS.includes(kind) ? (
+            <img
+              src={previewUrl}
+              alt="Uploaded preview"
+              className={
+                kind === "logo"
+                  ? "h-24 w-24 rounded-md object-contain p-2"
+                  : "h-44 w-full object-cover"
+              }
+            />
           ) : (
             <video src={previewUrl} controls className="h-44 w-full bg-black object-contain" />
           )}

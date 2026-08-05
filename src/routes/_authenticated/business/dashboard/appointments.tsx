@@ -22,7 +22,7 @@ type BookingRow = {
   customer_phone: string;
   status: string;
   slot_id: string;
-  slots: { id: string; date: string; start_time: string; staff_id: string; staff: { id: string; name: string } | null } | null;
+  slots: { id: string; date: string; start_time: string; staff_id: string; capacity: number; booked_count: number; staff: { id: string; name: string } | null } | null;
 };
 
 function AppointmentsPage() {
@@ -47,7 +47,7 @@ function AppointmentsPage() {
       if (!staffIds.length) return [] as BookingRow[];
       const { data: slots } = await supabase
         .from("slots")
-        .select("id,date,start_time,staff_id")
+        .select("id,date,start_time,staff_id,capacity,booked_count")
         .in("staff_id", staffIds);
       const slotMap = new Map((slots ?? []).map((s) => [s.id, s]));
       const slotIds = (slots ?? []).map((s) => s.id);
@@ -126,6 +126,9 @@ function AppointmentsPage() {
                     <p className="font-medium">{b.slots?.start_time?.slice(0, 5)} · {b.customer_name}</p>
                     <p className="text-muted-foreground">
                       {b.customer_phone} · {b.slots?.staff?.name ?? "—"}
+                      {b.slots && (
+                        <> · {b.slots.booked_count} of {b.slots.capacity} booked</>
+                      )}
                     </p>
                   </div>
                   <span className="rounded-full border border-border px-3 py-1 text-xs capitalize text-muted-foreground">

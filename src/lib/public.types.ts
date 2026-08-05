@@ -7,6 +7,7 @@ export type PublicBusiness = {
   name: string;
   description: string | null;
   hero_image_url: string | null;
+  logo_url: string | null;
   categories: string[];
   business_types: string[];
   is_eco_friendly: boolean;
@@ -44,6 +45,8 @@ export type BusinessDetail = {
   whatsapp: string | null;
   contact_email: string | null;
   hero_image_url: string | null;
+  logo_url: string | null;
+  gallery_urls: string[];
   main_video_url: string | null;
   short_video_urls: string[];
   brand_accent_color: string | null;
@@ -69,5 +72,26 @@ export type PublicInfluencer = {
 
 export type StaffAvailability = {
   staff: { id: string; name: string; specializations: string[] }[];
-  slots: { id: string; staff_id: string; date: string; start_time: string; status: string }[];
+  slots: {
+    id: string;
+    staff_id: string;
+    date: string;
+    start_time: string;
+    status: string;
+    capacity: number;
+    booked_count: number;
+  }[];
+};
+
+export type PublicEvent = {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  city: string | null;
+  address: string | null;
+  start_date: string;
+  end_date: string | null;
+  image_urls: string[];
+  is_featured: boolean;
 };
