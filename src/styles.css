@@ -241,15 +241,23 @@
 @utility shimmer-text {
   background: linear-gradient(
     90deg,
-    var(--color-accent) 0%,
-    color-mix(in oklab, var(--color-accent) 40%, white) 50%,
-    var(--color-accent) 100%
+    var(--color-foreground) 0%,
+    color-mix(in oklab, var(--color-foreground) 35%, var(--color-background)) 50%,
+    var(--color-foreground) 100%
   );
   background-size: 200% 100%;
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
   animation: luv-shimmer 6s linear infinite;
+}
+
+/* Large full-width search pill used on the homepage + browse */
+@utility search-pill {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  box-shadow: 0 12px 40px -18px oklch(0 0 0 / 0.35);
 }
 
 @media (prefers-reduced-motion: reduce) {
