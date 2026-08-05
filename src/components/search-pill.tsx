@@ -10,14 +10,21 @@ import type { CategoryRow } from "@/lib/public.types";
  */
 export function SearchPill({
   categories = [],
-  defaultCity = "",
+  city: controlledCity,
+  onCityChange,
 }: {
   categories?: CategoryRow[];
-  defaultCity?: string;
+  city?: string;
+  onCityChange?: (city: string) => void;
 }) {
   const cities = useCities();
   const navigate = useNavigate();
-  const [city, setCity] = useState(defaultCity);
+  const [internalCity, setInternalCity] = useState(controlledCity ?? "");
+  const city = controlledCity ?? internalCity;
+  const setCity = (value: string) => {
+    setInternalCity(value);
+    onCityChange?.(value);
+  };
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
   const [openNow, setOpenNow] = useState(false);

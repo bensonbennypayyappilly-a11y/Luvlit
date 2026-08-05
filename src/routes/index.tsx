@@ -126,7 +126,7 @@ function Index() {
             </p>
 
             <div className="rise-in mt-10" style={{ animationDelay: "360ms" }}>
-              <SearchPill categories={categories} defaultCity={city} />
+              <SearchPill categories={categories} city={city} onCityChange={setCity} />
             </div>
 
             <div
