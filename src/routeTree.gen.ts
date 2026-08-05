@@ -21,9 +21,11 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as InfluencerIndexRouteImport } from './routes/influencer.index'
+import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as BrowseIndexRouteImport } from './routes/browse.index'
 import { Route as InfluencerStatusRouteImport } from './routes/influencer.status'
 import { Route as InfluencerOnboardingRouteImport } from './routes/influencer.onboarding'
+import { Route as EventsIdRouteImport } from './routes/events.$id'
 import { Route as BusinessIdRouteImport } from './routes/business.$id'
 import { Route as BrowseCategoryRouteImport } from './routes/browse.$category'
 import { Route as AuthenticatedPostRequirementRouteImport } from './routes/_authenticated/post-requirement'
@@ -111,6 +113,11 @@ const InfluencerIndexRoute = InfluencerIndexRouteImport.update({
   path: '/influencer/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsIndexRoute = EventsIndexRouteImport.update({
+  id: '/events/',
+  path: '/events/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrowseIndexRoute = BrowseIndexRouteImport.update({
   id: '/browse/',
   path: '/browse/',
@@ -124,6 +131,11 @@ const InfluencerStatusRoute = InfluencerStatusRouteImport.update({
 const InfluencerOnboardingRoute = InfluencerOnboardingRouteImport.update({
   id: '/influencer/onboarding',
   path: '/influencer/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsIdRoute = EventsIdRouteImport.update({
+  id: '/events/$id',
+  path: '/events/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BusinessIdRoute = BusinessIdRouteImport.update({
@@ -301,9 +313,11 @@ export interface FileRoutesByFullPath {
   '/post-requirement': typeof AuthenticatedPostRequirementRoute
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
+  '/events/$id': typeof EventsIdRoute
   '/influencer/onboarding': typeof InfluencerOnboardingRoute
   '/influencer/status': typeof InfluencerStatusRoute
   '/browse/': typeof BrowseIndexRoute
+  '/events/': typeof EventsIndexRoute
   '/influencer/': typeof InfluencerIndexRoute
   '/business/dashboard': typeof AuthenticatedBusinessDashboardRouteRouteWithChildren
   '/admin/influencer-approvals': typeof AuthenticatedAdminInfluencerApprovalsRoute
@@ -342,9 +356,11 @@ export interface FileRoutesByTo {
   '/post-requirement': typeof AuthenticatedPostRequirementRoute
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
+  '/events/$id': typeof EventsIdRoute
   '/influencer/onboarding': typeof InfluencerOnboardingRoute
   '/influencer/status': typeof InfluencerStatusRoute
   '/browse': typeof BrowseIndexRoute
+  '/events': typeof EventsIndexRoute
   '/influencer': typeof InfluencerIndexRoute
   '/admin/influencer-approvals': typeof AuthenticatedAdminInfluencerApprovalsRoute
   '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
@@ -386,9 +402,11 @@ export interface FileRoutesById {
   '/_authenticated/post-requirement': typeof AuthenticatedPostRequirementRoute
   '/browse/$category': typeof BrowseCategoryRoute
   '/business/$id': typeof BusinessIdRoute
+  '/events/$id': typeof EventsIdRoute
   '/influencer/onboarding': typeof InfluencerOnboardingRoute
   '/influencer/status': typeof InfluencerStatusRoute
   '/browse/': typeof BrowseIndexRoute
+  '/events/': typeof EventsIndexRoute
   '/influencer/': typeof InfluencerIndexRoute
   '/_authenticated/business/dashboard': typeof AuthenticatedBusinessDashboardRouteRouteWithChildren
   '/_authenticated/admin/influencer-approvals': typeof AuthenticatedAdminInfluencerApprovalsRoute
@@ -431,9 +449,11 @@ export interface FileRouteTypes {
     | '/post-requirement'
     | '/browse/$category'
     | '/business/$id'
+    | '/events/$id'
     | '/influencer/onboarding'
     | '/influencer/status'
     | '/browse/'
+    | '/events/'
     | '/influencer/'
     | '/business/dashboard'
     | '/admin/influencer-approvals'
@@ -472,9 +492,11 @@ export interface FileRouteTypes {
     | '/post-requirement'
     | '/browse/$category'
     | '/business/$id'
+    | '/events/$id'
     | '/influencer/onboarding'
     | '/influencer/status'
     | '/browse'
+    | '/events'
     | '/influencer'
     | '/admin/influencer-approvals'
     | '/business/onboarding'
@@ -515,9 +537,11 @@ export interface FileRouteTypes {
     | '/_authenticated/post-requirement'
     | '/browse/$category'
     | '/business/$id'
+    | '/events/$id'
     | '/influencer/onboarding'
     | '/influencer/status'
     | '/browse/'
+    | '/events/'
     | '/influencer/'
     | '/_authenticated/business/dashboard'
     | '/_authenticated/admin/influencer-approvals'
@@ -557,9 +581,11 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   BrowseCategoryRoute: typeof BrowseCategoryRoute
   BusinessIdRoute: typeof BusinessIdRoute
+  EventsIdRoute: typeof EventsIdRoute
   InfluencerOnboardingRoute: typeof InfluencerOnboardingRoute
   InfluencerStatusRoute: typeof InfluencerStatusRoute
   BrowseIndexRoute: typeof BrowseIndexRoute
+  EventsIndexRoute: typeof EventsIndexRoute
   InfluencerIndexRoute: typeof InfluencerIndexRoute
 }
 
@@ -649,6 +675,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InfluencerIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/': {
+      id: '/events/'
+      path: '/events'
+      fullPath: '/events/'
+      preLoaderRoute: typeof EventsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/browse/': {
       id: '/browse/'
       path: '/browse'
@@ -668,6 +701,13 @@ declare module '@tanstack/react-router' {
       path: '/influencer/onboarding'
       fullPath: '/influencer/onboarding'
       preLoaderRoute: typeof InfluencerOnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/$id': {
+      id: '/events/$id'
+      path: '/events/$id'
+      fullPath: '/events/$id'
+      preLoaderRoute: typeof EventsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/business/$id': {
@@ -985,9 +1025,11 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   BrowseCategoryRoute: BrowseCategoryRoute,
   BusinessIdRoute: BusinessIdRoute,
+  EventsIdRoute: EventsIdRoute,
   InfluencerOnboardingRoute: InfluencerOnboardingRoute,
   InfluencerStatusRoute: InfluencerStatusRoute,
   BrowseIndexRoute: BrowseIndexRoute,
+  EventsIndexRoute: EventsIndexRoute,
   InfluencerIndexRoute: InfluencerIndexRoute,
 }
 export const routeTree = rootRouteImport
