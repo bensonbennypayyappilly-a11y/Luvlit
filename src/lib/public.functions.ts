@@ -71,7 +71,10 @@ export const getBusinesses = createServerFn({ method: "GET" })
     // Thumbnails live in a private bucket as object paths; resolve them to signed URLs.
     const isPath = (v: unknown): v is string =>
       typeof v === "string" && v.length > 0 && !/^https?:\/\//i.test(v);
-    const thumbPaths = rows.map((b) => b.hero_image_url).filter(isPath);
+    const thumbPaths = [
+      ...rows.map((b) => b.hero_image_url),
+      ...rows.map((b) => b.logo_url),
+    ].filter(isPath);
     const signedMap = new Map<string, string>();
     if (thumbPaths.length) {
       const { data: signed } = await publicClient()
@@ -81,13 +84,14 @@ export const getBusinesses = createServerFn({ method: "GET" })
         if (s.path && s.signedUrl) signedMap.set(s.path, s.signedUrl);
       });
     }
+    const resolve = (v: string | null | undefined) =>
+      isPath(v) ? signedMap.get(v) ?? null : v ?? null;
 
     return rows
       .map((b) => ({
         ...b,
-        hero_image_url: isPath(b.hero_image_url)
-          ? signedMap.get(b.hero_image_url) ?? null
-          : b.hero_image_url ?? null,
+        hero_image_url: resolve(b.hero_image_url),
+        logo_url: resolve(b.logo_url),
         featured: (b.featured_placements ?? []).some(
           (f) => f.end_date >= today && (f.scope === "all_india" || (!!city && f.city === city)),
         ),
