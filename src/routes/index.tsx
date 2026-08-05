@@ -69,7 +69,6 @@ function Index() {
   };
   const [city, setCity] = useState("");
   const [q, setQ] = useState("");
-  const [videoOpen, setVideoOpen] = useState(false);
   const featuredList = featured.filter((b) => b.featured).slice(0, 6);
   const recent = featured.slice(0, 6);
   const place = city || "India";
@@ -152,16 +151,6 @@ function Index() {
               className="rise-in mt-8 flex flex-wrap items-center gap-4"
               style={{ animationDelay: "460ms" }}
             >
-              <button
-                type="button"
-                onClick={() => setVideoOpen(true)}
-                className="group flex items-center gap-3 rounded-full border border-background/40 py-2 pl-2 pr-6 text-sm text-background transition-colors hover:border-background"
-              >
-                <span className="float-slow flex h-10 w-10 items-center justify-center rounded-full bg-accent text-accent-foreground transition-transform group-hover:scale-110">
-                  ▶
-                </span>
-                Watch the LuvLit film
-              </button>
               <Link
                 to="/auth"
                 search={{ role: "business" }}
