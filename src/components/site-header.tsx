@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useAccount } from "@/hooks/use-session";
+import { useQuery } from "@tanstack/react-query";
+import { useAccount, useSession } from "@/hooks/use-session";
 import { AccountMenu } from "@/components/account-menu";
+import { LuvLitLogo } from "@/components/luvlit-logo";
+import { supabase } from "@/integrations/supabase/client";
 
 type NavItem = { label: string; to: string };
-
-const loggedOutItems: NavItem[] = [
-  { label: "Browse", to: "/browse" },
-  { label: "Are you an influencer?", to: "/influencer" },
-  { label: "Post a Requirement", to: "/post-requirement" },
-];
 
 const businessItems: NavItem[] = [
   { label: "Dashboard", to: "/business/dashboard" },
@@ -56,11 +53,33 @@ function NavLink({ item }: { item: NavItem }) {
   );
 }
 
+/** Looks up whether the signed-in user has an organizer profile, to route "Post an event" correctly. */
+function useOrganizerLink(): string {
+  const { user } = useSession();
+  const { data } = useQuery({
+    queryKey: ["organizer-profile", user?.id ?? null],
+    enabled: !!user,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("organizer_profiles")
+        .select("id")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) return null;
+      return data;
+    },
+  });
+  if (!user) return "/organizer/onboarding";
+  return data ? "/organizer/dashboard" : "/organizer/onboarding";
+}
+
 export function SiteHeader() {
   const { loading, role, displayName, businessName } = useAccount();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const organizerLink = useOrganizerLink();
 
-  const items = loading
+  const roleItems = loading
     ? []
     : role === "business"
       ? businessItems
@@ -68,7 +87,13 @@ export function SiteHeader() {
         ? customerItems
         : role === "influencer"
           ? influencerItems
-          : loggedOutItems;
+          : [
+              { label: "Browse", to: "/browse" },
+              { label: "Are you an influencer?", to: "/influencer" },
+              { label: "Post a Requirement", to: "/post-requirement" },
+            ];
+
+  const items: NavItem[] = [...roleItems, { label: "Post an event", to: organizerLink }];
 
   const accountLabel =
     role === "business" ? businessName ?? "Your business" : displayName ?? "Account";
@@ -76,8 +101,9 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6">
-        <Link to="/" className="font-serif text-2xl tracking-editorial text-primary">
-          LuvLit
+        <Link to="/" className="flex items-center gap-2.5 text-primary">
+          <LuvLitLogo className="h-8 w-8" />
+          <span className="font-serif text-2xl tracking-editorial">LuvLit</span>
         </Link>
 
         <nav className="hidden items-center gap-9 md:flex">
