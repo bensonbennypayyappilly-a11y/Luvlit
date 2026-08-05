@@ -21,7 +21,16 @@ export const Route = createFileRoute("/_authenticated/business/dashboard/staff")
 });
 
 type DayHours = { start: string; end: string } | null;
-type WorkingHours = Record<string, DayHours> & { _capacity?: number };
+type WorkingHours = {
+  mon: DayHours;
+  tue: DayHours;
+  wed: DayHours;
+  thu: DayHours;
+  fri: DayHours;
+  sat: DayHours;
+  sun: DayHours;
+  _capacity?: number;
+} & Record<string, DayHours | number | undefined>;
 
 type Staff = {
   id: string;
@@ -173,7 +182,7 @@ function StaffPage() {
 
   function updateDay(key: string, patch: Partial<{ enabled: boolean; start: string; end: string }>) {
     if (!editDraft) return;
-    const current = editDraft.hours[key];
+    const current = editDraft.hours[key] as DayHours;
     let next: DayHours;
     if (patch.enabled === false) {
       next = null;
@@ -204,7 +213,7 @@ function StaffPage() {
         const date = new Date();
         date.setDate(date.getDate() + day);
         const dayKey = dayIndexToKey[date.getDay()];
-        const dayHours = hours[dayKey];
+        const dayHours = hours[dayKey] as DayHours;
         if (!dayHours) continue;
         const iso = date.toISOString().slice(0, 10);
         const [sh, sm] = dayHours.start.split(":").map(Number);
