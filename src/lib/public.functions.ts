@@ -47,7 +47,7 @@ export const getBusinesses = createServerFn({ method: "GET" })
     const { data, error } = await publicClient()
       .from("businesses")
       .select(
-        "id,name,description,hero_image_url,categories,business_types,is_eco_friendly,brand_accent_color,locations(city,state,is_primary),delivery_areas(city,is_pan_india),featured_placements(scope,city,end_date)",
+        "id,name,description,hero_image_url,logo_url,categories,business_types,is_eco_friendly,brand_accent_color,locations(city,state,is_primary),delivery_areas(city,is_pan_india),featured_placements(scope,city,end_date)",
       )
       .eq("is_live", true)
       .order("created_at", { ascending: false });
