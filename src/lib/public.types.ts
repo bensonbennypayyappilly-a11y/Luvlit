@@ -7,6 +7,7 @@ export type PublicBusiness = {
   name: string;
   description: string | null;
   hero_image_url: string | null;
+  logo_url: string | null;
   categories: string[];
   business_types: string[];
   is_eco_friendly: boolean;
