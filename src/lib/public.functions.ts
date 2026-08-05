@@ -182,7 +182,7 @@ export const getStaffAvailability = createServerFn({ method: "GET" })
     if (!ids.length) return { staff: [], slots: [] };
     const { data: slots } = await client
       .from("slots")
-      .select("id,staff_id,date,start_time,status")
+      .select("id,staff_id,date,start_time,status,capacity,booked_count")
       .in("staff_id", ids)
       .eq("status", "open")
       .gte("date", new Date().toISOString().slice(0, 10))
@@ -191,8 +191,29 @@ export const getStaffAvailability = createServerFn({ method: "GET" })
       .limit(600);
     return {
       staff: (staff ?? []) as StaffAvailability["staff"],
-      slots: (slots ?? []) as StaffAvailability["slots"],
+      slots: ((slots ?? []) as StaffAvailability["slots"]).filter(
+        (s) => s.booked_count < s.capacity,
+      ),
     };
+  });
+
+/** Published events, optionally scoped to a city. Used by the homepage + events pages. */
+export const getEvents = createServerFn({ method: "GET" })
+  .inputValidator((input: { city?: string; limit?: number } | undefined) => input ?? {})
+  .handler(async ({ data: filters }): Promise<PublicEvent[]> => {
+    const { publicClient } = await import("./supabase-public.server");
+    let query = publicClient()
+      .from("events")
+      .select("id,title,description,category,city,address,start_date,end_date,image_urls,is_featured")
+      .eq("status", "published")
+      .gte("start_date", new Date().toISOString())
+      .order("is_featured", { ascending: false })
+      .order("start_date", { ascending: true })
+      .limit(filters.limit ?? 12);
+    if (filters.city) query = query.eq("city", filters.city);
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+    return (data ?? []) as PublicEvent[];
   });
 
 /** Public influencer application status lookup by the email/phone used to apply. */
