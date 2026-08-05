@@ -6,11 +6,11 @@ export function EcoBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary-soft/50 px-2.5 py-1 text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-primary",
+        "inline-flex items-center gap-1.5 rounded-full border border-border bg-transparent px-2.5 py-1 text-[0.6875rem] font-medium uppercase tracking-[0.12em] text-muted-foreground",
         className,
       )}
     >
-      <Leaf className="size-3" strokeWidth={1.75} aria-hidden />
+      <Leaf className="size-3 text-accent" strokeWidth={1.75} aria-hidden />
       Eco-friendly
     </span>
   );

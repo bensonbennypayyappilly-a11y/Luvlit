@@ -8,6 +8,7 @@ export type BusinessCardData = {
   categories: string[] | null;
   is_eco_friendly: boolean | null;
   hero_image_url?: string | null;
+  logo_url?: string | null;
   locations?: { city: string | null }[] | null;
   featured?: boolean;
 };
@@ -22,21 +23,37 @@ function initials(name: string) {
 }
 
 export function BusinessCard({ business }: { business: BusinessCardData }) {
-  const city = business.locations?.[0]?.city;
+  const cities = Array.from(
+    new Set((business.locations ?? []).map((l) => l.city).filter((c): c is string => !!c)),
+  );
+  const city = cities[0];
+  const moreCities = cities.length - 1;
+  const hasHero = !!business.hero_image_url;
+  const hasLogo = !!business.logo_url;
+
   return (
     <Link
       to="/business/$id"
       params={{ id: business.id }}
-      className="surface-card group flex flex-col overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-24px_oklch(0.221_0.006_56/0.45)]"
+      className="surface-card group flex aspect-square flex-col overflow-hidden rounded-3xl transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-24px_oklch(0.221_0.006_56/0.45)]"
     >
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-secondary">
-        {business.hero_image_url ? (
+      <div className="relative h-1/2 w-full shrink-0 overflow-hidden bg-secondary">
+        {hasHero ? (
           <img
-            src={business.hero_image_url}
+            src={business.hero_image_url!}
             alt={business.name}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.06]"
           />
+        ) : hasLogo ? (
+          <div className="flex h-full w-full items-center justify-center bg-secondary">
+            <img
+              src={business.logo_url!}
+              alt={business.name}
+              loading="lazy"
+              className="max-h-[60%] max-w-[60%] object-contain"
+            />
+          </div>
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-primary-soft">
             <span className="font-serif text-4xl text-primary/70">{initials(business.name)}</span>
@@ -44,19 +61,33 @@ export function BusinessCard({ business }: { business: BusinessCardData }) {
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-foreground/45 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
         {business.featured && (
-          <span className="absolute left-3 top-3 rounded-full bg-accent px-3 py-1 text-[0.625rem] font-medium uppercase tracking-[0.16em] text-accent-foreground shadow-sm">
+          <span className="absolute right-3 top-3 rounded-full bg-accent px-3 py-1 text-[0.625rem] font-medium uppercase tracking-[0.16em] text-accent-foreground shadow-sm">
             Featured
           </span>
         )}
+        {hasHero && hasLogo && (
+          <div className="absolute bottom-3 left-3 flex size-11 items-center justify-center overflow-hidden rounded-xl border border-border bg-card p-1.5 shadow-sm">
+            <img src={business.logo_url!} alt="" className="h-full w-full object-contain" />
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-1 flex-col p-6">
-        <h3 className="text-xl transition-colors group-hover:text-primary">{business.name}</h3>
-        {city && <p className="mt-1.5 text-sm text-muted-foreground">{city}</p>}
-        {business.description && (
-          <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{business.description}</p>
+      <div className="flex h-1/2 flex-col p-5">
+        <h3 className="truncate text-lg transition-colors group-hover:text-primary">{business.name}</h3>
+        {(city || moreCities > 0) && (
+          <div className="mt-1.5 flex items-center gap-2">
+            {city && <p className="truncate text-sm text-muted-foreground">{city}</p>}
+            {moreCities > 0 && (
+              <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[0.625rem] uppercase tracking-[0.1em] text-muted-foreground">
+                +{moreCities} more {moreCities === 1 ? "city" : "cities"}
+              </span>
+            )}
+          </div>
         )}
-        <div className="mt-5 flex flex-wrap items-center gap-2 pt-1">
+        {business.description && (
+          <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{business.description}</p>
+        )}
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-3">
           {(business.categories ?? []).slice(0, 2).map((c) => (
             <span
               key={c}
