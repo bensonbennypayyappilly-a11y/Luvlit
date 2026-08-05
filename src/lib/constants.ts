@@ -54,16 +54,16 @@ export const BUSINESS_TYPES = [
 /** Categories where a sustainability question is meaningful. */
 export const ECO_CATEGORIES = ["Home Décor", "Handmade", "Fashion & Boutiques"];
 
-/** Curated accent colours, all pre-tested against the ivory base. */
+/** Curated accent colours, all pre-tested against the light warm-grey base. */
 export const ACCENT_COLORS = [
-  { name: "Forest", value: "#173D2E" },
-  { name: "Antique gold", value: "#B8935F" },
-  { name: "Terracotta", value: "#9C5B44" },
+  { name: "Charcoal", value: "#1C1917" },
+  { name: "Graphite", value: "#44403C" },
+  { name: "Stone", value: "#78716C" },
+  { name: "Forest", value: "#20463A" },
   { name: "Ink blue", value: "#26384F" },
   { name: "Plum", value: "#5A3350" },
-  { name: "Olive", value: "#5E6440" },
-  { name: "Clay", value: "#8A7461" },
-  { name: "Slate", value: "#3F4A48" },
+  { name: "Terracotta", value: "#9C5B44" },
+  { name: "Bronze", value: "#8A7461" },
 ];
 
 export const PLANS = {
@@ -74,3 +74,31 @@ export const PLANS = {
 
 /** Featured slots available per category + location combination. */
 export const FEATURED_CAP = 3;
+
+/** Featured event placement pricing (stored, not charged — billing isn't wired up yet). */
+export const EVENT_FEATURED_PRICING = { week: 100, month: 300 };
+
+export const EVENT_CATEGORIES = [
+  "Flea market",
+  "Pop-up shop",
+  "Craft fair",
+  "Food festival",
+  "Exhibition",
+  "Workshop",
+  "Music & culture",
+  "Other",
+];
+
+/** Days of the week used by staff working-hours editing. */
+export const WEEKDAYS = [
+  { key: "mon", label: "Monday" },
+  { key: "tue", label: "Tuesday" },
+  { key: "wed", label: "Wednesday" },
+  { key: "thu", label: "Thursday" },
+  { key: "fri", label: "Friday" },
+  { key: "sat", label: "Saturday" },
+  { key: "sun", label: "Sunday" },
+] as const;
+
+/** Max images in a business's standalone photo gallery. */
+export const GALLERY_MAX = 6;
