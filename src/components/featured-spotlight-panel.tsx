@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import type { PublicBusiness } from "@/lib/public.types";
 
 /**
