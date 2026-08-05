@@ -9,7 +9,7 @@ const NAV: { to: string; label: string; exact?: boolean }[] = [
   { to: "/business/dashboard/products", label: "Products" },
   { to: "/business/dashboard/leads", label: "Leads & Chats" },
   { to: "/business/dashboard/requirements", label: "Requirements" },
-  { to: "/business/dashboard/find-influencer", label: "Find an Influencer" },
+  { to: "/dashboard/find-influencer", label: "Find an Influencer" },
   { to: "/business/dashboard/profile", label: "Profile & Media" },
   { to: "/business/dashboard/featured", label: "Featured Placement" },
   { to: "/business/dashboard/billing", label: "Billing" },
