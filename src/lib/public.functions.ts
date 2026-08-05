@@ -4,6 +4,7 @@ import type {
   CategoryRow,
   CityRow,
   PublicBusiness,
+  PublicEvent,
   PublicInfluencer,
   StaffAvailability,
 } from "./public.types";
