@@ -31,6 +31,7 @@ import { Route as AuthenticatedDashboardRouteRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedOrganizerOnboardingRouteImport } from './routes/_authenticated/organizer/onboarding'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard/settings'
 import { Route as AuthenticatedDashboardSavedRouteImport } from './routes/_authenticated/dashboard/saved'
 import { Route as AuthenticatedDashboardRequirementsRouteImport } from './routes/_authenticated/dashboard/requirements'
@@ -162,6 +163,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedOrganizerOnboardingRoute =
+  AuthenticatedOrganizerOnboardingRouteImport.update({
+    id: '/organizer/onboarding',
+    path: '/organizer/onboarding',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardSettingsRoute =
   AuthenticatedDashboardSettingsRouteImport.update({
     id: '/settings',
@@ -300,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/requirements': typeof AuthenticatedDashboardRequirementsRoute
   '/dashboard/saved': typeof AuthenticatedDashboardSavedRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
+  '/organizer/onboarding': typeof AuthenticatedOrganizerOnboardingRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/business/dashboard/appointments': typeof AuthenticatedBusinessDashboardAppointmentsRoute
@@ -338,6 +346,7 @@ export interface FileRoutesByTo {
   '/dashboard/requirements': typeof AuthenticatedDashboardRequirementsRoute
   '/dashboard/saved': typeof AuthenticatedDashboardSavedRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
+  '/organizer/onboarding': typeof AuthenticatedOrganizerOnboardingRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/business/dashboard/appointments': typeof AuthenticatedBusinessDashboardAppointmentsRoute
@@ -381,6 +390,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/requirements': typeof AuthenticatedDashboardRequirementsRoute
   '/_authenticated/dashboard/saved': typeof AuthenticatedDashboardSavedRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
+  '/_authenticated/organizer/onboarding': typeof AuthenticatedOrganizerOnboardingRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/business/dashboard/appointments': typeof AuthenticatedBusinessDashboardAppointmentsRoute
@@ -424,6 +434,7 @@ export interface FileRouteTypes {
     | '/dashboard/requirements'
     | '/dashboard/saved'
     | '/dashboard/settings'
+    | '/organizer/onboarding'
     | '/admin/'
     | '/dashboard/'
     | '/business/dashboard/appointments'
@@ -462,6 +473,7 @@ export interface FileRouteTypes {
     | '/dashboard/requirements'
     | '/dashboard/saved'
     | '/dashboard/settings'
+    | '/organizer/onboarding'
     | '/admin'
     | '/dashboard'
     | '/business/dashboard/appointments'
@@ -504,6 +516,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/requirements'
     | '/_authenticated/dashboard/saved'
     | '/_authenticated/dashboard/settings'
+    | '/_authenticated/organizer/onboarding'
     | '/_authenticated/admin/'
     | '/_authenticated/dashboard/'
     | '/_authenticated/business/dashboard/appointments'
@@ -692,6 +705,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/organizer/onboarding': {
+      id: '/_authenticated/organizer/onboarding'
+      path: '/organizer/onboarding'
+      fullPath: '/organizer/onboarding'
+      preLoaderRoute: typeof AuthenticatedOrganizerOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard/settings': {
       id: '/_authenticated/dashboard/settings'
@@ -911,6 +931,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBusinessDashboardRouteRoute: typeof AuthenticatedBusinessDashboardRouteRouteWithChildren
   AuthenticatedBusinessOnboardingRoute: typeof AuthenticatedBusinessOnboardingRoute
   AuthenticatedBusinessSetupStaffRoute: typeof AuthenticatedBusinessSetupStaffRoute
+  AuthenticatedOrganizerOnboardingRoute: typeof AuthenticatedOrganizerOnboardingRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -922,6 +943,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedBusinessDashboardRouteRouteWithChildren,
   AuthenticatedBusinessOnboardingRoute: AuthenticatedBusinessOnboardingRoute,
   AuthenticatedBusinessSetupStaffRoute: AuthenticatedBusinessSetupStaffRoute,
+  AuthenticatedOrganizerOnboardingRoute: AuthenticatedOrganizerOnboardingRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
