@@ -5,9 +5,12 @@ import { SiteFooter } from "@/components/site-footer";
 import { BusinessCard } from "@/components/business-card";
 import { FaqSection } from "@/components/faq-section";
 import { Reveal } from "@/components/reveal";
-import heroImage from "@/assets/luvlit-hero.jpg";
+import { SearchPill } from "@/components/search-pill";
+import { FeaturedSpotlightPanel } from "@/components/featured-spotlight-panel";
+import { EventsSection } from "@/components/events-section";
 import { getCategories, getBusinesses, getCities } from "@/lib/public.functions";
 import type { CategoryRow, CityRow, PublicBusiness } from "@/lib/public.types";
+import heroImage from "@/assets/luvlit-hero.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -68,7 +71,7 @@ function Index() {
     cities: CityRow[];
   };
   const [city, setCity] = useState("");
-  const [q, setQ] = useState("");
+  const [spotlightOpen, setSpotlightOpen] = useState(false);
   const featuredList = featured.filter((b) => b.featured).slice(0, 6);
   const recent = featured.slice(0, 6);
   const place = city || "India";
@@ -86,12 +89,18 @@ function Index() {
       <SiteHeader />
 
       <main className="flex-1">
-        {/* Cinematic hero */}
+        {/* Editorial hero — static monochrome photograph */}
         <section className="relative isolate overflow-hidden">
           <div className="absolute inset-0 -z-10 bg-primary">
-            <img src={heroImage} alt="Indian small-business artisans on LuvLit" width={1920} height={1088} className="h-full w-full object-cover grayscale" />
-            <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/60 to-background" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,transparent,oklch(0.221_0.006_56/0.55))]" />
+            <img
+              src={heroImage}
+              alt=""
+              width={1920}
+              height={1088}
+              className="h-full w-full object-cover grayscale"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-foreground/75 via-foreground/55 to-background" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,transparent,oklch(0.15_0_0/0.5))]" />
           </div>
 
           <div className="mx-auto max-w-6xl px-6 pb-24 pt-28 md:pb-32 md:pt-40">
@@ -116,36 +125,9 @@ function Index() {
               appointment, request a quote, or find the right influencer for your brand.
             </p>
 
-            <form
-              className="rise-in mt-10 flex flex-col gap-3 rounded-xl border border-background/20 bg-background/95 p-3 shadow-2xl backdrop-blur sm:flex-row"
-              style={{ animationDelay: "360ms" }}
-              onSubmit={(e) => {
-                e.preventDefault();
-                window.location.href = `/browse?${new URLSearchParams({ city, q })}`;
-              }}
-            >
-              <select
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className="rounded-md border border-border bg-card px-4 py-3.5 text-sm transition-colors focus:border-accent focus:outline-none sm:w-52"
-                aria-label="Select your city"
-              >
-                <option value="">All of India</option>
-                {cities.map((c) => (
-                  <option key={c.id}>{c.name}</option>
-                ))}
-              </select>
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Try “block print saree”, “bakery”, “wedding photographer”…"
-                className="flex-1 rounded-md border border-border bg-card px-4 py-3.5 text-sm transition-colors focus:border-accent focus:outline-none"
-                aria-label="Search"
-              />
-              <button className="rounded-md bg-primary px-8 py-3.5 text-sm font-medium text-primary-foreground transition-all hover:scale-[1.02] hover:opacity-95 active:scale-100">
-                Search
-              </button>
-            </form>
+            <div className="rise-in mt-10" style={{ animationDelay: "360ms" }}>
+              <SearchPill categories={categories} defaultCity={city} />
+            </div>
 
             <div
               className="rise-in mt-8 flex flex-wrap items-center gap-4"
@@ -176,9 +158,17 @@ function Index() {
           </div>
         </section>
 
+        {/* Floating featured panel — expands the spotlight grid below */}
+        <FeaturedSpotlightPanel
+          businesses={featured}
+          city={city}
+          expanded={spotlightOpen}
+          onToggle={() => setSpotlightOpen((v) => !v)}
+        />
+
         {/* Scrolling category ribbon */}
         {categories.length > 0 && (
-          <section className="overflow-hidden border-y border-border bg-secondary/60 py-4">
+          <section className="mt-10 overflow-hidden border-y border-border bg-secondary/60 py-4">
             <div className="marquee-track gap-8 whitespace-nowrap">
               {marquee.map((c, i) => (
                 <span
@@ -217,7 +207,7 @@ function Index() {
                   to="/browse/$category"
                   params={{ category: category.name }}
                   search={city ? { city } : undefined}
-                  className="surface-card group relative block h-full overflow-hidden p-7 transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-28px_oklch(0.221_0.006_56/0.5)]"
+                  className="surface-card group relative block h-full overflow-hidden p-7 transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-28px_oklch(0_0_0/0.35)]"
                 >
                   <span className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-accent-soft opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                   <h3 className="relative text-xl">{category.name}</h3>
@@ -233,8 +223,8 @@ function Index() {
           </div>
         </section>
 
-        {/* Listings */}
-        {(featuredList.length > 0 || recent.length > 0) && (
+        {/* Listings — expanded by the floating spotlight panel above */}
+        {(featuredList.length > 0 || recent.length > 0) && spotlightOpen && (
           <section className="bg-secondary/40 py-20">
             <div className="mx-auto max-w-6xl px-6">
               <Reveal>
@@ -263,6 +253,8 @@ function Index() {
             </div>
           </section>
         )}
+
+        <EventsSection city={city || undefined} />
 
         {/* How it works */}
         <section className="mx-auto max-w-6xl px-6 py-24">
