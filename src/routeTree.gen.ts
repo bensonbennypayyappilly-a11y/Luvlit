@@ -41,6 +41,7 @@ import { Route as AuthenticatedBusinessOnboardingRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminInfluencerApprovalsRouteImport } from './routes/_authenticated/admin/influencer-approvals'
 import { Route as AuthenticatedBusinessDashboardRouteRouteImport } from './routes/_authenticated/business/dashboard/route'
 import { Route as AuthenticatedBusinessDashboardIndexRouteImport } from './routes/_authenticated/business/dashboard/index'
+import { Route as AuthenticatedBusinessDashboardStaffRouteImport } from './routes/_authenticated/business/dashboard/staff'
 import { Route as AuthenticatedBusinessDashboardRequirementsRouteImport } from './routes/_authenticated/business/dashboard/requirements'
 import { Route as AuthenticatedBusinessDashboardProfileRouteImport } from './routes/_authenticated/business/dashboard/profile'
 import { Route as AuthenticatedBusinessDashboardProductsRouteImport } from './routes/_authenticated/business/dashboard/products'
@@ -221,6 +222,12 @@ const AuthenticatedBusinessDashboardIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedBusinessDashboardRouteRoute,
   } as any)
+const AuthenticatedBusinessDashboardStaffRoute =
+  AuthenticatedBusinessDashboardStaffRouteImport.update({
+    id: '/staff',
+    path: '/staff',
+    getParentRoute: () => AuthenticatedBusinessDashboardRouteRoute,
+  } as any)
 const AuthenticatedBusinessDashboardRequirementsRoute =
   AuthenticatedBusinessDashboardRequirementsRouteImport.update({
     id: '/requirements',
@@ -302,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/business/dashboard/products': typeof AuthenticatedBusinessDashboardProductsRoute
   '/business/dashboard/profile': typeof AuthenticatedBusinessDashboardProfileRoute
   '/business/dashboard/requirements': typeof AuthenticatedBusinessDashboardRequirementsRoute
+  '/business/dashboard/staff': typeof AuthenticatedBusinessDashboardStaffRoute
   '/business/dashboard/': typeof AuthenticatedBusinessDashboardIndexRoute
 }
 export interface FileRoutesByTo {
@@ -339,6 +347,7 @@ export interface FileRoutesByTo {
   '/business/dashboard/products': typeof AuthenticatedBusinessDashboardProductsRoute
   '/business/dashboard/profile': typeof AuthenticatedBusinessDashboardProfileRoute
   '/business/dashboard/requirements': typeof AuthenticatedBusinessDashboardRequirementsRoute
+  '/business/dashboard/staff': typeof AuthenticatedBusinessDashboardStaffRoute
   '/business/dashboard': typeof AuthenticatedBusinessDashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -381,6 +390,7 @@ export interface FileRoutesById {
   '/_authenticated/business/dashboard/products': typeof AuthenticatedBusinessDashboardProductsRoute
   '/_authenticated/business/dashboard/profile': typeof AuthenticatedBusinessDashboardProfileRoute
   '/_authenticated/business/dashboard/requirements': typeof AuthenticatedBusinessDashboardRequirementsRoute
+  '/_authenticated/business/dashboard/staff': typeof AuthenticatedBusinessDashboardStaffRoute
   '/_authenticated/business/dashboard/': typeof AuthenticatedBusinessDashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -423,6 +433,7 @@ export interface FileRouteTypes {
     | '/business/dashboard/products'
     | '/business/dashboard/profile'
     | '/business/dashboard/requirements'
+    | '/business/dashboard/staff'
     | '/business/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -460,6 +471,7 @@ export interface FileRouteTypes {
     | '/business/dashboard/products'
     | '/business/dashboard/profile'
     | '/business/dashboard/requirements'
+    | '/business/dashboard/staff'
     | '/business/dashboard'
   id:
     | '__root__'
@@ -501,6 +513,7 @@ export interface FileRouteTypes {
     | '/_authenticated/business/dashboard/products'
     | '/_authenticated/business/dashboard/profile'
     | '/_authenticated/business/dashboard/requirements'
+    | '/_authenticated/business/dashboard/staff'
     | '/_authenticated/business/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -750,6 +763,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedBusinessDashboardRouteRoute
     }
+    '/_authenticated/business/dashboard/staff': {
+      id: '/_authenticated/business/dashboard/staff'
+      path: '/staff'
+      fullPath: '/business/dashboard/staff'
+      preLoaderRoute: typeof AuthenticatedBusinessDashboardStaffRouteImport
+      parentRoute: typeof AuthenticatedBusinessDashboardRouteRoute
+    }
     '/_authenticated/business/dashboard/requirements': {
       id: '/_authenticated/business/dashboard/requirements'
       path: '/requirements'
@@ -853,6 +873,7 @@ interface AuthenticatedBusinessDashboardRouteRouteChildren {
   AuthenticatedBusinessDashboardProductsRoute: typeof AuthenticatedBusinessDashboardProductsRoute
   AuthenticatedBusinessDashboardProfileRoute: typeof AuthenticatedBusinessDashboardProfileRoute
   AuthenticatedBusinessDashboardRequirementsRoute: typeof AuthenticatedBusinessDashboardRequirementsRoute
+  AuthenticatedBusinessDashboardStaffRoute: typeof AuthenticatedBusinessDashboardStaffRoute
   AuthenticatedBusinessDashboardIndexRoute: typeof AuthenticatedBusinessDashboardIndexRoute
 }
 
@@ -872,6 +893,8 @@ const AuthenticatedBusinessDashboardRouteRouteChildren: AuthenticatedBusinessDas
       AuthenticatedBusinessDashboardProfileRoute,
     AuthenticatedBusinessDashboardRequirementsRoute:
       AuthenticatedBusinessDashboardRequirementsRoute,
+    AuthenticatedBusinessDashboardStaffRoute:
+      AuthenticatedBusinessDashboardStaffRoute,
     AuthenticatedBusinessDashboardIndexRoute:
       AuthenticatedBusinessDashboardIndexRoute,
   }
