@@ -77,11 +77,13 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           description: string | null
+          gallery_urls: string[]
           hero_image_url: string | null
           id: string
           instagram_url: string | null
           is_eco_friendly: boolean
           is_live: boolean
+          logo_url: string | null
           main_video_url: string | null
           name: string
           owner_id: string
@@ -98,11 +100,13 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          gallery_urls?: string[]
           hero_image_url?: string | null
           id?: string
           instagram_url?: string | null
           is_eco_friendly?: boolean
           is_live?: boolean
+          logo_url?: string | null
           main_video_url?: string | null
           name: string
           owner_id: string
@@ -119,11 +123,13 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          gallery_urls?: string[]
           hero_image_url?: string | null
           id?: string
           instagram_url?: string | null
           is_eco_friendly?: boolean
           is_live?: boolean
+          logo_url?: string | null
           main_video_url?: string | null
           name?: string
           owner_id?: string
@@ -248,6 +254,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      events: {
+        Row: {
+          address: string | null
+          category: string | null
+          city: string | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          featured_until: string | null
+          id: string
+          image_urls: string[]
+          is_featured: boolean
+          organizer_id: string
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          category?: string | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          featured_until?: string | null
+          id?: string
+          image_urls?: string[]
+          is_featured?: boolean
+          organizer_id: string
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          category?: string | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          featured_until?: string | null
+          id?: string
+          image_urls?: string[]
+          is_featured?: boolean
+          organizer_id?: string
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       favorites: {
         Row: {
@@ -534,6 +594,42 @@ export type Database = {
           },
         ]
       }
+      organizer_profiles: {
+        Row: {
+          city: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -613,6 +709,8 @@ export type Database = {
       }
       slots: {
         Row: {
+          booked_count: number
+          capacity: number
           date: string
           id: string
           staff_id: string
@@ -620,6 +718,8 @@ export type Database = {
           status: string
         }
         Insert: {
+          booked_count?: number
+          capacity?: number
           date: string
           id?: string
           staff_id: string
@@ -627,6 +727,8 @@ export type Database = {
           status?: string
         }
         Update: {
+          booked_count?: number
+          capacity?: number
           date?: string
           id?: string
           staff_id?: string
