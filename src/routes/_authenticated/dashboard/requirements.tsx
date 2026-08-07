@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { ChatPanel } from "@/components/chat-panel";
 import { useAccount } from "@/hooks/use-session";
+import { isStoragePath, useMediaUrl } from "@/components/media-uploader";
 
 export const Route = createFileRoute("/_authenticated/dashboard/requirements")({
   head: () => ({
@@ -21,6 +22,24 @@ export const Route = createFileRoute("/_authenticated/dashboard/requirements")({
   }),
   component: Requirements,
 });
+
+function RequirementThumbs({ imageUrls }: { imageUrls: string[] | null | undefined }) {
+  if (!imageUrls || imageUrls.length === 0) return null;
+  return (
+    <div className="mt-3 flex gap-2">
+      {imageUrls.slice(0, 3).map((path, i) => (
+        <RequirementThumb key={i} path={path} />
+      ))}
+    </div>
+  );
+}
+
+function RequirementThumb({ path }: { path: string }) {
+  const resolved = useMediaUrl(path, "requirement-media");
+  const url = isStoragePath(path) ? resolved : path;
+  if (!url) return null;
+  return <img src={url} alt="" className="h-14 w-14 rounded-md object-cover" />;
+}
 
 function Requirements() {
   const { userId } = useAccount();
@@ -81,6 +100,7 @@ function Requirements() {
                   <p className="mt-2 text-sm text-muted-foreground">
                     {r.city} {r.budget ? `· ₹${r.budget}` : ""}
                   </p>
+                  <RequirementThumbs imageUrls={(r as any).image_urls} />
                 </div>
                 <button
                   onClick={() => setOpenId(openId === r.id ? null : r.id)}

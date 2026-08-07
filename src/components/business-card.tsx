@@ -37,7 +37,7 @@ export function BusinessCard({ business }: { business: BusinessCardData }) {
       params={{ id: business.id }}
       className="surface-card group flex aspect-square flex-col overflow-hidden rounded-3xl transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-24px_oklch(0.221_0.006_56/0.45)]"
     >
-      <div className="relative h-1/2 w-full shrink-0 overflow-hidden bg-secondary">
+      <div className="relative h-[55%] w-full shrink-0 overflow-hidden bg-secondary">
         {hasHero ? (
           <img
             src={business.hero_image_url!}
@@ -72,8 +72,8 @@ export function BusinessCard({ business }: { business: BusinessCardData }) {
         )}
       </div>
 
-      <div className="flex h-1/2 flex-col p-5">
-        <h3 className="truncate text-lg transition-colors group-hover:text-primary">{business.name}</h3>
+      <div className="flex h-[45%] flex-col p-4">
+        <h3 className="truncate text-base transition-colors group-hover:text-primary">{business.name}</h3>
         {(city || moreCities > 0) && (
           <div className="mt-1.5 flex items-center gap-2">
             {city && <p className="truncate text-sm text-muted-foreground">{city}</p>}
@@ -91,7 +91,7 @@ export function BusinessCard({ business }: { business: BusinessCardData }) {
           {(business.categories ?? []).slice(0, 2).map((c) => (
             <span
               key={c}
-              className="rounded-full border border-border px-2.5 py-1 text-[0.6875rem] uppercase tracking-[0.12em] text-muted-foreground transition-colors group-hover:border-accent/60"
+              className="rounded-full border border-border px-2 py-0.5 text-[0.6875rem] uppercase tracking-[0.12em] text-muted-foreground transition-colors group-hover:border-accent/60"
             >
               {c}
             </span>

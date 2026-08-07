@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
+import { isStoragePath, useMediaUrl } from "@/components/media-uploader";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/requirements")({
   head: () => ({
@@ -15,6 +16,24 @@ export const Route = createFileRoute("/_authenticated/business/dashboard/require
   component: RequirementsPage,
 });
 
+function RequirementThumbs({ imageUrls }: { imageUrls: string[] | null | undefined }) {
+  if (!imageUrls || imageUrls.length === 0) return null;
+  return (
+    <div className="mt-2 flex gap-2">
+      {imageUrls.slice(0, 3).map((path, i) => (
+        <RequirementThumb key={i} path={path} />
+      ))}
+    </div>
+  );
+}
+
+function RequirementThumb({ path }: { path: string }) {
+  const resolved = useMediaUrl(path, "requirement-media");
+  const url = isStoragePath(path) ? resolved : path;
+  if (!url) return null;
+  return <img src={url} alt="" className="h-14 w-14 rounded-md object-cover" />;
+}
+
 function RequirementsPage() {
   const { data: business } = useDashboardBusiness();
   const businessId = business?.id ?? null;
@@ -25,7 +44,7 @@ function RequirementsPage() {
     queryFn: async () => {
       const { data: reqs } = await supabase
         .from("requirements")
-        .select("id,category,description,city,budget,created_at")
+        .select("id,category,description,city,budget,created_at,image_urls")
         .eq("posted_by_business_id", businessId!)
         .order("created_at", { ascending: false });
       const reqIds = (reqs ?? []).map((r) => r.id);
@@ -83,6 +102,7 @@ function RequirementsPage() {
             <p className="mt-1 text-xs text-muted-foreground">
               {r.city ?? "Any city"} {r.budget ? `· Budget ₹${r.budget}` : ""}
             </p>
+            <RequirementThumbs imageUrls={(r as any).image_urls} />
             <div className="mt-3 space-y-2">
               {r.conversations.length === 0 && (
                 <p className="text-xs text-muted-foreground">No responses yet.</p>

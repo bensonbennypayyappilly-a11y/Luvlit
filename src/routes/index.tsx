@@ -233,7 +233,7 @@ function Index() {
                   {featuredList.length ? "In the spotlight" : "New on LuvLit"}
                 </h2>
               </Reveal>
-              <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
                 {(featuredList.length ? featuredList : recent).map((b, i) => (
                   <Reveal key={b.id} delay={i * 80}>
                     <BusinessCard business={b} />
