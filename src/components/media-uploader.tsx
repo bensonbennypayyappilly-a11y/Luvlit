@@ -34,6 +34,18 @@ export const MEDIA_LIMITS = {
     accept: "video/*",
     label: "Main video (max 20MB)",
   },
+  poster: {
+    maxBytes: 10 * 1024 * 1024,
+    maxSeconds: 0,
+    accept: "image/*",
+    label: "Event poster",
+  },
+  product: {
+    maxBytes: 10 * 1024 * 1024,
+    maxSeconds: 0,
+    accept: "image/*",
+    label: "Product photo",
+  },
 } as const;
 
 export type MediaKind = keyof typeof MEDIA_LIMITS;
