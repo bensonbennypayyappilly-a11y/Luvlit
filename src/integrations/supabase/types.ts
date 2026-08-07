@@ -267,6 +267,8 @@ export type Database = {
           id: string
           image_urls: string[]
           is_featured: boolean
+          latitude: number | null
+          longitude: number | null
           organizer_id: string
           start_date: string
           status: string
@@ -284,6 +286,8 @@ export type Database = {
           id?: string
           image_urls?: string[]
           is_featured?: boolean
+          latitude?: number | null
+          longitude?: number | null
           organizer_id: string
           start_date: string
           status?: string
@@ -301,6 +305,8 @@ export type Database = {
           id?: string
           image_urls?: string[]
           is_featured?: boolean
+          latitude?: number | null
+          longitude?: number | null
           organizer_id?: string
           start_date?: string
           status?: string
@@ -450,6 +456,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          image_urls: string[]
           is_active: boolean
           name: string
           price: number | null
@@ -459,6 +466,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           is_active?: boolean
           name: string
           price?: number | null
@@ -468,6 +476,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           is_active?: boolean
           name?: string
           price?: number | null
@@ -866,6 +875,7 @@ export type Database = {
         Args: { _business_id: string }
         Returns: undefined
       }
+      is_organizer: { Args: { _user_id: string }; Returns: boolean }
       owns_business: { Args: { _business_id: string }; Returns: boolean }
       soft_delete_account: { Args: never; Returns: undefined }
     }
