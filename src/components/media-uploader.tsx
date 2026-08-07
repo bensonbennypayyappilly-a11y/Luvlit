@@ -55,14 +55,14 @@ export function isStoragePath(value: string | null | undefined) {
 }
 
 /** Resolves a stored value (external URL or storage object path) to a displayable URL. */
-export function useMediaUrl(value: string | null | undefined) {
+export function useMediaUrl(value: string | null | undefined, bucket: string = MEDIA_BUCKET) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
     if (!value) return setUrl(null);
     if (!isStoragePath(value)) return setUrl(value);
     supabase.storage
-      .from(MEDIA_BUCKET)
+      .from(bucket)
       .createSignedUrl(value, 60 * 60 * 24 * 7)
       .then(({ data }) => {
         if (active) setUrl(data?.signedUrl ?? null);
@@ -70,7 +70,7 @@ export function useMediaUrl(value: string | null | undefined) {
     return () => {
       active = false;
     };
-  }, [value]);
+  }, [value, bucket]);
   return url;
 }
 
@@ -87,7 +87,7 @@ function readDuration(file: File) {
   });
 }
 
-const IMAGE_KINDS: MediaKind[] = ["logo", "hero", "gallery"];
+const IMAGE_KINDS: MediaKind[] = ["logo", "hero", "gallery", "poster", "product"];
 
 /** Downscale + re-encode large images in the browser so we never upload raw 20MB JPEGs. */
 async function compressImage(file: File, maxEdge: number, quality = 0.82): Promise<File> {
@@ -116,11 +116,20 @@ type Props = {
   value: string | null;
   onChange: (path: string | null) => void;
   label?: string;
+  /** Storage bucket override; defaults to business-media. */
+  bucket?: string;
 };
 
-export function MediaUploader({ businessId, kind, value, onChange, label }: Props) {
+export function MediaUploader({
+  businessId,
+  kind,
+  value,
+  onChange,
+  label,
+  bucket = MEDIA_BUCKET,
+}: Props) {
   const limits = MEDIA_LIMITS[kind];
-  const previewUrl = useMediaUrl(value);
+  const previewUrl = useMediaUrl(value, bucket);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
 
@@ -151,7 +160,7 @@ export function MediaUploader({ businessId, kind, value, onChange, label }: Prop
       const path = `${businessId}/${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const timer = setInterval(() => setProgress((p) => (p == null ? p : Math.min(p + 7, 92))), 400);
       const { error: uploadError } = await supabase.storage
-        .from(MEDIA_BUCKET)
+        .from(bucket)
         .upload(path, file, { cacheControl: "3600", upsert: false });
       clearInterval(timer);
       if (uploadError) {
@@ -162,7 +171,7 @@ export function MediaUploader({ businessId, kind, value, onChange, label }: Prop
       onChange(path);
       setTimeout(() => setProgress(null), 600);
     },
-    [businessId, kind, limits, onChange],
+    [businessId, kind, limits, onChange, bucket],
   );
 
   return (
