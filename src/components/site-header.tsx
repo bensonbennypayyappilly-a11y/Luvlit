@@ -14,18 +14,21 @@ const businessItems: NavItem[] = [
   { label: "Leads", to: "/business/dashboard/leads" },
   { label: "Post a Requirement", to: "/post-requirement" },
   { label: "Find an Influencer", to: "/dashboard/find-influencer" },
+  { label: "Events", to: "/events" },
 ];
 
 const customerItems: NavItem[] = [
   { label: "Browse", to: "/browse" },
   { label: "My Requirements", to: "/dashboard/requirements" },
   { label: "Saved Businesses", to: "/dashboard/saved" },
+  { label: "Events", to: "/events" },
 ];
 
 const influencerItems: NavItem[] = [
   { label: "Dashboard", to: "/influencer/status" },
   { label: "My Profile", to: "/influencer/onboarding" },
   { label: "Chats", to: "/dashboard/chats" },
+  { label: "Events", to: "/events" },
 ];
 
 const KNOWN_ROUTES = new Set([
@@ -35,6 +38,8 @@ const KNOWN_ROUTES = new Set([
   "/dashboard/find-influencer",
   "/influencer/status",
   "/influencer/onboarding",
+  "/events",
+  "/organizer/dashboard",
 ]);
 
 function NavLink({ item }: { item: NavItem }) {
@@ -53,8 +58,8 @@ function NavLink({ item }: { item: NavItem }) {
   );
 }
 
-/** Looks up whether the signed-in user has an organizer profile, to route "Post an event" correctly. */
-function useOrganizerLink(): string {
+/** Whether the signed-in user has an organizer_profiles row, so we can surface "Post an event" only to them. */
+function useIsOrganizer(): boolean {
   const { user } = useSession();
   const { data } = useQuery({
     queryKey: ["organizer-profile", user?.id ?? null],
@@ -70,14 +75,13 @@ function useOrganizerLink(): string {
       return data;
     },
   });
-  if (!user) return "/organizer/onboarding";
-  return data ? "/organizer/dashboard" : "/organizer/onboarding";
+  return !!data;
 }
 
 export function SiteHeader() {
   const { loading, role, displayName, businessName } = useAccount();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const organizerLink = useOrganizerLink();
+  const isOrganizer = useIsOrganizer();
 
   const roleItems = loading
     ? []
@@ -91,9 +95,13 @@ export function SiteHeader() {
               { label: "Browse", to: "/browse" },
               { label: "Are you an influencer?", to: "/influencer" },
               { label: "Post a Requirement", to: "/post-requirement" },
+              { label: "Events", to: "/events" },
             ];
 
-  const items: NavItem[] = [...roleItems, { label: "Post an event", to: organizerLink }];
+  const items: NavItem[] = [...roleItems];
+  if (isOrganizer) {
+    items.push({ label: "Post an event", to: "/organizer/dashboard" });
+  }
 
   const accountLabel =
     role === "business" ? businessName ?? "Your business" : displayName ?? "Account";
@@ -146,20 +154,29 @@ export function SiteHeader() {
 
       {mobileOpen && (
         <div className="border-t border-border px-6 py-4 md:hidden">
-          <nav className="flex flex-col gap-4">
+          <nav className="flex flex-col">
             {items.map((item) => (
-              <NavLink key={item.label} item={item} />
+              <div key={item.label} className="py-2.5">
+                <NavLink item={item} />
+              </div>
             ))}
-            {!loading && role && <AccountMenu label={accountLabel} role={role} />}
+            {!loading && role && (
+              <div className="py-2.5">
+                <AccountMenu label={accountLabel} role={role} />
+              </div>
+            )}
             {!loading && !role && (
               <>
-                <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground">
+                <Link
+                  to="/auth"
+                  className="py-2.5 text-sm text-muted-foreground hover:text-foreground"
+                >
                   Sign in
                 </Link>
                 <Link
                   to="/auth"
                   search={{ role: "business" }}
-                  className="w-fit rounded-md border border-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-soft"
+                  className="my-2.5 w-fit rounded-md border border-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-soft"
                 >
                   List your business
                 </Link>

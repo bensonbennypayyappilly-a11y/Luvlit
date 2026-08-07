@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { isStoragePath, useMediaUrl } from "@/components/media-uploader";
 
 export type EventCardData = {
   id: string;
@@ -16,11 +17,13 @@ function isCurrentlyFeatured(e: EventCardData) {
   return !!e.is_featured && !!e.featured_until && new Date(e.featured_until) > new Date();
 }
 
-export function EventCard({ event }: { event: EventCardData }) {
+export function EventCard({ event, distanceKm }: { event: EventCardData; distanceKm?: number }) {
   const start = new Date(event.start_date);
   const day = start.toLocaleDateString("en-IN", { day: "2-digit" });
   const month = start.toLocaleDateString("en-IN", { month: "short" });
-  const hero = event.image_urls?.[0];
+  const rawHero = event.image_urls?.[0] ?? null;
+  const resolvedHero = useMediaUrl(rawHero, "event-media");
+  const hero = rawHero ? (isStoragePath(rawHero) ? resolvedHero : rawHero) : null;
   const featured = isCurrentlyFeatured(event);
 
   return (
@@ -29,7 +32,7 @@ export function EventCard({ event }: { event: EventCardData }) {
       params={{ id: event.id }}
       className="surface-card group flex aspect-square flex-col overflow-hidden rounded-3xl transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-24px_oklch(0.221_0.006_56/0.45)]"
     >
-      <div className="relative h-1/2 w-full shrink-0 overflow-hidden bg-secondary">
+      <div className="relative h-[55%] w-full shrink-0 overflow-hidden bg-secondary">
         {hero ? (
           <img
             src={hero}
@@ -54,13 +57,18 @@ export function EventCard({ event }: { event: EventCardData }) {
         </div>
       </div>
 
-      <div className="flex h-1/2 flex-col p-5">
-        <h3 className="truncate text-lg transition-colors group-hover:text-primary">{event.title}</h3>
+      <div className="flex h-[45%] flex-col p-4">
+        <h3 className="truncate text-base transition-colors group-hover:text-primary">{event.title}</h3>
         {event.city && <p className="mt-1.5 truncate text-sm text-muted-foreground">{event.city}</p>}
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-3">
           {event.category && (
-            <span className="rounded-full border border-border px-2.5 py-1 text-[0.6875rem] uppercase tracking-[0.12em] text-muted-foreground transition-colors group-hover:border-accent/60">
+            <span className="rounded-full border border-border px-2 py-0.5 text-[0.6875rem] uppercase tracking-[0.12em] text-muted-foreground transition-colors group-hover:border-accent/60">
               {event.category}
+            </span>
+          )}
+          {typeof distanceKm === "number" && (
+            <span className="rounded-full border border-border px-2 py-0.5 text-[0.6875rem] text-muted-foreground">
+              {distanceKm.toFixed(1)} km away
             </span>
           )}
         </div>
