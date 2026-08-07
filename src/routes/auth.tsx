@@ -1,14 +1,29 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-type Search = { role?: "business" | "customer"; redirect?: string };
+type Search = { role?: "business" | "customer" | "organizer"; redirect?: string };
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): Search => ({
-    role: s.role === "business" ? "business" : s.role === "customer" ? "customer" : undefined,
+    role:
+      s.role === "business"
+        ? "business"
+        : s.role === "customer"
+          ? "customer"
+          : s.role === "organizer"
+            ? "organizer"
+            : undefined,
     redirect: typeof s.redirect === "string" && s.redirect.startsWith("/") ? s.redirect : undefined,
   }),
   head: () => ({
@@ -30,12 +45,23 @@ function AuthPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">(search.role ? "signup" : "signin");
-  const [role, setRole] = useState<"business" | "customer">(search.role ?? "customer");
+  const [role, setRole] = useState<"business" | "customer" | "organizer">(search.role ?? "customer");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendStatus, setResendStatus] = useState<{ type: "idle" | "success" | "error"; message?: string }>({
+    type: "idle",
+  });
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setInterval(() => setResendCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(t);
+  }, [resendCooldown]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,12 +75,29 @@ function AuthPage() {
       });
       setBusy(false);
       if (error) return setError(error.message);
+      setShowVerifyModal(true);
       navigate({ to: "/verify-email", search: { role } });
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setBusy(false);
       if (error) return setError(error.message);
       navigate({ to: search.redirect ?? "/dashboard" });
+    }
+  }
+
+  async function resend() {
+    if (!email || resendCooldown > 0) return;
+    setResendStatus({ type: "idle" });
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    if (error) {
+      setResendStatus({ type: "error", message: error.message });
+    } else {
+      setResendStatus({ type: "success", message: "Verification email sent." });
+      setResendCooldown(30);
     }
   }
 
@@ -68,8 +111,8 @@ function AuthPage() {
         <form onSubmit={submit} className="mt-10 space-y-5">
           {mode === "signup" && (
             <>
-              <div className="grid grid-cols-2 gap-3">
-                {(["customer", "business"] as const).map((r) => (
+              <div className="grid grid-cols-3 gap-3">
+                {(["customer", "business", "organizer"] as const).map((r) => (
                   <button
                     type="button"
                     key={r}
@@ -78,7 +121,7 @@ function AuthPage() {
                       role === r ? "border-accent bg-accent-soft" : "border-border"
                     }`}
                   >
-                    {r === "business" ? "Business owner" : "Customer"}
+                    {r === "business" ? "Business owner" : r === "organizer" ? "Event organizer" : "Customer"}
                   </button>
                 ))}
               </div>
@@ -134,6 +177,43 @@ function AuthPage() {
         </p>
       </main>
       <SiteFooter />
+
+      <Dialog open={showVerifyModal} onOpenChange={setShowVerifyModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Check your email</DialogTitle>
+            <DialogDescription>
+              We&apos;ve sent a verification link to {email}. Click it to activate your account.
+            </DialogDescription>
+          </DialogHeader>
+          {resendStatus.type === "success" && (
+            <p className="text-sm text-accent-foreground">{resendStatus.message}</p>
+          )}
+          {resendStatus.type === "error" && (
+            <p className="text-sm text-destructive">{resendStatus.message}</p>
+          )}
+          <DialogFooter className="sm:justify-between">
+            <button
+              type="button"
+              onClick={resend}
+              disabled={resendCooldown > 0}
+              className="rounded-md border border-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-soft disabled:opacity-50"
+            >
+              {resendCooldown > 0 ? `Resend (${resendCooldown}s)` : "Resend"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowVerifyModal(false);
+                navigate({ to: "/verify-email", search: { role } });
+              }}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Continue
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

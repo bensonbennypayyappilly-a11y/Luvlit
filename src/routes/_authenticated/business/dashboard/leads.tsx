@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { ChatPanel } from "@/components/chat-panel";
+import { isStoragePath, useMediaUrl } from "@/components/media-uploader";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/leads")({
   head: () => ({
@@ -23,7 +24,26 @@ type InboxRow = {
   title: string;
   subtitle: string;
   unread: boolean;
+  imageUrls?: string[] | null;
 };
+
+function LeadThumbs({ imageUrls }: { imageUrls: string[] | null | undefined }) {
+  if (!imageUrls || imageUrls.length === 0) return null;
+  return (
+    <div className="mt-1 flex gap-1">
+      {imageUrls.slice(0, 3).map((path, i) => (
+        <LeadThumb key={i} path={path} />
+      ))}
+    </div>
+  );
+}
+
+function LeadThumb({ path }: { path: string }) {
+  const resolved = useMediaUrl(path, "requirement-media");
+  const url = isStoragePath(path) ? resolved : path;
+  if (!url) return null;
+  return <img src={url} alt="" className="h-8 w-8 rounded object-cover" />;
+}
 
 function LeadsPage() {
   const { data: business } = useDashboardBusiness();
@@ -38,7 +58,7 @@ function LeadsPage() {
       (
         await supabase
           .from("leads")
-          .select("id,status,created_at,requirement_id,requirements(id,description,category,city)")
+          .select("id,status,created_at,requirement_id,requirements(id,description,category,city,image_urls)")
           .eq("matched_business_id", businessId!)
           .order("created_at", { ascending: false })
       ).data ?? [],
@@ -92,6 +112,7 @@ function LeadsPage() {
         title: (l as any).requirements?.category ?? "Lead",
         subtitle: (l as any).requirements?.description ?? l.status,
         unread: false,
+        imageUrls: (l as any).requirements?.image_urls ?? null,
       }));
     return [...conv, ...leadRows];
   }, [leads, conversations, unreadMap]);
@@ -128,6 +149,7 @@ function LeadsPage() {
               <div className="min-w-0">
                 <p className="truncate font-medium">{row.title}</p>
                 <p className="truncate text-xs text-muted-foreground">{row.subtitle}</p>
+                <LeadThumbs imageUrls={row.imageUrls} />
               </div>
               {row.unread && <span className="size-2 shrink-0 rounded-full bg-primary" />}
             </button>

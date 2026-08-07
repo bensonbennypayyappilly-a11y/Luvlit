@@ -18,6 +18,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { label: "Pricing & featured placement", to: "/pricing" },
       { label: "Find an influencer", to: "/dashboard/find-influencer" },
       { label: "Post a requirement", to: "/post-requirement" },
+      { label: "Are you an event organizer?", to: "/organizer/onboarding" },
     ],
   },
   {

@@ -70,7 +70,7 @@ function BrowseCategory() {
         {featured.length > 0 && (
           <section className="mt-14">
             <p className="eyebrow">Featured</p>
-            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
               {featured.map((b) => (
                 <BusinessCard key={b.id} business={b} />
               ))}
@@ -79,7 +79,7 @@ function BrowseCategory() {
         )}
 
         <section className="mt-14">
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
             {rest.map((b) => (
               <BusinessCard key={b.id} business={b} />
             ))}

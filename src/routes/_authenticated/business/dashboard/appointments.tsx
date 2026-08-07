@@ -117,15 +117,26 @@ function AppointmentsPage() {
         {byDate.map(([date, rows]) => (
           <div key={date} className="surface-card p-5">
             <p className="text-sm font-medium">
-              {date === "Unscheduled" ? "Unscheduled" : new Date(date).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+              {date === "Unscheduled" ? (
+                <span className="text-muted-foreground">Date unavailable</span>
+              ) : (
+                new Date(date).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })
+              )}
             </p>
             <div className="mt-3 divide-y divide-border">
               {rows.map((b) => (
                 <div key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
                   <div>
-                    <p className="font-medium">{b.slots?.start_time?.slice(0, 5)} · {b.customer_name}</p>
+                    <p className="font-medium">
+                      {b.slots?.start_time ? (
+                        b.slots.start_time.slice(0, 5)
+                      ) : (
+                        <span className="text-muted-foreground">Time unavailable</span>
+                      )}{" "}
+                      · {b.customer_name}
+                    </p>
                     <p className="text-muted-foreground">
-                      {b.customer_phone} · {b.slots?.staff?.name ?? "—"}
+                      {b.customer_phone} · {b.slots?.staff?.name ?? "Staff unavailable"}
                       {b.slots && (
                         <> · {b.slots.booked_count} of {b.slots.capacity} booked</>
                       )}

@@ -90,7 +90,7 @@ export function SearchPill({
       </div>
 
       {filtersOpen && (
-        <div className="surface-card absolute left-0 right-0 top-full z-20 mt-3 grid gap-5 p-6 sm:grid-cols-3">
+        <div className="surface-card absolute left-0 right-0 top-full z-20 mt-3 grid grid-cols-1 gap-5 p-6 sm:grid-cols-3">
           <div>
             <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Category</p>
             <select

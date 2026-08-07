@@ -205,7 +205,7 @@ export const getEvents = createServerFn({ method: "GET" })
     const { publicClient } = await import("./supabase-public.server");
     let query = publicClient()
       .from("events")
-      .select("id,title,description,category,city,address,start_date,end_date,image_urls,is_featured")
+      .select("id,title,description,category,city,address,start_date,end_date,image_urls,is_featured,latitude,longitude")
       .eq("status", "published")
       .gte("start_date", new Date().toISOString())
       .order("is_featured", { ascending: false })

@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { CITIES } from "@/lib/constants";
+import { MediaUploader } from "@/components/media-uploader";
 
 export const Route = createFileRoute("/_authenticated/post-requirement")({
   head: () => ({
@@ -31,6 +32,12 @@ function PostRequirement() {
         .data ?? [],
   });
   const [form, setForm] = useState({ category: "", description: "", city: "", budget: "" });
+  const [images, setImages] = useState<(string | null)[]>([null, null, null]);
+  const [posterId, setPosterId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setPosterId(data.user?.id ?? null));
+  }, []);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [matchedCount, setMatchedCount] = useState<number | null>(null);
@@ -40,6 +47,7 @@ function PostRequirement() {
     setBusy(true);
     setError(null);
     const { data: userData } = await supabase.auth.getUser();
+    setPosterId(userData.user?.id ?? null);
     const { data: ownBusiness } = await supabase
       .from("businesses")
       .select("id")
@@ -60,6 +68,7 @@ function PostRequirement() {
         description: form.description,
         city: form.city || null,
         budget: form.budget ? Number(form.budget) : null,
+        image_urls: images.filter((i): i is string => !!i),
       })
       .select("id")
       .single();
@@ -187,6 +196,24 @@ function PostRequirement() {
             placeholder="Budget (optional, ₹)"
             className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
           />
+          <div>
+            <p className="text-sm text-muted-foreground">Add up to 3 photos (optional)</p>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {[0, 1, 2].map((i) => (
+                <MediaUploader
+                  key={i}
+                  businessId={posterId ?? "pending"}
+                  kind="gallery"
+                  bucket="requirement-media"
+                  value={images[i]}
+                  onChange={(path) =>
+                    setImages((prev) => prev.map((v, idx) => (idx === i ? path : v)))
+                  }
+                  label={`Photo ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <button
             disabled={busy}

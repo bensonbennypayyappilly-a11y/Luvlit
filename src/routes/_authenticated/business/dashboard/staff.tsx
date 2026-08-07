@@ -115,6 +115,10 @@ function StaffPage() {
   } | null>(null);
   const [regenMsg, setRegenMsg] = useState<Record<string, string>>({});
   const [regenBusy, setRegenBusy] = useState<Record<string, boolean>>({});
+  const [addError, setAddError] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [regenError, setRegenError] = useState<Record<string, string>>({});
 
   async function refresh() {
     await qc.invalidateQueries({ queryKey: ["dashboard-staff-full", businessId] });
@@ -123,19 +127,25 @@ function StaffPage() {
   async function addStaff() {
     if (!businessId || !draftName.trim()) return;
     setBusy(true);
-    await supabase.from("staff").insert({
+    setAddError(null);
+    const { error } = await supabase.from("staff").insert({
       business_id: businessId,
       name: draftName.trim(),
       specializations: [],
       slot_duration_minutes: 30,
       working_hours: DEFAULT_HOURS,
     });
-    setDraftName("");
     setBusy(false);
+    if (error) {
+      setAddError(error.message);
+      return;
+    }
+    setDraftName("");
     refresh();
   }
 
   function startEdit(s: Staff) {
+    setEditError(null);
     setEditingId(s.id);
     setEditDraft({
       name: s.name,
@@ -148,7 +158,8 @@ function StaffPage() {
   async function saveEdit(id: string) {
     if (!editDraft) return;
     setBusy(true);
-    await supabase
+    setEditError(null);
+    const { error } = await supabase
       .from("staff")
       .update({
         name: editDraft.name,
@@ -158,6 +169,10 @@ function StaffPage() {
       })
       .eq("id", id);
     setBusy(false);
+    if (error) {
+      setEditError(error.message);
+      return;
+    }
     setEditingId(null);
     setEditDraft(null);
     refresh();
@@ -165,7 +180,12 @@ function StaffPage() {
 
   async function remove(id: string) {
     if (!confirm("Remove this staff member? Their slots will remain but be unavailable.")) return;
-    await supabase.from("staff").delete().eq("id", id);
+    setRemoveError(null);
+    const { error } = await supabase.from("staff").delete().eq("id", id);
+    if (error) {
+      setRemoveError(error.message);
+      return;
+    }
     refresh();
   }
 
@@ -196,16 +216,21 @@ function StaffPage() {
   async function regenerate(s: Staff) {
     setRegenBusy((m) => ({ ...m, [s.id]: true }));
     setRegenMsg((m) => ({ ...m, [s.id]: "" }));
+    setRegenError((m) => ({ ...m, [s.id]: "" }));
     try {
       const hours = normalizeWorkingHours(s.working_hours);
       const capacity = hours._capacity ?? 1;
       const duration = s.slot_duration_minutes || 30;
       const dayIndexToKey = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
-      const { data: existing } = await supabase
+      const { data: existing, error: fetchError } = await supabase
         .from("slots")
         .select("date,start_time,booked_count")
         .eq("staff_id", s.id);
+      if (fetchError) {
+        setRegenError((m) => ({ ...m, [s.id]: fetchError.message }));
+        return;
+      }
       const existingKeys = new Set((existing ?? []).map((r) => `${r.date}_${String(r.start_time).slice(0, 8)}`));
 
       const toInsert: { staff_id: string; date: string; start_time: string; capacity: number }[] = [];
@@ -227,7 +252,11 @@ function StaffPage() {
       }
 
       for (let i = 0; i < toInsert.length; i += 500) {
-        await supabase.from("slots").insert(toInsert.slice(i, i + 500));
+        const { error: insertError } = await supabase.from("slots").insert(toInsert.slice(i, i + 500));
+        if (insertError) {
+          setRegenError((m) => ({ ...m, [s.id]: insertError.message }));
+          return;
+        }
       }
       setRegenMsg((m) => ({
         ...m,
@@ -261,6 +290,8 @@ function StaffPage() {
           Add staff
         </button>
       </div>
+      {addError && <p className="mt-2 text-sm text-destructive">{addError}</p>}
+      {removeError && <p className="mt-2 text-sm text-destructive">{removeError}</p>}
 
       {isLoading && <p className="mt-6 text-sm text-muted-foreground">Loading staff…</p>}
       {!isLoading && (staff ?? []).length === 0 && (
@@ -318,6 +349,7 @@ function StaffPage() {
                       {regenBusy[s.id] ? "Generating…" : "Regenerate next 30 days"}
                     </button>
                     {regenMsg[s.id] && <p className="text-xs text-muted-foreground">{regenMsg[s.id]}</p>}
+                    {regenError[s.id] && <p className="text-xs text-destructive">{regenError[s.id]}</p>}
                   </div>
                 </div>
               ) : (
@@ -421,6 +453,7 @@ function StaffPage() {
                       </div>
                     </div>
 
+                    {editError && <p className="text-sm text-destructive">{editError}</p>}
                     <div className="flex gap-3">
                       <button
                         onClick={() => saveEdit(s.id)}
@@ -433,6 +466,7 @@ function StaffPage() {
                         onClick={() => {
                           setEditingId(null);
                           setEditDraft(null);
+                          setEditError(null);
                         }}
                         className="rounded-md border border-border px-5 py-2 text-sm"
                       >

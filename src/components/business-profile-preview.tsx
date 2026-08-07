@@ -102,9 +102,9 @@ export function BusinessProfilePreview({ business }: { business: ProfileBusiness
 
   const shorts = shortUrls.filter(isPlayableVideo).slice(0, 3);
   const items = (business.items ?? []).filter((i) => i.is_active);
-  const fallbackGallery = items.filter(
-    (i): i is (typeof items)[number] & { image_url: string } => !!i.image_url,
-  );
+  const fallbackGallery = items
+    .map((i) => ({ ...i, image_url: (i as { image_urls?: string[] }).image_urls?.[0] ?? i.image_url }))
+    .filter((i): i is (typeof items)[number] & { image_url: string } => !!i.image_url);
   const galleryItems = galleryUrls.length
     ? galleryUrls.map((url, i) => ({ id: `gallery-${i}`, image_url: url, name: `${business.name} photo ${i + 1}` }))
     : fallbackGallery.map((i) => ({
@@ -137,7 +137,7 @@ export function BusinessProfilePreview({ business }: { business: ProfileBusiness
                 className="mb-6 h-16 w-16 rounded-md border border-white/40 bg-white/90 object-contain p-1"
               />
             )}
-            <h1 className="text-5xl text-white md:text-7xl">{business.name}</h1>
+            <h1 className="text-4xl text-white md:text-7xl">{business.name}</h1>
             <div className="mt-6 flex flex-wrap items-center gap-2">
               {(business.categories ?? []).map((c) => (
                 <span
@@ -163,7 +163,7 @@ export function BusinessProfilePreview({ business }: { business: ProfileBusiness
             {logoUrl && (
               <img src={logoUrl} alt={`${business.name} logo`} className="h-16 w-16 rounded-md border object-contain p-1" />
             )}
-            <h1 className="mt-6 text-5xl md:text-7xl" style={{ color: accent }}>
+            <h1 className="mt-6 text-4xl md:text-7xl" style={{ color: accent }}>
               {business.name}
             </h1>
             <div className="mt-6 flex flex-wrap items-center gap-2">

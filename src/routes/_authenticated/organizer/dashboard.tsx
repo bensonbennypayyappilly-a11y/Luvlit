@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { CITIES, EVENT_CATEGORIES, EVENT_FEATURED_PRICING } from "@/lib/constants";
+import { MediaUploader } from "@/components/media-uploader";
 import type { Database } from "@/integrations/supabase/types";
 
 type EventRow = Database["public"]["Tables"]["events"]["Row"];
@@ -30,8 +31,11 @@ const emptyForm = {
   category: EVENT_CATEGORIES[0],
   city: "",
   address: "",
+  latitude: "",
+  longitude: "",
   start_date: "",
   end_date: "",
+  poster: null as string | null,
 };
 
 function toLocalInput(iso: string | null) {
@@ -118,8 +122,11 @@ function OrganizerDashboard() {
       category: ev.category ?? EVENT_CATEGORIES[0],
       city: ev.city ?? "",
       address: ev.address ?? "",
+      latitude: (ev as unknown as { latitude: number | null }).latitude?.toString() ?? "",
+      longitude: (ev as unknown as { longitude: number | null }).longitude?.toString() ?? "",
       start_date: toLocalInput(ev.start_date),
       end_date: toLocalInput(ev.end_date),
+      poster: ev.image_urls?.[0] ?? null,
     });
     setShowForm(true);
     setError(null);
@@ -138,9 +145,12 @@ function OrganizerDashboard() {
       category: form.category,
       city: form.city || null,
       address: form.address || null,
+      latitude: form.latitude ? Number(form.latitude) : null,
+      longitude: form.longitude ? Number(form.longitude) : null,
       start_date: new Date(form.start_date).toISOString(),
       end_date: form.end_date ? new Date(form.end_date).toISOString() : null,
-    };
+      image_urls: form.poster ? [form.poster] : [],
+    } as any;
     const { error: saveError } = editingId
       ? await supabase.from("events").update(payload).eq("id", editingId)
       : await supabase.from("events").insert({ ...payload, status: "draft" });
@@ -232,6 +242,40 @@ function OrganizerDashboard() {
               placeholder="Address"
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
             />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <input
+                  type="number"
+                  step="any"
+                  value={form.latitude}
+                  onChange={(e) => setForm({ ...form, latitude: e.target.value })}
+                  placeholder="Latitude"
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <input
+                  type="number"
+                  step="any"
+                  value={form.longitude}
+                  onChange={(e) => setForm({ ...form, longitude: e.target.value })}
+                  placeholder="Longitude"
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+            <p className="-mt-2 text-xs text-muted-foreground">
+              Optional — lets customers filter events by distance
+            </p>
+            {userId && (
+              <MediaUploader
+                businessId={userId}
+                kind="poster"
+                bucket="event-media"
+                value={form.poster}
+                onChange={(path) => setForm({ ...form, poster: path })}
+              />
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <p className="text-xs text-muted-foreground">Starts</p>
