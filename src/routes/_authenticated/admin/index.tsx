@@ -26,6 +26,7 @@ function AdminIndex() {
   const [renaming, setRenaming] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [merging, setMerging] = useState<string | null>(null);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
 
   const { data: businesses } = useQuery({
     queryKey: ["admin-businesses"],
@@ -62,21 +63,39 @@ function AdminIndex() {
   });
 
   async function approveCategory(id: string) {
-    await supabase.from("categories").update({ is_approved: true }).eq("id", id);
+    setCategoryError(null);
+    const { error } = await supabase.from("categories").update({ is_approved: true }).eq("id", id);
+    if (error) {
+      setCategoryError(error.message);
+      return;
+    }
     queryClient.invalidateQueries({ queryKey: ["admin-pending-categories"] });
     queryClient.invalidateQueries({ queryKey: ["admin-approved-categories"] });
   }
 
   async function renameCategory(id: string) {
     if (!renameValue.trim()) return;
-    await supabase.from("categories").update({ name: renameValue.trim() }).eq("id", id);
+    setCategoryError(null);
+    const { error } = await supabase.from("categories").update({ name: renameValue.trim() }).eq("id", id);
+    if (error) {
+      setCategoryError(error.message);
+      return;
+    }
     setRenaming(null);
     setRenameValue("");
     queryClient.invalidateQueries({ queryKey: ["admin-pending-categories"] });
   }
 
   async function mergeCategory(id: string, targetName: string) {
-    await supabase.from("categories").update({ is_approved: true, name: targetName }).eq("id", id);
+    setCategoryError(null);
+    const { error } = await supabase
+      .from("categories")
+      .update({ is_approved: true, name: targetName })
+      .eq("id", id);
+    if (error) {
+      setCategoryError(error.message);
+      return;
+    }
     setMerging(null);
     queryClient.invalidateQueries({ queryKey: ["admin-pending-categories"] });
   }
@@ -146,6 +165,7 @@ function AdminIndex() {
 
       <section className="mt-14">
         <h2 className="hairline pt-10 text-2xl">Pending category suggestions</h2>
+        {categoryError && <p className="mt-3 text-sm text-destructive">{categoryError}</p>}
         <div className="mt-6 space-y-4">
           {(categories ?? []).map((c) => (
             <div key={c.id} className="surface-card p-6">
@@ -170,6 +190,7 @@ function AdminIndex() {
                   ) : (
                     <button
                       onClick={() => {
+                        setCategoryError(null);
                         setRenaming(c.id);
                         setRenameValue(c.name);
                       }}

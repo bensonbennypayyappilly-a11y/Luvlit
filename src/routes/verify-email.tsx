@@ -5,12 +5,12 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { useSession } from "@/hooks/use-session";
 
-type Search = { role?: "business" | "customer" | "influencer" };
+type Search = { role?: "business" | "customer" | "influencer" | "organizer" };
 
 export const Route = createFileRoute("/verify-email")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     role:
-      s.role === "business" ? "business" : s.role === "customer" ? "customer" : s.role === "influencer" ? "influencer" : undefined,
+      s.role === "business" ? "business" : s.role === "customer" ? "customer" : s.role === "influencer" ? "influencer" : s.role === "organizer" ? "organizer" : undefined,
   }),
   ssr: false,
   head: () => ({
@@ -27,6 +27,7 @@ export const Route = createFileRoute("/verify-email")({
 function destinationFor(role: string | undefined) {
   if (role === "business") return "/business/onboarding";
   if (role === "influencer") return "/influencer/onboarding";
+  if (role === "organizer") return "/organizer/onboarding";
   return "/dashboard";
 }
 

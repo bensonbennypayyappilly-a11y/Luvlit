@@ -94,4 +94,6 @@ export type PublicEvent = {
   end_date: string | null;
   image_urls: string[];
   is_featured: boolean;
+  latitude: number | null;
+  longitude: number | null;
 };
