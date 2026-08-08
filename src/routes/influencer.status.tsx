@@ -38,18 +38,22 @@ const COPY: Record<string, { label: string; body: string }> = {
 };
 
 function StatusLookup() {
-  const [contact, setContact] = useState("");
   const [result, setResult] = useState<null | { found: boolean; status?: string; submitted_at?: string }>(
     null,
   );
   const [busy, setBusy] = useState(false);
+  const [needsAuth, setNeedsAuth] = useState(false);
 
-  async function lookup(e: React.FormEvent) {
-    e.preventDefault();
+  async function lookup() {
     setBusy(true);
     setResult(null);
-    const res = await getInfluencerApplicationStatus({ data: { contact } });
-    setResult(res);
+    setNeedsAuth(false);
+    try {
+      const res = await getInfluencerApplicationStatus();
+      setResult(res);
+    } catch {
+      setNeedsAuth(true);
+    }
     setBusy(false);
   }
 
@@ -62,33 +66,37 @@ function StatusLookup() {
         <p className="eyebrow">For creators</p>
         <h1 className="mt-4 text-4xl">Check application status</h1>
         <p className="mt-6 text-muted-foreground">
-          Enter the email address or phone number on your LuvLit account.
+          Sign in with the account you applied with to see your application status.
         </p>
 
-        <form onSubmit={lookup} className="surface-card mt-10 space-y-5 p-8">
-          <input
-            required
-            value={contact}
-            onChange={(e) => setContact(e.target.value)}
-            placeholder="Email or phone number"
-            className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
-            aria-label="Email or phone number"
-          />
+        <div className="surface-card mt-10 space-y-5 p-8">
           <button
+            onClick={lookup}
             disabled={busy}
             className="rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
           >
-            {busy ? "Looking up…" : "Check status"}
+            {busy ? "Looking up…" : "Check my status"}
           </button>
-        </form>
+        </div>
+
+        {needsAuth && (
+          <div className="surface-card mt-8 p-8">
+            <p className="text-muted-foreground">
+              Please{" "}
+              <Link to="/auth" className="text-primary hover:underline">
+                sign in
+              </Link>{" "}
+              to view your application status.
+            </p>
+          </div>
+        )}
 
         {result && !result.found && (
           <div className="surface-card mt-8 p-8">
             <p className="text-muted-foreground">
-              We couldn't find an application for that email or phone number. Make sure it matches
-              the one on your account, or{" "}
+              We couldn't find an application on your account.{" "}
               <Link to="/influencer/onboarding" className="text-primary hover:underline">
-                start an application
+                Start an application
               </Link>
               .
             </p>

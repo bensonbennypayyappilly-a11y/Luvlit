@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type {
   BusinessDetail,
   CategoryRow,
@@ -219,25 +220,17 @@ export const getEvents = createServerFn({ method: "GET" })
 
 /** Public influencer application status lookup by the email/phone used to apply. */
 export const getInfluencerApplicationStatus = createServerFn({ method: "POST" })
-  .inputValidator((input: { contact: string }) => ({ contact: String(input.contact ?? "").trim() }))
-  .handler(async ({ data }): Promise<{ found: boolean; status?: string; submitted_at?: string }> => {
-    const contact = data.contact.replace(/[,()]/g, "");
-    if (!contact || contact.length > 255) return { found: false };
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: profiles } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .or(`email.eq.${contact},phone.eq.${contact}`)
-      .limit(1);
-    const profileId = profiles?.[0]?.id;
-    if (!profileId) return { found: false };
-    const { data: rows } = await supabaseAdmin
-      .from("influencer_profiles")
-      .select("approval_status,submitted_at")
-      .eq("user_id", profileId)
-      .order("submitted_at", { ascending: false })
-      .limit(1);
-    const row = rows?.[0];
-    if (!row) return { found: false };
-    return { found: true, status: row.approval_status, submitted_at: row.submitted_at };
-  });
+  .middleware([requireSupabaseAuth])
+  .handler(
+    async ({ context }): Promise<{ found: boolean; status?: string; submitted_at?: string }> => {
+      const { data: rows } = await context.supabase
+        .from("influencer_profiles")
+        .select("approval_status,submitted_at")
+        .eq("user_id", context.userId)
+        .order("submitted_at", { ascending: false })
+        .limit(1);
+      const row = rows?.[0];
+      if (!row) return { found: false };
+      return { found: true, status: row.approval_status, submitted_at: row.submitted_at };
+    },
+  );
