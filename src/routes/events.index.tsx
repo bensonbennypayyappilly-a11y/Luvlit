@@ -108,6 +108,7 @@ function EventsIndex() {
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <select
+            aria-label="Filter events by city"
             value={search.city ?? ""}
             onChange={(e) => navigate({ search: { ...search, city: e.target.value || undefined } })}
             className="rounded-md border border-border bg-background px-3 py-2 text-sm"
@@ -118,6 +119,7 @@ function EventsIndex() {
             ))}
           </select>
           <select
+            aria-label="Filter events by category"
             value={search.category ?? ""}
             onChange={(e) => navigate({ search: { ...search, category: e.target.value || undefined } })}
             className="rounded-md border border-border bg-background px-3 py-2 text-sm"

@@ -19,19 +19,58 @@ const getEventById = createServerFn({ method: "GET" })
 
 export const Route = createFileRoute("/events/$id")({
   loader: async ({ params }) => getEventById({ data: { id: params.id } }),
-  head: ({ loaderData }) => {
+  head: ({ params, loaderData }) => {
     if (!loaderData) {
       return { meta: [{ title: "Event unavailable — LuvLit" }, { name: "robots", content: "noindex" }] };
     }
+    const url = `https://luvlt.lovable.app/events/${params.id}`;
     const desc = (loaderData.description ?? `${loaderData.title} on LuvLit.`).slice(0, 155);
     const meta: { title?: string; name?: string; property?: string; content?: string }[] = [
       { title: `${loaderData.title} — LuvLit` },
       { name: "description", content: desc },
       { property: "og:title", content: loaderData.title },
       { property: "og:description", content: desc },
+      { property: "og:url", content: url },
+      { property: "og:type", content: "website" },
     ];
-    if (loaderData.image_urls?.[0]) meta.push({ property: "og:image", content: loaderData.image_urls[0] });
-    return { meta };
+    if (loaderData.image_urls?.[0]) {
+      meta.push({ property: "og:image", content: loaderData.image_urls[0] });
+      meta.push({ name: "twitter:image", content: loaderData.image_urls[0] });
+    }
+    return {
+      meta,
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Event",
+            name: loaderData.title,
+            description: desc,
+            url,
+            startDate: loaderData.start_date,
+            ...(loaderData.end_date ? { endDate: loaderData.end_date } : {}),
+            eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+            ...(loaderData.image_urls?.length ? { image: loaderData.image_urls } : {}),
+            ...(loaderData.city || loaderData.address
+              ? {
+                  location: {
+                    "@type": "Place",
+                    name: loaderData.address ?? loaderData.city ?? "",
+                    address: {
+                      "@type": "PostalAddress",
+                      ...(loaderData.address ? { streetAddress: loaderData.address } : {}),
+                      ...(loaderData.city ? { addressLocality: loaderData.city } : {}),
+                      addressCountry: "IN",
+                    },
+                  },
+                }
+              : {}),
+          }),
+        },
+      ],
+    };
   },
   errorComponent: () => <Shell>Something went wrong loading this event.</Shell>,
   notFoundComponent: () => <Shell>This event isn't available.</Shell>,

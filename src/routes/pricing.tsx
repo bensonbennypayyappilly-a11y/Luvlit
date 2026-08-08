@@ -4,7 +4,7 @@ import { PageShell, Section } from "@/components/page-shell";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — free until 30 November, then ₹20 and ₹199/month | LuvLit" },
+      { title: "Pricing for businesses — ₹20 first month | LuvLit" },
       {
         name: "description",
         content:
