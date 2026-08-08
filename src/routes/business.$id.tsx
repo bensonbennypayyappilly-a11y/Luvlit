@@ -5,19 +5,60 @@ import type { BusinessDetail } from "@/lib/public.types";
 
 export const Route = createFileRoute("/business/$id")({
   loader: async ({ params }) => getBusinessById({ data: { id: params.id } }),
-  head: ({ loaderData }) => {
+  head: ({ params, loaderData }) => {
     if (!loaderData) {
       return { meta: [{ title: "Business unavailable — LuvLit" }, { name: "robots", content: "noindex" }] };
     }
+    const url = `https://luvlt.lovable.app/business/${params.id}`;
     const desc = (loaderData.description ?? `${loaderData.name} on LuvLit.`).slice(0, 155);
     const meta: { title?: string; name?: string; property?: string; content?: string }[] = [
       { title: `${loaderData.name} — LuvLit` },
       { name: "description", content: desc },
       { property: "og:title", content: loaderData.name },
       { property: "og:description", content: desc },
+      { property: "og:url", content: url },
+      { property: "og:type", content: "website" },
     ];
-    if (loaderData.hero_image_url) meta.push({ property: "og:image", content: loaderData.hero_image_url });
-    return { meta };
+    if (loaderData.hero_image_url) {
+      meta.push({ property: "og:image", content: loaderData.hero_image_url });
+      meta.push({ name: "twitter:image", content: loaderData.hero_image_url });
+    }
+    const locations = (loaderData.locations ?? []) as Array<{
+      address?: string | null;
+      city?: string | null;
+      state?: string | null;
+    }>;
+    return {
+      meta,
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            name: loaderData.name,
+            description: desc,
+            url,
+            ...(loaderData.hero_image_url ? { image: loaderData.hero_image_url } : {}),
+            ...(loaderData.logo_url ? { logo: loaderData.logo_url } : {}),
+            ...(loaderData.contact_email ? { email: loaderData.contact_email } : {}),
+            ...(loaderData.categories?.length ? { knowsAbout: loaderData.categories } : {}),
+            ...(locations.length
+              ? {
+                  address: locations.map((l) => ({
+                    "@type": "PostalAddress",
+                    ...(l.address ? { streetAddress: l.address } : {}),
+                    ...(l.city ? { addressLocality: l.city } : {}),
+                    ...(l.state ? { addressRegion: l.state } : {}),
+                    addressCountry: "IN",
+                  })),
+                }
+              : {}),
+          }),
+        },
+      ],
+    };
   },
   errorComponent: () => <Shell>Something went wrong loading this page.</Shell>,
   notFoundComponent: () => <Shell>This business page isn't available.</Shell>,
