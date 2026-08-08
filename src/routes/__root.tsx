@@ -111,6 +111,43 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "@id": "https://luvlt.lovable.app/#website",
+              url: "https://luvlt.lovable.app/",
+              name: "LuvLit",
+              description:
+                "Marketplace connecting customers with small businesses, brands and influencers across India.",
+              inLanguage: "en-IN",
+              publisher: { "@id": "https://luvlt.lovable.app/#organization" },
+              potentialAction: {
+                "@type": "SearchAction",
+                target: {
+                  "@type": "EntryPoint",
+                  urlTemplate: "https://luvlt.lovable.app/browse?q={search_term_string}",
+                },
+                "query-input": "required name=search_term_string",
+              },
+            },
+            {
+              "@type": "Organization",
+              "@id": "https://luvlt.lovable.app/#organization",
+              name: "LuvLit",
+              url: "https://luvlt.lovable.app/",
+              description:
+                "LuvLit gives Indian small businesses their own website and connects them with customers by category and city.",
+              areaServed: { "@type": "Country", name: "India" },
+            },
+          ],
+        }),
+      },
+    ],
   }),
 
   shellComponent: RootShell,

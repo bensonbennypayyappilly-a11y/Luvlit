@@ -15,21 +15,23 @@ import heroImage from "@/assets/luvlit-hero.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "LuvLit — Discover India's Small Businesses & Brands" },
+      { title: "LuvLit — Find local businesses & brands near you" },
       {
         name: "description",
         content:
-          "LuvLit connects you with small businesses, brands and influencers across India — browse by category and city, book appointments, and request quotes.",
+          "Browse handmade, fashion, decor, food and service businesses by city, book appointments without an account, and post a requirement to get quotes from matching sellers.",
       },
-      { property: "og:title", content: "LuvLit — Discover India's Small Businesses & Brands" },
+      { property: "og:title", content: "Find local businesses & brands near you — LuvLit" },
       {
         property: "og:description",
         content:
-          "LuvLit connects you with small businesses, brands and influencers across India — browse by category and city, book appointments, and request quotes.",
+          "Browse by category and city, book appointments without an account, and post a requirement to get quotes from matching Indian small businesses.",
       },
+      { property: "og:url", content: "https://luvlt.lovable.app/" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://luvlt.lovable.app/" }],
   }),
   loader: async () => ({
     categories: await getCategories(),
