@@ -8,37 +8,55 @@ import { Reveal } from "@/components/reveal";
 import { SearchPill } from "@/components/search-pill";
 import { FeaturedSpotlightPanel } from "@/components/featured-spotlight-panel";
 import { EventsSection } from "@/components/events-section";
-import { getCategories, getBusinesses, getCities } from "@/lib/public.functions";
+import { getCategories, getBusinesses, getCities, getSubdomainBusiness } from "@/lib/public.functions";
+import { buildBusinessHead, toProfileBusiness } from "@/lib/business-seo";
+import { BusinessProfilePreview } from "@/components/business-profile-preview";
 import type { CategoryRow, CityRow, PublicBusiness } from "@/lib/public.types";
 import { PLANS } from "@/lib/constants";
 import heroImage from "@/assets/luvlit-hero.jpg";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "LuvLit — Find local businesses & brands near you" },
-      {
-        name: "description",
-        content:
-          "Browse handmade, fashion, decor, food and service businesses by city, book appointments without an account, and post a requirement to get quotes from matching sellers.",
-      },
-      { property: "og:title", content: "Find local businesses & brands near you — LuvLit" },
-      {
-        property: "og:description",
-        content:
-          "Browse by category and city, book appointments without an account, and post a requirement to get quotes from matching Indian small businesses.",
-      },
-      { property: "og:url", content: "https://luvlit.in/" },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [{ rel: "canonical", href: "https://luvlit.in/" }],
-  }),
-  loader: async () => ({
-    categories: await getCategories(),
-    featured: await getBusinesses({ data: {} }),
-    cities: await getCities(),
-  }),
+  head: ({ loaderData }) => {
+    if (loaderData?.type === "business") {
+      return buildBusinessHead(loaderData.business, `https://${loaderData.business.slug}.luvlit.in/`);
+    }
+    return {
+      meta: [
+        { title: "LuvLit — Find local businesses & brands near you" },
+        {
+          name: "description",
+          content:
+            "Browse handmade, fashion, decor, food and service businesses by city, book appointments without an account, and post a requirement to get quotes from matching sellers.",
+        },
+        { property: "og:title", content: "Find local businesses & brands near you — LuvLit" },
+        {
+          property: "og:description",
+          content:
+            "Browse by category and city, book appointments without an account, and post a requirement to get quotes from matching Indian small businesses.",
+        },
+        { property: "og:url", content: "https://luvlit.in/" },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      links: [{ rel: "canonical", href: "https://luvlit.in/" }],
+    };
+  },
+  loader: async () => {
+    // A request to {slug}.luvlit.in/ renders that business's public profile here
+    // instead of the marketplace homepage — see getSubdomainBusiness for the
+    // Host-header matching logic. Any other host (localhost, *.vercel.app, luvlit.in
+    // itself) falls through to the normal homepage below.
+    const subdomainBusiness = await getSubdomainBusiness();
+    if (subdomainBusiness) {
+      return { type: "business" as const, business: subdomainBusiness };
+    }
+    return {
+      type: "home" as const,
+      categories: await getCategories(),
+      featured: await getBusinesses({ data: {} }),
+      cities: await getCities(),
+    };
+  },
   component: Index,
 });
 
@@ -68,11 +86,25 @@ const OWNER_PERKS = [
 ];
 
 function Index() {
-  const { categories, featured, cities } = Route.useLoaderData() as {
-    categories: CategoryRow[];
-    featured: PublicBusiness[];
-    cities: CityRow[];
-  };
+  const data = Route.useLoaderData() as
+    | { type: "business"; business: NonNullable<import("@/lib/public.types").BusinessDetail> }
+    | { type: "home"; categories: CategoryRow[]; featured: PublicBusiness[]; cities: CityRow[] };
+
+  if (data.type === "business") {
+    return <BusinessProfilePreview business={toProfileBusiness(data.business)} />;
+  }
+  return <HomePage categories={data.categories} featured={data.featured} cities={data.cities} />;
+}
+
+function HomePage({
+  categories,
+  featured,
+  cities,
+}: {
+  categories: CategoryRow[];
+  featured: PublicBusiness[];
+  cities: CityRow[];
+}) {
   const [city, setCity] = useState("");
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const featuredList = featured.filter((b) => b.featured).slice(0, 6);

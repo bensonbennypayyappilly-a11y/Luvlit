@@ -37,6 +37,7 @@ export type BusinessItem = {
 
 export type BusinessDetail = {
   id: string;
+  slug: string;
   name: string;
   description: string | null;
   categories: string[];

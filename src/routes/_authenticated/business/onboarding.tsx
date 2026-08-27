@@ -6,6 +6,8 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MediaUploader } from "@/components/media-uploader";
 import { ACCENT_COLORS, BUSINESS_TYPES, CITIES, ECO_CATEGORIES } from "@/lib/constants";
+import { slugify } from "@/lib/slugify";
+import { isReservedSlug } from "@/lib/reserved-slugs";
 
 export const Route = createFileRoute("/_authenticated/business/onboarding")({
   head: () => ({
@@ -107,16 +109,39 @@ function Onboarding() {
     setStep(step + 1);
   }
 
+  /** Generates a slug from `name`, retrying with -2/-3/... until it's neither reserved nor taken. */
+  async function generateUniqueSlug(name: string, ownId: string): Promise<string> {
+    const base = slugify(name);
+    let candidate = base;
+    let suffix = 1;
+    for (;;) {
+      if (!isReservedSlug(candidate)) {
+        const { data: taken } = await supabase
+          .from("businesses")
+          .select("id")
+          .eq("slug", candidate)
+          .neq("id", ownId)
+          .maybeSingle();
+        if (!taken) return candidate;
+      }
+      suffix += 1;
+      candidate = `${base}-${suffix}`;
+    }
+  }
+
   async function finish() {
     setError(null);
     const id = await ensureBusiness();
     if (!id) return;
     setSaving(true);
 
+    const slug = await generateUniqueSlug(form.name || "Untitled business", id);
+
     const { error: businessError } = await supabase
       .from("businesses")
       .update({
         name: form.name,
+        slug,
         description: form.description,
         categories: form.categories,
         business_types: form.business_types,

@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isReservedSlug } from "@/lib/reserved-slugs";
 import type {
   BusinessDetail,
   CategoryRow,
@@ -9,6 +10,46 @@ import type {
   PublicInfluencer,
   StaffAvailability,
 } from "./public.types";
+
+const BUSINESS_DETAIL_SELECT =
+  "*,locations(*),delivery_areas(*),items(*),staff(id,name,specializations,slot_duration_minutes)";
+
+/** Resolves private-bucket storage paths on a fetched business row to signed URLs. */
+async function resolveBusinessMedia(
+  client: Awaited<ReturnType<typeof import("./supabase-public.server").publicClient>>,
+  business: Record<string, unknown> | null,
+): Promise<BusinessDetail> {
+  if (!business) return null;
+
+  const isPath = (v: unknown): v is string => typeof v === "string" && v.length > 0 && !/^https?:\/\//i.test(v);
+  const b = business;
+  const paths: string[] = [];
+  if (isPath(b.hero_image_url)) paths.push(b.hero_image_url);
+  if (isPath(b.logo_url)) paths.push(b.logo_url);
+  if (isPath(b.main_video_url)) paths.push(b.main_video_url);
+  const shorts = Array.isArray(b.short_video_urls) ? (b.short_video_urls as string[]) : [];
+  for (const s of shorts) if (isPath(s)) paths.push(s);
+  const gallery = Array.isArray(b.gallery_urls) ? (b.gallery_urls as string[]) : [];
+  for (const g of gallery) if (isPath(g)) paths.push(g);
+
+  if (paths.length) {
+    const { data: signed, error: signedError } = await client.storage
+      .from("business-media")
+      .createSignedUrls(paths, 60 * 60 * 24 * 7);
+    if (signedError) throw new Error(signedError.message);
+    const map = new Map<string, string>();
+    (signed ?? []).forEach((s) => {
+      if (s.path && s.signedUrl) map.set(s.path, s.signedUrl);
+    });
+    if (isPath(b.hero_image_url)) b.hero_image_url = map.get(b.hero_image_url) ?? b.hero_image_url;
+    if (isPath(b.logo_url)) b.logo_url = map.get(b.logo_url) ?? b.logo_url;
+    if (isPath(b.main_video_url)) b.main_video_url = map.get(b.main_video_url) ?? b.main_video_url;
+    if (shorts.length) b.short_video_urls = shorts.map((s) => (isPath(s) ? map.get(s) ?? s : s));
+    if (gallery.length) b.gallery_urls = gallery.map((g) => (isPath(g) ? map.get(g) ?? g : g));
+  }
+
+  return b as unknown as BusinessDetail;
+}
 
 export type BusinessFilters = {
   category?: string;
@@ -109,44 +150,43 @@ export const getBusinessById = createServerFn({ method: "GET" })
     const client = publicClient();
     const { data: business, error } = await client
       .from("businesses")
-      .select(
-        "*,locations(*),delivery_areas(*),items(*),staff(id,name,specializations,slot_duration_minutes)",
-      )
+      .select(BUSINESS_DETAIL_SELECT)
       .eq("id", data.id)
       .eq("is_live", true)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!business) return null;
-
-    const isPath = (v: unknown): v is string => typeof v === "string" && v.length > 0 && !/^https?:\/\//i.test(v);
-    const b = business as unknown as Record<string, unknown>;
-    const paths: string[] = [];
-    if (isPath(b.hero_image_url)) paths.push(b.hero_image_url);
-    if (isPath(b.logo_url)) paths.push(b.logo_url);
-    if (isPath(b.main_video_url)) paths.push(b.main_video_url);
-    const shorts = Array.isArray(b.short_video_urls) ? (b.short_video_urls as string[]) : [];
-    for (const s of shorts) if (isPath(s)) paths.push(s);
-    const gallery = Array.isArray(b.gallery_urls) ? (b.gallery_urls as string[]) : [];
-    for (const g of gallery) if (isPath(g)) paths.push(g);
-
-    if (paths.length) {
-      const { data: signed, error: signedError } = await client.storage
-        .from("business-media")
-        .createSignedUrls(paths, 60 * 60 * 24 * 7);
-      if (signedError) throw new Error(signedError.message);
-      const map = new Map<string, string>();
-      (signed ?? []).forEach((s) => {
-        if (s.path && s.signedUrl) map.set(s.path, s.signedUrl);
-      });
-      if (isPath(b.hero_image_url)) b.hero_image_url = map.get(b.hero_image_url) ?? b.hero_image_url;
-      if (isPath(b.logo_url)) b.logo_url = map.get(b.logo_url) ?? b.logo_url;
-      if (isPath(b.main_video_url)) b.main_video_url = map.get(b.main_video_url) ?? b.main_video_url;
-      if (shorts.length) b.short_video_urls = shorts.map((s) => (isPath(s) ? map.get(s) ?? s : s));
-      if (gallery.length) b.gallery_urls = gallery.map((g) => (isPath(g) ? map.get(g) ?? g : g));
-    }
-
-    return b as unknown as BusinessDetail;
+    return resolveBusinessMedia(client, business as unknown as Record<string, unknown> | null);
   });
+
+/**
+ * Looks up a business by the request's Host header, for rendering a business's
+ * public profile at the root path of its {slug}.luvlit.in subdomain. Returns null
+ * for any host that isn't exactly `{slug}.luvlit.in` with a non-reserved slug —
+ * including localhost and *.vercel.app preview deployments — so this only ever
+ * activates in production on the real domain.
+ */
+export const getSubdomainBusiness = createServerFn({ method: "GET" }).handler(
+  async (): Promise<BusinessDetail> => {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const request = getRequest();
+    const hostname = (request?.headers.get("host") ?? "").split(":")[0].toLowerCase();
+    const parts = hostname.split(".");
+    if (parts.length !== 3 || parts[1] !== "luvlit" || parts[2] !== "in") return null;
+    const slug = parts[0];
+    if (!slug || isReservedSlug(slug)) return null;
+
+    const { publicClient } = await import("./supabase-public.server");
+    const client = publicClient();
+    const { data: business, error } = await client
+      .from("businesses")
+      .select(BUSINESS_DETAIL_SELECT)
+      .eq("slug", slug)
+      .eq("is_live", true)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return resolveBusinessMedia(client, business as unknown as Record<string, unknown> | null);
+  },
+);
 
 export const getInfluencers = createServerFn({ method: "GET" })
   .validator(

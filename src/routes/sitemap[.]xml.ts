@@ -4,7 +4,10 @@ import type {} from "@tanstack/react-start";
 const BASE_URL = "https://luvlit.in";
 
 interface SitemapEntry {
-  path: string;
+  /** Relative path under BASE_URL. Mutually exclusive with absoluteUrl. */
+  path?: string;
+  /** Fully-qualified URL, used for business subdomain entries. */
+  absoluteUrl?: string;
   lastmod?: string;
   changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
   priority?: string;
@@ -33,11 +36,15 @@ export const Route = createFileRoute("/sitemap.xml")({
           const { publicClient } = await import("@/lib/supabase-public.server");
           const client = publicClient();
           const [{ data: businesses }, { data: events }] = await Promise.all([
-            client.from("businesses").select("id").eq("is_live", true).is("deleted_at", null),
+            client.from("businesses").select("id,slug").eq("is_live", true).is("deleted_at", null),
             client.from("events").select("id").eq("status", "published"),
           ]);
           for (const b of businesses ?? []) {
-            entries.push({ path: `/business/${b.id}`, changefreq: "weekly", priority: "0.8" });
+            entries.push(
+              b.slug
+                ? { absoluteUrl: `https://${b.slug}.luvlit.in/`, changefreq: "weekly", priority: "0.8" }
+                : { path: `/business/${b.id}`, changefreq: "weekly", priority: "0.8" },
+            );
           }
           for (const e of events ?? []) {
             entries.push({ path: `/events/${e.id}`, changefreq: "weekly", priority: "0.6" });
@@ -50,7 +57,7 @@ export const Route = createFileRoute("/sitemap.xml")({
         const urls = entries.map((e) =>
           [
             `  <url>`,
-            `    <loc>${BASE_URL}${e.path}</loc>`,
+            `    <loc>${e.absoluteUrl ?? `${BASE_URL}${e.path}`}</loc>`,
             e.lastmod ? `    <lastmod>${e.lastmod}</lastmod>` : null,
             e.changefreq ? `    <changefreq>${e.changefreq}</changefreq>` : null,
             e.priority ? `    <priority>${e.priority}</priority>` : null,
