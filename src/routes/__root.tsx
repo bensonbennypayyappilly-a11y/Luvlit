@@ -91,8 +91,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "LuvLit — Discover India's Small Businesses & Brands" },
       { name: "twitter:description", content: "LuvLit connects you with small businesses, brands and influencers across India — browse by category and city, book appointments, and request quotes." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8aa7dce3-74ed-4234-bed9-0c00f49b1029/id-preview-ff899fdb--5e0b0d79-7845-4c5a-8e08-d267b3fc9893.lovable.app-1785306133659.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8aa7dce3-74ed-4234-bed9-0c00f49b1029/id-preview-ff899fdb--5e0b0d79-7845-4c5a-8e08-d267b3fc9893.lovable.app-1785306133659.png" },
+      { property: "og:image", content: "https://luvlit.in/og-placeholder.jpg" },
+      { name: "twitter:image", content: "https://luvlit.in/og-placeholder.jpg" },
     ],
     links: [
       {
