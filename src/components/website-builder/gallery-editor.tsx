@@ -15,7 +15,7 @@ function GalleryThumb({ path, onRemove }: { path: string; onRemove: () => void }
       <button
         type="button"
         onClick={onRemove}
-        className="absolute right-1 top-1 rounded-md bg-background/90 px-2 py-0.5 text-[0.65rem] text-destructive"
+        className="absolute right-1 top-1 rounded-md bg-background/90 px-2.5 py-1 text-xs text-destructive"
       >
         Remove
       </button>
@@ -43,8 +43,8 @@ export function GalleryEditor({
   }
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-2">
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-3">
         {value.map((path, i) => (
           <GalleryThumb
             key={`${path}-${i}`}

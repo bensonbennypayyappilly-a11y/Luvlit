@@ -82,12 +82,12 @@ export function LocationsEditor({ businessId }: { businessId: string }) {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-medium">Locations</p>
-        <div className="mt-2 space-y-2">
+        <p className="text-sm font-medium">Locations</p>
+        <div className="mt-3 space-y-3">
           {(locations ?? []).map((l) => (
-            <div key={l.id} className="flex items-center justify-between rounded-md border border-border p-3 text-xs">
+            <div key={l.id} className="flex items-center justify-between rounded-md border border-border p-4 text-xs">
               <div>
-                <p className="font-medium">{l.city}{l.is_primary ? " · Main branch" : ""}</p>
+                <p className="text-sm font-medium">{l.city}{l.is_primary ? " · Main branch" : ""}</p>
                 <p className="text-muted-foreground">{[l.address, l.state].filter(Boolean).join(", ")}</p>
               </div>
               <button type="button" onClick={() => removeLocation(l.id)} className="text-destructive">
@@ -96,18 +96,18 @@ export function LocationsEditor({ businessId }: { businessId: string }) {
             </div>
           ))}
         </div>
-        <div className="mt-3 space-y-2">
+        <div className="mt-4 space-y-3">
           <input
             value={form.address}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
             placeholder="Address"
-            className="w-full rounded-md border border-border bg-card px-3 py-2 text-xs"
+            className="w-full rounded-md border border-border bg-card px-3 py-2.5 text-sm"
           />
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <select
               value={form.city}
               onChange={(e) => setForm({ ...form, city: e.target.value })}
-              className="w-full rounded-md border border-border bg-card px-3 py-2 text-xs"
+              className="w-full rounded-md border border-border bg-card px-3 py-2.5 text-sm"
             >
               <option value="">City</option>
               {CITIES.map((c) => (
@@ -118,29 +118,29 @@ export function LocationsEditor({ businessId }: { businessId: string }) {
               value={form.state}
               onChange={(e) => setForm({ ...form, state: e.target.value })}
               placeholder="State"
-              className="w-full rounded-md border border-border bg-card px-3 py-2 text-xs"
+              className="w-full rounded-md border border-border bg-card px-3 py-2.5 text-sm"
             />
           </div>
-          <button type="button" onClick={addLocation} className="rounded-md border border-accent px-3 py-1.5 text-xs">
+          <button type="button" onClick={addLocation} className="rounded-md border border-accent px-4 py-2 text-sm">
             Add location
           </button>
         </div>
       </div>
 
       <div>
-        <p className="text-xs font-medium">Delivery areas</p>
-        <label className="mt-2 flex items-center gap-2 text-xs">
+        <p className="text-sm font-medium">Delivery areas</p>
+        <label className="mt-3 flex items-center gap-2 text-sm">
           <input type="checkbox" checked={panIndia} onChange={(e) => setPanIndia(e.target.checked)} />
           I deliver / serve all of India
         </label>
         {!panIndia && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-3 flex flex-wrap gap-2">
             {CITIES.map((c) => (
               <button
                 type="button"
                 key={c}
                 onClick={() => toggleDeliveryCity(c)}
-                className={`rounded-full border px-2.5 py-1 text-[0.7rem] ${
+                className={`rounded-full border px-3 py-1.5 text-xs ${
                   deliveryCities.includes(c) ? "border-accent bg-accent-soft" : "border-border"
                 }`}
               >

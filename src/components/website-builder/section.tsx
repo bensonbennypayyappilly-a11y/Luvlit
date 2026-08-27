@@ -19,15 +19,15 @@ export function BuilderSection({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-start justify-between gap-3 px-4 py-4 text-left"
+        className="flex w-full items-start justify-between gap-3 px-4 py-5 text-left"
       >
         <div>
           <p className="text-sm font-medium">{title}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
         </div>
         <span className="mt-0.5 shrink-0 text-muted-foreground">{open ? "−" : "+"}</span>
       </button>
-      {open && <div className="space-y-4 px-4 pb-5">{children}</div>}
+      {open && <div className="space-y-5 px-4 pb-6">{children}</div>}
     </div>
   );
 }

@@ -180,7 +180,7 @@ function WebsiteBuilder() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-4">
         <Link to="/business/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
           ← My Website
         </Link>
@@ -196,9 +196,9 @@ function WebsiteBuilder() {
           </button>
         </div>
       </div>
-      {publishError && <p className="px-4 pt-2 text-sm text-destructive">{publishError}</p>}
+      {publishError && <p className="px-4 pt-3 text-sm text-destructive">{publishError}</p>}
       {publishState === "saved" && !publishError && (
-        <p className="px-4 pt-2 text-xs text-muted-foreground">Your website is live.</p>
+        <p className="px-4 pt-3 text-xs text-muted-foreground">Your website is live.</p>
       )}
 
       <div className="flex flex-1 flex-col lg:flex-row">
@@ -250,13 +250,13 @@ function WebsiteBuilder() {
               placeholder="Describe what you do"
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
             />
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {(categories ?? []).map((c) => (
                 <button
                   type="button"
                   key={c.id}
                   onClick={() => onImmediateChange({ categories: toggle(draft.categories, c.name) })}
-                  className={`rounded-full border px-2.5 py-1 text-xs ${
+                  className={`rounded-full border px-3 py-1.5 text-xs ${
                     draft.categories.includes(c.name) ? "border-accent bg-accent-soft" : "border-border"
                   }`}
                 >
@@ -264,13 +264,13 @@ function WebsiteBuilder() {
                 </button>
               ))}
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {["product", "appointment", "custom"].map((t) => (
                 <button
                   type="button"
                   key={t}
                   onClick={() => onImmediateChange({ business_types: toggle(draft.business_types, t) })}
-                  className={`rounded-full border px-2.5 py-1 text-xs capitalize ${
+                  className={`rounded-full border px-3 py-1.5 text-xs capitalize ${
                     draft.business_types.includes(t) ? "border-accent bg-accent-soft" : "border-border"
                   }`}
                 >
@@ -279,7 +279,7 @@ function WebsiteBuilder() {
               ))}
             </div>
             {showEco && (
-              <label className="flex items-center justify-between rounded-md border border-border p-3 text-xs">
+              <label className="flex items-center justify-between rounded-md border border-border p-4 text-sm">
                 <span>Eco-friendly / sustainable?</span>
                 <input
                   type="checkbox"
@@ -293,7 +293,7 @@ function WebsiteBuilder() {
           <BuilderSection title="Products/Services" subtitle="Manage your catalogue in Products.">
             <Link
               to="/business/dashboard/products"
-              className="inline-block rounded-md border border-accent px-4 py-2 text-xs"
+              className="inline-block rounded-md border border-accent px-4 py-2.5 text-sm"
             >
               Go to Products →
             </Link>
@@ -302,7 +302,7 @@ function WebsiteBuilder() {
           <BuilderSection title="Book Appointments" subtitle="Manage staff & availability there.">
             <Link
               to="/business/dashboard/staff"
-              className="inline-block rounded-md border border-accent px-4 py-2 text-xs"
+              className="inline-block rounded-md border border-accent px-4 py-2.5 text-sm"
             >
               Go to Staff & Availability →
             </Link>
@@ -310,7 +310,7 @@ function WebsiteBuilder() {
 
           <BuilderSection title="Website Settings" subtitle="Colour, contact info, locations & delivery.">
             <div>
-              <p className="text-xs font-medium">Brand accent colour</p>
+              <p className="text-sm font-medium">Brand accent colour</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {ACCENT_COLORS.map((c) => (
                   <button
@@ -352,7 +352,7 @@ function WebsiteBuilder() {
 
         {/* Live preview */}
         <div className="flex flex-1 flex-col bg-secondary/30">
-          <div className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-2">
+          <div className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5">
             <div className="flex items-center gap-1">
               <button
                 type="button"
@@ -384,7 +384,7 @@ function WebsiteBuilder() {
               Preview ↗
             </a>
           </div>
-          <p className="border-b border-border bg-card px-4 py-2 text-[0.7rem] text-muted-foreground">
+          <p className="border-b border-border bg-card px-4 py-2.5 text-xs text-muted-foreground">
             The "Preview" tab shows your last-saved / published page, not unsaved draft changes.
           </p>
           <div className="flex-1 overflow-y-auto p-4 lg:p-8">
