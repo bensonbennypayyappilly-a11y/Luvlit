@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/saved")({
 function Saved() {
   const { userId } = useAccount();
   const queryClient = useQueryClient();
+  const [removeError, setRemoveError] = useState<string | null>(null);
 
   const { data } = useQuery({
     queryKey: ["saved-businesses", userId],
@@ -41,7 +43,9 @@ function Saved() {
   });
 
   async function remove(favoriteId: string) {
-    await supabase.from("favorites").delete().eq("id", favoriteId);
+    setRemoveError(null);
+    const { error } = await supabase.from("favorites").delete().eq("id", favoriteId);
+    if (error) return setRemoveError(error.message);
     queryClient.invalidateQueries({ queryKey: ["saved-businesses", userId] });
   }
 
@@ -54,6 +58,7 @@ function Saved() {
         <p className="mt-3 max-w-xl text-muted-foreground">
           Businesses you've favourited, ready whenever you need them.
         </p>
+        {removeError && <p className="mt-4 text-sm text-destructive">{removeError}</p>}
 
         <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
           {(data ?? []).map((f) =>

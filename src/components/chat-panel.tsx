@@ -23,6 +23,7 @@ export function ChatPanel({ conversationId, senderType, senderId, title, accent 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -71,14 +72,19 @@ export function ChatPanel({ conversationId, senderType, senderId, title, accent 
     const content = draft.trim().slice(0, 2000);
     if (!content) return;
     setSending(true);
-    setDraft("");
-    await supabase.from("messages").insert({
+    setSendError(null);
+    const { error } = await supabase.from("messages").insert({
       conversation_id: conversationId,
       sender_type: senderType,
       sender_id: senderId,
       content,
     });
     setSending(false);
+    if (error) {
+      setSendError(error.message);
+      return;
+    }
+    setDraft("");
   }
 
   return (
@@ -112,6 +118,7 @@ export function ChatPanel({ conversationId, senderType, senderId, title, accent 
         })}
         <div ref={endRef} />
       </div>
+      {sendError && <p className="px-4 pt-3 text-sm text-destructive">{sendError}</p>}
       <form onSubmit={send} className="flex gap-2 border-t border-border px-4 py-3">
         <input
           value={draft}

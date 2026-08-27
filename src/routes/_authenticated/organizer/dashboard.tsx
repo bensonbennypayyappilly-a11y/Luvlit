@@ -164,13 +164,21 @@ function OrganizerDashboard() {
 
   async function deleteEvent(id: string) {
     if (!confirm("Delete this event?")) return;
-    await supabase.from("events").delete().eq("id", id);
+    const { error: deleteError } = await supabase.from("events").delete().eq("id", id);
+    if (deleteError) {
+      setFeatureMessage(deleteError.message);
+      return;
+    }
     qc.invalidateQueries({ queryKey: ["organizer-events", userId] });
   }
 
   async function togglePublish(ev: EventRow) {
     const status = ev.status === "published" ? "draft" : "published";
-    await supabase.from("events").update({ status }).eq("id", ev.id);
+    const { error: publishError } = await supabase.from("events").update({ status }).eq("id", ev.id);
+    if (publishError) {
+      setFeatureMessage(publishError.message);
+      return;
+    }
     qc.invalidateQueries({ queryKey: ["organizer-events", userId] });
   }
 

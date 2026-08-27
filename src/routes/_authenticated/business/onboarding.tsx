@@ -137,23 +137,41 @@ function Onboarding() {
     }
 
     if (form.newCategory.trim()) {
-      await supabase
+      const { error: categoryError } = await supabase
         .from("categories")
         .insert({ name: form.newCategory.trim(), is_approved: false, suggested_by_business_id: id });
+      if (categoryError) {
+        setSaving(false);
+        return setError(categoryError.message);
+      }
     }
     if (form.city) {
-      await supabase
+      const { error: locationError } = await supabase
         .from("locations")
         .insert({ business_id: id, address: form.address, city: form.city, state: form.state, is_primary: true });
+      if (locationError) {
+        setSaving(false);
+        return setError(locationError.message);
+      }
     }
     if (form.panIndia || form.delivery.length) {
       const areas: { business_id: string; city: string | null; is_pan_india: boolean }[] =
         form.panIndia
           ? [{ business_id: id, city: null, is_pan_india: true }]
           : form.delivery.map((city) => ({ business_id: id, city, is_pan_india: false }));
-      await supabase.from("delivery_areas").insert(areas);
+      const { error: deliveryError } = await supabase.from("delivery_areas").insert(areas);
+      if (deliveryError) {
+        setSaving(false);
+        return setError(deliveryError.message);
+      }
     }
-    await supabase.from("subscriptions").insert({ business_id: id, plan: "base", status: "active" });
+    const { error: subscriptionError } = await supabase
+      .from("subscriptions")
+      .insert({ business_id: id, plan: "base", status: "active" });
+    if (subscriptionError) {
+      setSaving(false);
+      return setError(subscriptionError.message);
+    }
 
     setSaving(false);
     navigate({ to: form.business_types.includes("appointment") ? "/business/setup-staff" : "/dashboard" });

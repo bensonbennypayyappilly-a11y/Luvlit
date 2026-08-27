@@ -99,14 +99,18 @@ function PostRequirement() {
     });
 
     if (matches.length) {
-      await supabase.from("leads").insert(
+      const { error: leadsError } = await supabase.from("leads").insert(
         matches.map((m) => ({
           requirement_id: requirement.id,
           matched_business_id: m.id,
           status: "new",
         })),
       );
-      await supabase.from("conversations").insert(
+      if (leadsError) {
+        setBusy(false);
+        return setError(leadsError.message);
+      }
+      const { error: conversationsError } = await supabase.from("conversations").insert(
         matches.map((m) => ({
           party_a_id: posterId,
           party_a_type: posterType,
@@ -115,6 +119,10 @@ function PostRequirement() {
           requirement_id: requirement.id,
         })),
       );
+      if (conversationsError) {
+        setBusy(false);
+        return setError(conversationsError.message);
+      }
     }
 
     setBusy(false);

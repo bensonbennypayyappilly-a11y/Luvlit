@@ -43,7 +43,7 @@ function SetupStaff() {
     }
 
     for (const member of staff.filter((s) => s.name.trim())) {
-      const { data: row } = await supabase
+      const { data: row, error: staffError } = await supabase
         .from("staff")
         .insert({
           business_id: business.id,
@@ -57,7 +57,10 @@ function SetupStaff() {
         })
         .select("id")
         .single();
-      if (!row) continue;
+      if (staffError || !row) {
+        setBusy(false);
+        return setError(staffError?.message ?? "Could not save staff member.");
+      }
 
       const slots: { staff_id: string; date: string; start_time: string }[] = [];
       for (let day = 0; day < 30; day++) {
@@ -76,7 +79,11 @@ function SetupStaff() {
         }
       }
       for (let i = 0; i < slots.length; i += 500) {
-        await supabase.from("slots").insert(slots.slice(i, i + 500));
+        const { error: slotsError } = await supabase.from("slots").insert(slots.slice(i, i + 500));
+        if (slotsError) {
+          setBusy(false);
+          return setError(slotsError.message);
+        }
       }
     }
     setBusy(false);

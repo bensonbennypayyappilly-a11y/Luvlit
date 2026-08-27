@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/admin/influencer-approvals
 
 function InfluencerApprovals() {
   const queryClient = useQueryClient();
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const { data: pending } = useQuery({
     queryKey: ["admin-pending-influencers"],
@@ -30,18 +32,22 @@ function InfluencerApprovals() {
   });
 
   async function approve(id: string) {
-    await supabase
+    setActionError(null);
+    const { error } = await supabase
       .from("influencer_profiles")
       .update({ approval_status: "approved", is_verified: true, reviewed_at: new Date().toISOString() })
       .eq("id", id);
+    if (error) return setActionError(error.message);
     queryClient.invalidateQueries({ queryKey: ["admin-pending-influencers"] });
   }
 
   async function reject(id: string) {
-    await supabase
+    setActionError(null);
+    const { error } = await supabase
       .from("influencer_profiles")
       .update({ approval_status: "rejected", reviewed_at: new Date().toISOString() })
       .eq("id", id);
+    if (error) return setActionError(error.message);
     queryClient.invalidateQueries({ queryKey: ["admin-pending-influencers"] });
   }
 
@@ -52,6 +58,7 @@ function InfluencerApprovals() {
       <p className="mt-3 max-w-xl text-muted-foreground">
         Review pending creator applications before they appear in Find an Influencer.
       </p>
+      {actionError && <p className="mt-4 text-sm text-destructive">{actionError}</p>}
 
       <div className="mt-12 space-y-5">
         {(pending ?? []).map((p) => (
