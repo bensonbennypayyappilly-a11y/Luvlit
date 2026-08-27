@@ -79,9 +79,10 @@ export const getBusinesses = createServerFn({ method: "GET" })
     ].filter(isPath);
     const signedMap = new Map<string, string>();
     if (thumbPaths.length) {
-      const { data: signed } = await publicClient()
+      const { data: signed, error: signedError } = await publicClient()
         .storage.from("business-media")
         .createSignedUrls(Array.from(new Set(thumbPaths)), 60 * 60 * 24 * 7);
+      if (signedError) throw new Error(signedError.message);
       (signed ?? []).forEach((s) => {
         if (s.path && s.signedUrl) signedMap.set(s.path, s.signedUrl);
       });
@@ -129,9 +130,10 @@ export const getBusinessById = createServerFn({ method: "GET" })
     for (const g of gallery) if (isPath(g)) paths.push(g);
 
     if (paths.length) {
-      const { data: signed } = await client.storage
+      const { data: signed, error: signedError } = await client.storage
         .from("business-media")
         .createSignedUrls(paths, 60 * 60 * 24 * 7);
+      if (signedError) throw new Error(signedError.message);
       const map = new Map<string, string>();
       (signed ?? []).forEach((s) => {
         if (s.path && s.signedUrl) map.set(s.path, s.signedUrl);

@@ -76,7 +76,8 @@ function useResolvedList(values: string[]) {
     Promise.all(
       values.map(async (v) => {
         if (!isStoragePath(v)) return v;
-        const { data } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(v, 60 * 60 * 24 * 7);
+        const { data, error } = await supabase.storage.from(MEDIA_BUCKET).createSignedUrl(v, 60 * 60 * 24 * 7);
+        if (error) console.error(error.message);
         return data?.signedUrl ?? v;
       }),
     ).then((resolved) => {

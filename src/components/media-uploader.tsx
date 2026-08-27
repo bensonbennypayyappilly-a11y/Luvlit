@@ -64,7 +64,8 @@ export function useMediaUrl(value: string | null | undefined, bucket: string = M
     supabase.storage
       .from(bucket)
       .createSignedUrl(value, 60 * 60 * 24 * 7)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error(error.message);
         if (active) setUrl(data?.signedUrl ?? null);
       });
     return () => {
