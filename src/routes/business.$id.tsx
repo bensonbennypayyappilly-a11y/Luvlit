@@ -9,7 +9,7 @@ export const Route = createFileRoute("/business/$id")({
     if (!loaderData) {
       return { meta: [{ title: "Business unavailable — LuvLit" }, { name: "robots", content: "noindex" }] };
     }
-    const url = `https://luvlt.lovable.app/business/${params.id}`;
+    const url = `https://luvlit.in/business/${params.id}`;
     const desc = (loaderData.description ?? `${loaderData.name} on LuvLit.`).slice(0, 155);
     const meta: { title?: string; name?: string; property?: string; content?: string }[] = [
       { title: `${loaderData.name} — LuvLit` },

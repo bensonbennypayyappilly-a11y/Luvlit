@@ -4,7 +4,7 @@ import type { PublicEvent } from "@/lib/public.types";
 
 /** Public single-event lookup — kept local to this route since it isn't shared elsewhere. */
 const getEventById = createServerFn({ method: "GET" })
-  .inputValidator((input: { id: string }) => input)
+  .validator((input: { id: string }) => input)
   .handler(async ({ data }): Promise<PublicEvent | null> => {
     const { publicClient } = await import("@/lib/supabase-public.server");
     const { data: event, error } = await publicClient()
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/events/$id")({
     if (!loaderData) {
       return { meta: [{ title: "Event unavailable — LuvLit" }, { name: "robots", content: "noindex" }] };
     }
-    const url = `https://luvlt.lovable.app/events/${params.id}`;
+    const url = `https://luvlit.in/events/${params.id}`;
     const desc = (loaderData.description ?? `${loaderData.title} on LuvLit.`).slice(0, 155);
     const meta: { title?: string; name?: string; property?: string; content?: string }[] = [
       { title: `${loaderData.title} — LuvLit` },

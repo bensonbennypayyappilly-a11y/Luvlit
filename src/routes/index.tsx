@@ -28,11 +28,11 @@ export const Route = createFileRoute("/")({
         content:
           "Browse by category and city, book appointments without an account, and post a requirement to get quotes from matching Indian small businesses.",
       },
-      { property: "og:url", content: "https://luvlt.lovable.app/" },
+      { property: "og:url", content: "https://luvlit.in/" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "canonical", href: "https://luvlt.lovable.app/" }],
+    links: [{ rel: "canonical", href: "https://luvlit.in/" }],
   }),
   loader: async () => ({
     categories: await getCategories(),

@@ -43,7 +43,7 @@ export const getCities = createServerFn({ method: "GET" }).handler(
 );
 
 export const getBusinesses = createServerFn({ method: "GET" })
-  .inputValidator((input: BusinessFilters) => input ?? {})
+  .validator((input: BusinessFilters) => input ?? {})
   .handler(async ({ data: filters }): Promise<PublicBusiness[]> => {
     const { publicClient } = await import("./supabase-public.server");
     const { data, error } = await publicClient()
@@ -103,7 +103,7 @@ export const getBusinesses = createServerFn({ method: "GET" })
   });
 
 export const getBusinessById = createServerFn({ method: "GET" })
-  .inputValidator((input: { id: string }) => input)
+  .validator((input: { id: string }) => input)
   .handler(async ({ data }): Promise<BusinessDetail> => {
     const { publicClient } = await import("./supabase-public.server");
     const client = publicClient();
@@ -149,7 +149,7 @@ export const getBusinessById = createServerFn({ method: "GET" })
   });
 
 export const getInfluencers = createServerFn({ method: "GET" })
-  .inputValidator(
+  .validator(
     (input: { category?: string; city?: string; minFollowers?: number; ratesOnly?: boolean }) =>
       input ?? {},
   )
@@ -174,7 +174,7 @@ export const getInfluencers = createServerFn({ method: "GET" })
   });
 
 export const getStaffAvailability = createServerFn({ method: "GET" })
-  .inputValidator((input: { businessId: string }) => input)
+  .validator((input: { businessId: string }) => input)
   .handler(async ({ data }): Promise<StaffAvailability> => {
     const { publicClient } = await import("./supabase-public.server");
     const client = publicClient();
@@ -203,7 +203,7 @@ export const getStaffAvailability = createServerFn({ method: "GET" })
 
 /** Published events, optionally scoped to a city. Used by the homepage + events pages. */
 export const getEvents = createServerFn({ method: "GET" })
-  .inputValidator((input: { city?: string; limit?: number } | undefined) => input ?? {})
+  .validator((input: { city?: string; limit?: number } | undefined) => input ?? {})
   .handler(async ({ data: filters }): Promise<PublicEvent[]> => {
     const { publicClient } = await import("./supabase-public.server");
     let query = publicClient()

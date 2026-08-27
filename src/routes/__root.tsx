@@ -10,7 +10,6 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -38,9 +37,6 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -119,27 +115,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@graph": [
             {
               "@type": "WebSite",
-              "@id": "https://luvlt.lovable.app/#website",
-              url: "https://luvlt.lovable.app/",
+              "@id": "https://luvlit.in/#website",
+              url: "https://luvlit.in/",
               name: "LuvLit",
               description:
                 "Marketplace connecting customers with small businesses, brands and influencers across India.",
               inLanguage: "en-IN",
-              publisher: { "@id": "https://luvlt.lovable.app/#organization" },
+              publisher: { "@id": "https://luvlit.in/#organization" },
               potentialAction: {
                 "@type": "SearchAction",
                 target: {
                   "@type": "EntryPoint",
-                  urlTemplate: "https://luvlt.lovable.app/browse?q={search_term_string}",
+                  urlTemplate: "https://luvlit.in/browse?q={search_term_string}",
                 },
                 "query-input": "required name=search_term_string",
               },
             },
             {
               "@type": "Organization",
-              "@id": "https://luvlt.lovable.app/#organization",
+              "@id": "https://luvlit.in/#organization",
               name: "LuvLit",
-              url: "https://luvlt.lovable.app/",
+              url: "https://luvlit.in/",
               description:
                 "LuvLit gives Indian small businesses their own website and connects them with customers by category and city.",
               areaServed: { "@type": "Country", name: "India" },
