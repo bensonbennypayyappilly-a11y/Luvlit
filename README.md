@@ -184,7 +184,7 @@ Final design pass: confirm every marketplace-shell page (home, browse, dashboard
 
 This project was built with [Lovable](https://lovable.dev).
 
-**Live app**: https://luvlt.lovable.app
+**Live app**: https://luvlit.in
 
 ## Build with Lovable
 
