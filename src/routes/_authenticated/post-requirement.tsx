@@ -198,21 +198,25 @@ function PostRequirement() {
           />
           <div>
             <p className="text-sm text-muted-foreground">Add up to 3 photos (optional)</p>
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {[0, 1, 2].map((i) => (
-                <MediaUploader
-                  key={i}
-                  businessId={posterId ?? "pending"}
-                  kind="gallery"
-                  bucket="requirement-media"
-                  value={images[i]}
-                  onChange={(path) =>
-                    setImages((prev) => prev.map((v, idx) => (idx === i ? path : v)))
-                  }
-                  label={`Photo ${i + 1}`}
-                />
-              ))}
-            </div>
+            {posterId ? (
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {[0, 1, 2].map((i) => (
+                  <MediaUploader
+                    key={i}
+                    businessId={posterId}
+                    kind="gallery"
+                    bucket="requirement-media"
+                    value={images[i]}
+                    onChange={(path) =>
+                      setImages((prev) => prev.map((v, idx) => (idx === i ? path : v)))
+                    }
+                    label={`Photo ${i + 1}`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">Loading…</p>
+            )}
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <button
