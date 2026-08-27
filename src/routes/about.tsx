@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell, Section } from "@/components/page-shell";
+import { PLANS } from "@/lib/constants";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -51,8 +52,8 @@ function About() {
       </Section>
       <Section heading="How we make money">
         <p>
-          Listing is free for every business until 30 November. After that it's ₹20 for the first
-          billing month and ₹199 per month afterwards, with optional featured placement. Customers
+          Listing is free for every business until 30 November. After that it's ₹{PLANS.base.introPrice} for the first
+          billing month and ₹{PLANS.base.price} per month afterwards, with optional featured placement. Customers
           never pay us anything, and we don't take a cut of what a business earns.
         </p>
       </Section>

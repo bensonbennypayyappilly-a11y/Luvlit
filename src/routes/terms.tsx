@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell, Section } from "@/components/page-shell";
+import { PLANS } from "@/lib/constants";
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
@@ -61,9 +62,9 @@ function Terms() {
 
       <Section heading="5. Payments">
         <p>
-          Base listings are free until 30 November. Subscriptions started after that are billed ₹20
-          for the first month and ₹199 per month thereafter; featured placement is ₹499/month for a
-          city or ₹999/month all-India. Payments are handled by Razorpay. Fees already paid are
+          Base listings are free until 30 November. Subscriptions started after that are billed ₹{PLANS.base.introPrice}
+          for the first month and ₹{PLANS.base.price} per month thereafter; featured placement is ₹{PLANS.featured_city.price}/month for a
+          city or ₹{PLANS.featured_all_india.price}/month all-India. Payments are handled by Razorpay. Fees already paid are
           non-refundable except where required by law; you can cancel at any time and keep access
           until the end of the paid period.
         </p>

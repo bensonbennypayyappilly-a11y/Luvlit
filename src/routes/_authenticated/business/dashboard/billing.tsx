@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
+import { PLANS, FREE_UNTIL_DATE } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/billing")({
   head: () => ({
@@ -14,8 +15,6 @@ export const Route = createFileRoute("/_authenticated/business/dashboard/billing
   }),
   component: BillingPage,
 });
-
-const FREE_UNTIL = new Date("2024-11-30T23:59:59");
 
 function BillingPage() {
   const { data: business } = useDashboardBusiness();
@@ -36,7 +35,7 @@ function BillingPage() {
       ).data,
   });
 
-  const isFreePeriod = Date.now() <= FREE_UNTIL.getTime();
+  const isFreePeriod = Date.now() <= FREE_UNTIL_DATE.getTime();
 
   return (
     <div>
@@ -59,8 +58,8 @@ function BillingPage() {
         <div className="mt-5 space-y-2 border-t border-border pt-5 text-muted-foreground">
           <p>Every business is free to use until <strong className="text-foreground">30 November</strong>.</p>
           <p>
-            Subscriptions starting after that are <strong className="text-foreground">₹20 for the first month</strong>, then{" "}
-            <strong className="text-foreground">₹199/month</strong>.
+            Subscriptions starting after that are <strong className="text-foreground">₹{PLANS.base.introPrice} for the first month</strong>, then{" "}
+            <strong className="text-foreground">₹{PLANS.base.price}/month</strong>.
           </p>
           <p>Yearly billing gives you <strong className="text-foreground">2 months free</strong>.</p>
           {isFreePeriod ? (

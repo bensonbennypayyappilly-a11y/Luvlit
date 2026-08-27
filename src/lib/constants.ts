@@ -67,10 +67,13 @@ export const ACCENT_COLORS = [
 ];
 
 export const PLANS = {
-  base: { label: "Base listing", price: 199, introPrice: 20, freeUntil: "30 November" },
+  base: { label: "Base listing", price: 99, introPrice: 49, freeUntil: "30 November" },
   featured_city: { label: "Featured — Custom Location", price: 499 },
   featured_all_india: { label: "Featured — All India", price: 999 },
 };
+
+/** Derived from PLANS.base.freeUntil ("30 November") — the free period ends Nov 30 of the current year. */
+export const FREE_UNTIL_DATE = new Date(new Date().getFullYear(), 10, 30, 23, 59, 59);
 
 /** Featured slots available per category + location combination. */
 export const FEATURED_CAP = 3;

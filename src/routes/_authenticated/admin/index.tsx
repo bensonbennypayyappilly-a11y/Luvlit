@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { PLANS } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -14,12 +15,6 @@ export const Route = createFileRoute("/_authenticated/admin/")({
   }),
   component: AdminIndex,
 });
-
-const PLAN_PRICE: Record<string, number> = {
-  base: 199,
-  featured_city: 499,
-  featured_all_india: 999,
-};
 
 function AdminIndex() {
   const queryClient = useQueryClient();
@@ -107,7 +102,7 @@ function AdminIndex() {
     if (s.status === "active") planCounts[s.plan].active += 1;
   }
   const monthlyRevenue = Object.entries(planCounts).reduce(
-    (sum, [plan, c]) => sum + c.active * (PLAN_PRICE[plan] ?? 0),
+    (sum, [plan, c]) => sum + c.active * (PLANS[plan as keyof typeof PLANS]?.price ?? 0),
     0,
   );
 

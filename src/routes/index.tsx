@@ -10,6 +10,7 @@ import { FeaturedSpotlightPanel } from "@/components/featured-spotlight-panel";
 import { EventsSection } from "@/components/events-section";
 import { getCategories, getBusinesses, getCities } from "@/lib/public.functions";
 import type { CategoryRow, CityRow, PublicBusiness } from "@/lib/public.types";
+import { PLANS } from "@/lib/constants";
 import heroImage from "@/assets/luvlit-hero.jpg";
 
 export const Route = createFileRoute("/")({
@@ -333,8 +334,8 @@ function Index() {
                   Free listing until 30 November.
                 </h2>
                 <p className="mt-4 max-w-lg text-primary-foreground/80">
-                  Guided setup, appointments, leads and chat included. ₹20 for your first month
-                  after, then ₹199/month.
+                  Guided setup, appointments, leads and chat included. ₹{PLANS.base.introPrice} for your first month
+                  after, then ₹{PLANS.base.price}/month.
                 </p>
               </div>
               <Link

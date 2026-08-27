@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PLANS } from "@/lib/constants";
 
 const FAQS: { audience: string; items: { q: string; a: string }[] }[] = [
   {
@@ -31,7 +32,7 @@ const FAQS: { audience: string; items: { q: string; a: string }[] }[] = [
       },
       {
         q: "What happens after the free period ends?",
-        a: "If your subscription starts after 30 November, your first billing month is ₹20, then ₹199 per month from the second month onwards. Yearly billing is available at a two-months-free equivalent discount.",
+        a: `If your subscription starts after 30 November, your first billing month is ₹${PLANS.base.introPrice}, then ₹${PLANS.base.price} per month from the second month onwards. Yearly billing is available at a two-months-free equivalent discount.`,
       },
       {
         q: "Can I list more than one location or category?",

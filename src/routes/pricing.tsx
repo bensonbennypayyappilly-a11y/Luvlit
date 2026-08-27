@@ -1,19 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell, Section } from "@/components/page-shell";
+import { PLANS } from "@/lib/constants";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing for businesses — ₹20 first month | LuvLit" },
+      { title: `Pricing for businesses — ₹${PLANS.base.introPrice} first month | LuvLit` },
       {
         name: "description",
-        content:
-          "LuvLit is free for every business until 30 November. After that: ₹20 for your first billing month, ₹199/month afterwards. Featured placement from ₹499/month.",
+        content: `LuvLit is free for every business until 30 November. After that: ₹${PLANS.base.introPrice} for your first billing month, ₹${PLANS.base.price}/month afterwards. Featured placement from ₹${PLANS.featured_city.price}/month.`,
       },
       { property: "og:title", content: "LuvLit pricing for businesses" },
       {
         property: "og:description",
-        content: "Free until 30 November, then ₹20 first month and ₹199/month.",
+        content: `Free until 30 November, then ₹${PLANS.base.introPrice} first month and ₹${PLANS.base.price}/month.`,
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -37,8 +37,8 @@ function Pricing() {
         </p>
         <p>
           If your subscription starts after 30 November, your{" "}
-          <strong className="text-foreground">first billing month is ₹20</strong>, and then{" "}
-          <strong className="text-foreground">₹199 per month</strong> from the second month onward.
+          <strong className="text-foreground">first billing month is ₹{PLANS.base.introPrice}</strong>, and then{" "}
+          <strong className="text-foreground">₹{PLANS.base.price} per month</strong> from the second month onward.
           Yearly billing is available at a two-months-free equivalent discount.
         </p>
       </Section>
