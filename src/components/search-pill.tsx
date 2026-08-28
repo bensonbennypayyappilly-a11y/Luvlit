@@ -1,7 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "framer-motion";
 import { useCities } from "@/hooks/use-cities";
 import type { CategoryRow } from "@/lib/public.types";
+
+/** Cycled in the search input when it's empty — real Indian SMB requirement examples. */
+const REQUIREMENT_EXAMPLES = [
+  "Wedding photographer in Jaipur",
+  "Home cleaning service in Bengaluru",
+  "Mehndi artist for a Delhi wedding",
+  "Event caterer for 100 guests, Mumbai",
+  "AC repair technician, Koramangala",
+];
+
+function useCyclingIndex(length: number, intervalMs: number) {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setIndex((i) => (i + 1) % length), intervalMs);
+    return () => clearInterval(id);
+  }, [length, intervalMs]);
+  return index;
+}
 
 /**
  * One large full-width search pill: city, free-text and a filter dropdown
@@ -29,6 +48,7 @@ export function SearchPill({
   const [category, setCategory] = useState("");
   const [openNow, setOpenNow] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const placeholderIndex = useCyclingIndex(REQUIREMENT_EXAMPLES.length, 3000);
 
   const submit = () => {
     void navigate({
@@ -63,13 +83,30 @@ export function SearchPill({
           ))}
         </select>
 
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search “block print saree”, “bakery”, “wedding photographer”…"
-          aria-label="Search"
-          className="min-w-0 flex-1 rounded-full bg-transparent px-5 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
-        />
+        <div className="relative min-w-0 flex-1">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            aria-label="Search"
+            className="w-full rounded-full bg-transparent px-5 py-3 text-sm text-foreground focus:outline-none"
+          />
+          {!q && (
+            <div className="pointer-events-none absolute inset-y-0 left-5 right-5 flex items-center overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={placeholderIndex}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.3 }}
+                  className="block truncate text-sm text-muted-foreground"
+                >
+                  Search "{REQUIREMENT_EXAMPLES[placeholderIndex]}"…
+                </motion.span>
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
 
         <div className="flex items-center gap-2 px-1 md:pr-1">
           <button

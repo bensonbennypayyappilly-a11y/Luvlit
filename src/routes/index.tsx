@@ -124,9 +124,9 @@ function HomePage({
       <SiteHeader />
 
       <main className="flex-1">
-        {/* Editorial hero — static monochrome photograph */}
-        <section className="relative isolate overflow-hidden">
-          <div className="absolute inset-0 -z-10 bg-primary">
+        {/* Dark-moment hero — the only place besides matching-results using --dark-* tokens. */}
+        <section className="relative isolate overflow-hidden bg-dark-bg">
+          <div className="absolute inset-0 -z-20">
             <img
               src={heroImage}
               alt=""
@@ -134,26 +134,26 @@ function HomePage({
               height={1088}
               className="h-full w-full object-cover grayscale"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-foreground/75 via-foreground/55 to-background" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,transparent,oklch(0.15_0_0/0.5))]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-dark-bg/75 via-dark-bg/65 to-dark-bg/90" />
           </div>
+          <div className="ambient-glow absolute inset-0 -z-10" aria-hidden="true" />
 
           <div className="mx-auto max-w-6xl px-6 pb-24 pt-28 md:pb-32 md:pt-40">
             <p
-              className="eyebrow rise-in text-background/80"
+              className="eyebrow rise-in text-dark-fg/80"
               style={{ animationDelay: "60ms" }}
             >
               Pan-India marketplace for local businesses
             </p>
             <h1
-              className="rise-in mt-6 max-w-3xl text-5xl leading-[1.06] text-background md:text-7xl"
-              style={{ animationDelay: "160ms" }}
+              className="headline rise-in mt-6 max-w-4xl text-6xl text-dark-fg md:text-8xl"
+              style={{ animationDelay: "160ms", ["--shimmer-color" as string]: "var(--dark-fg)" }}
             >
               The small businesses worth
               <span className="shimmer-text"> knowing</span>, near you.
             </h1>
             <p
-              className="rise-in mt-7 max-w-xl text-lg text-background/85"
+              className="rise-in mt-7 max-w-xl text-lg text-dark-fg/85"
               style={{ animationDelay: "260ms" }}
             >
               Makers, studios, salons and neighbourhood brands — each with their own page. Book an
@@ -171,20 +171,20 @@ function HomePage({
               <Link
                 to="/auth"
                 search={{ role: "business" }}
-                className="text-sm text-background/80 underline-offset-4 hover:text-background hover:underline"
+                className="text-sm text-dark-fg/80 underline-offset-4 hover:text-dark-fg hover:underline"
               >
                 List your business free →
               </Link>
             </div>
 
             <div
-              className="rise-in mt-16 grid grid-cols-2 gap-6 border-t border-background/20 pt-8 sm:grid-cols-4"
+              className="rise-in mt-16 grid grid-cols-2 gap-6 border-t border-dark-fg/20 pt-8 sm:grid-cols-4"
               style={{ animationDelay: "560ms" }}
             >
               {stats.map((s) => (
                 <div key={s.label}>
-                  <p className="text-3xl font-semibold text-background md:text-4xl">{s.value}</p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-background/70">
+                  <p className="text-3xl font-semibold text-dark-fg md:text-4xl">{s.value}</p>
+                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-dark-fg/70">
                     {s.label}
                   </p>
                 </div>

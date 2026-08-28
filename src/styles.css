@@ -262,6 +262,11 @@
   to { background-position: -200% 0; }
 }
 
+@keyframes luv-ambient-drift {
+  0%, 100% { background-position: 15% 20%, 85% 80%; }
+  50% { background-position: 25% 30%, 75% 70%; }
+}
+
 @utility marquee-track {
   display: flex;
   width: max-content;
@@ -280,18 +285,32 @@
   animation: luv-ken-burns 24s ease-in-out infinite alternate;
 }
 
+/* Defaults to the light-scheme foreground; dark-moment contexts (hero, matching-results)
+ * override --shimmer-color to --dark-fg so the shimmer stays visible there too. */
 @utility shimmer-text {
+  --shimmer-color: var(--color-foreground);
   background: linear-gradient(
     90deg,
-    var(--color-foreground) 0%,
-    color-mix(in oklab, var(--color-foreground) 35%, var(--color-background)) 50%,
-    var(--color-foreground) 100%
+    var(--shimmer-color) 0%,
+    color-mix(in oklab, var(--shimmer-color) 35%, transparent) 50%,
+    var(--shimmer-color) 100%
   );
   background-size: 200% 100%;
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
   animation: luv-shimmer 6s linear infinite;
+}
+
+/* Slow-moving ambient color wash for dark-moment sections (hero, matching-results) — two
+ * low-opacity blobs (indigo + cyan) drifting behind content. CSS-only, no canvas/WebGL. */
+@utility ambient-glow {
+  background-image:
+    radial-gradient(circle, color-mix(in oklab, var(--color-primary) 40%, transparent), transparent 45%),
+    radial-gradient(circle, color-mix(in oklab, var(--color-accent-2) 35%, transparent), transparent 45%);
+  background-size: 70% 70%, 60% 60%;
+  background-repeat: no-repeat;
+  animation: luv-ambient-drift 26s ease-in-out infinite;
 }
 
 /* Large full-width search pill used on the homepage + browse */
