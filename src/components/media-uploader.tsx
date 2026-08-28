@@ -23,7 +23,7 @@ export const MEDIA_LIMITS = {
     label: "Gallery photo",
   },
   short: {
-    maxBytes: 50 * 1024 * 1024,
+    maxBytes: 15 * 1024 * 1024,
     maxSeconds: 60,
     accept: "video/*",
     label: "Short video (max 60s)",

@@ -367,7 +367,7 @@ function Onboarding() {
       body: businessId ? (
         <div className="space-y-6">
           <p className="text-sm text-muted-foreground">
-            Upload a hero image, up to 3 short videos (max 60s / 50MB each) and one main feature
+            Upload a hero image, up to 3 short videos (max 60s / 15MB each) and one main feature
             video (max 3 min / 150MB). These play directly on your page.
           </p>
           <MediaUploader

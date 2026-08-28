@@ -19,6 +19,7 @@ const businessItems: NavItem[] = [
 
 const customerItems: NavItem[] = [
   { label: "Browse", to: "/browse" },
+  { label: "Post a Requirement", to: "/post-requirement" },
   { label: "My Requirements", to: "/dashboard/requirements" },
   { label: "Saved Businesses", to: "/dashboard/saved" },
   { label: "Events", to: "/events" },
