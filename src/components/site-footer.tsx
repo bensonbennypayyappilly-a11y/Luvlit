@@ -38,7 +38,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="grid gap-14 md:grid-cols-[1.4fr_repeat(3,1fr)]">
           <div className="max-w-xs">
-            <Link to="/" className="font-serif text-2xl tracking-editorial text-primary">
+            <Link to="/" className="text-2xl font-semibold tracking-editorial text-primary">
               LuvLit
             </Link>
             <p className="mt-4 text-sm text-muted-foreground">

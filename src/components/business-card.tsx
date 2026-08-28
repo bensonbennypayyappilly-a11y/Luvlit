@@ -56,7 +56,7 @@ export function BusinessCard({ business }: { business: BusinessCardData }) {
           </div>
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-primary-soft">
-            <span className="font-serif text-4xl text-primary/70">{initials(business.name)}</span>
+            <span className="text-4xl font-medium text-primary/70">{initials(business.name)}</span>
           </div>
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-foreground/45 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />

@@ -114,7 +114,7 @@ export function SiteHeader() {
       <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6">
         <Link to="/" className="flex items-center gap-2.5 text-primary">
           <LuvLitLogo className="h-8 w-8" />
-          <span className="font-serif text-2xl tracking-editorial">LuvLit</span>
+          <span className="text-2xl font-semibold tracking-editorial">LuvLit</span>
         </Link>
 
         <nav className="hidden items-center gap-9 md:flex">

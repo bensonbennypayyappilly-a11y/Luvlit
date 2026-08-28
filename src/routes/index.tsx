@@ -183,7 +183,7 @@ function HomePage({
             >
               {stats.map((s) => (
                 <div key={s.label}>
-                  <p className="font-serif text-3xl text-background md:text-4xl">{s.value}</p>
+                  <p className="text-3xl font-semibold text-background md:text-4xl">{s.value}</p>
                   <p className="mt-1 text-xs uppercase tracking-[0.14em] text-background/70">
                     {s.label}
                   </p>
@@ -303,7 +303,7 @@ function HomePage({
             {HOW_IT_WORKS.map((s, i) => (
               <Reveal key={s.step} delay={i * 120}>
                 <div className="group h-full border-t border-border pt-6 transition-colors hover:border-accent">
-                  <p className="font-serif text-4xl text-accent transition-transform duration-500 group-hover:-translate-y-1">
+                  <p className="text-4xl font-semibold text-accent transition-transform duration-500 group-hover:-translate-y-1">
                     {s.step}
                   </p>
                   <h3 className="mt-4 text-xl">{s.title}</h3>
