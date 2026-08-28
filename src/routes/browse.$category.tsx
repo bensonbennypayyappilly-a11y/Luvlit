@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { BusinessCard } from "@/components/business-card";
+import { Reveal } from "@/components/reveal";
 import { getBusinesses } from "@/lib/public.functions";
 import { CITIES } from "@/lib/constants";
 import type { PublicBusiness } from "@/lib/public.types";
@@ -70,20 +71,20 @@ function BrowseCategory() {
         {featured.length > 0 && (
           <section className="mt-14">
             <p className="eyebrow">Featured</p>
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+            <Reveal className="mt-6 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
               {featured.map((b) => (
                 <BusinessCard key={b.id} business={b} />
               ))}
-            </div>
+            </Reveal>
           </section>
         )}
 
         <section className="mt-14">
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+          <Reveal className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
             {rest.map((b) => (
               <BusinessCard key={b.id} business={b} />
             ))}
-          </div>
+          </Reveal>
           {businesses.length === 0 && (
             <p className="text-muted-foreground">
               No {category} businesses here yet{city ? ` in ${city}` : ""}.

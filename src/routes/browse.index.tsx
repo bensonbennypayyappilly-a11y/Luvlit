@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { BusinessCard } from "@/components/business-card";
+import { Reveal } from "@/components/reveal";
 import { getCategories, getBusinesses } from "@/lib/public.functions";
 import type { CategoryRow, PublicBusiness } from "@/lib/public.types";
 
@@ -65,11 +66,11 @@ function BrowseIndex() {
           ))}
         </div>
 
-        <div className="mt-14 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+        <Reveal className="mt-14 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
           {businesses.map((b) => (
             <BusinessCard key={b.id} business={b} />
           ))}
-        </div>
+        </Reveal>
         {businesses.length === 0 && (
           <p className="mt-14 text-muted-foreground">No businesses listed here yet.</p>
         )}

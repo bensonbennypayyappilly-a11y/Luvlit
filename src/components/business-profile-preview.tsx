@@ -94,7 +94,9 @@ function useResolvedList(values: string[]) {
 /** The real business profile UI. Shared between the public /business/$id page (signed data
  * from the loader) and the website builder's live preview pane (in-progress draft state). */
 export function BusinessProfilePreview({ business }: { business: ProfileBusiness }) {
-  const accent = business.brand_accent_color || "#173D2E";
+  // Literal hex (not a --color-primary var()) because this value has hex-alpha suffixes
+  // appended below (e.g. `${accent}33`) for the overlay gradients — var() can't take one.
+  const accent = business.brand_accent_color || "#4F46E5";
   const heroUrl = useMediaUrl(business.hero_image_url);
   const logoUrl = useMediaUrl(business.logo_url);
   const mainVideoUrl = useMediaUrl(business.main_video_url);

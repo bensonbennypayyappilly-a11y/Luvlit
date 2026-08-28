@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { EventCard } from "@/components/event-card";
+import { Reveal } from "@/components/reveal";
 import { getEvents } from "@/lib/public.functions";
 import { CITIES, EVENT_CATEGORIES } from "@/lib/constants";
 import type { PublicEvent } from "@/lib/public.types";
@@ -141,11 +142,11 @@ function EventsIndex() {
         </div>
         {locationMessage && <p className="mt-2 text-xs text-muted-foreground">{locationMessage}</p>}
 
-        <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+        <Reveal className="mt-12 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
           {rows.map(({ event, distance }) => (
             <EventCard key={event.id} event={event} distanceKm={distance ?? undefined} />
           ))}
-        </div>
+        </Reveal>
         {filtered.length === 0 && <p className="mt-14 text-muted-foreground">No events listed here yet.</p>}
       </main>
       <SiteFooter />

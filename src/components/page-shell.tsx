@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { Reveal } from "@/components/reveal";
 
 export function PageShell({
   eyebrow,
@@ -29,9 +30,9 @@ export function PageShell({
 
 export function Section({ heading, children }: { heading: string; children: ReactNode }) {
   return (
-    <section className="hairline pt-8">
+    <Reveal className="hairline pt-8">
       <h2 className="text-2xl">{heading}</h2>
       <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted-foreground">{children}</div>
-    </section>
+    </Reveal>
   );
 }
