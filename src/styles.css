@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -6,8 +7,8 @@
 
 /*
  * LuvLit design system.
- * Minimal futurism: near-white base, indigo primary, cyan reserved for gradients only.
- * Geist throughout — one sans typeface for headings, brand and body.
+ * Botanical warmth: ivory base, pine-green primary, terracotta reserved for gradients only.
+ * Fraunces (serif) for headings, Inter (sans) for body and UI text.
  */
 
 @theme inline {
@@ -63,120 +64,113 @@
   --color-dark-fg: var(--dark-fg);
   --color-dark-card: var(--dark-card);
 
-  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
 
-  --tracking-editorial: -0.02em;
+  --tracking-editorial: -0.01em;
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 1rem;
 
-  --background: #fafafa;
-  --foreground: #0a0a0a;
+  --background: #faf6ee;
+  --foreground: #23201a;
 
-  --card: #ffffff;
-  --card-foreground: #0a0a0a;
-  --popover: #ffffff;
-  --popover-foreground: #0a0a0a;
+  --card: #fffdf8;
+  --card-foreground: #23201a;
+  --popover: #fffdf8;
+  --popover-foreground: #23201a;
 
-  /* indigo primary */
-  --primary: #4f46e5;
-  --primary-foreground: #ffffff;
-  --primary-soft: #eef2ff;
+  /* pine-green primary */
+  --primary: #2f5d46;
+  --primary-foreground: #fdfaf3;
+  --primary-soft: #e7efe6;
 
-  --secondary: #f2f2f2;
-  --secondary-foreground: #0a0a0a;
+  --secondary: #f1e9d8;
+  --secondary-foreground: #23201a;
 
-  --muted: #f2f2f2;
-  --muted-foreground: #6b6b6b;
+  --muted: #f1e9d8;
+  --muted-foreground: #7c7362;
 
-  /* single accent — same as primary; accent-2 (cyan) is the only second hue, gradient-only */
-  --accent: #4f46e5;
-  --accent-foreground: #ffffff;
-  --accent-soft: #eef2ff;
-  --accent-2: #06b6d4;
+  /* single accent — same as primary; accent-2 (terracotta) is the only second hue, gradient-only */
+  --accent: #2f5d46;
+  --accent-foreground: #fdfaf3;
+  --accent-soft: #e7efe6;
+  --accent-2: #c1613f;
 
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
+  --destructive: #b3432f;
+  --destructive-foreground: #fffdf8;
 
-  --success: #16a34a;
-  /* white-on-this-green fails WCAG AA (3.3:1) — dark text passes (6.0:1) */
-  --success-foreground: #0a0a0a;
+  --success: #6ba34a;
+  /* white-on-this-green fails WCAG AA — dark text passes */
+  --success-foreground: #151c10;
 
-  --border: #e5e5e5;
-  --input: #e5e5e5;
-  --ring: #4f46e5;
+  --border: #e6dcc8;
+  --input: #e6dcc8;
+  --ring: #2f5d46;
 
-  --chart-1: #4f46e5;
-  --chart-2: #06b6d4;
-  --chart-3: #6b6b6b;
-  --chart-4: #c7d2fe;
-  --chart-5: #d4d4d4;
+  --chart-1: #2f5d46;
+  --chart-2: #c1613f;
+  --chart-3: #7c7362;
+  --chart-4: #cfe0cc;
+  --chart-5: #ded2b8;
 
-  --sidebar: #ffffff;
-  --sidebar-foreground: #0a0a0a;
-  --sidebar-primary: #4f46e5;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eef2ff;
-  --sidebar-accent-foreground: #0a0a0a;
-  --sidebar-border: #e5e5e5;
-  --sidebar-ring: #4f46e5;
+  --sidebar: #fffdf8;
+  --sidebar-foreground: #23201a;
+  --sidebar-primary: #2f5d46;
+  --sidebar-primary-foreground: #fdfaf3;
+  --sidebar-accent: #e7efe6;
+  --sidebar-accent-foreground: #23201a;
+  --sidebar-border: #e6dcc8;
+  --sidebar-ring: #2f5d46;
 
   /* Dark-moment tokens — hero + matching-results only, see @theme inline note above. */
-  --dark-bg: #0a0a0a;
-  --dark-fg: #fafafa;
-  --dark-card: #151515;
+  --dark-bg: #14190f;
+  --dark-fg: #f7f1e4;
+  --dark-card: #1c241a;
 }
 
 .dark {
-  --background: #fafafa;
-  --foreground: #0a0a0a;
-  --card: #ffffff;
-  --card-foreground: #0a0a0a;
-  --popover: #ffffff;
-  --popover-foreground: #0a0a0a;
-  --primary: #4f46e5;
-  --primary-foreground: #ffffff;
-  --primary-soft: #eef2ff;
-  --secondary: #f2f2f2;
-  --secondary-foreground: #0a0a0a;
-  --muted: #f2f2f2;
-  --muted-foreground: #6b6b6b;
-  --accent: #4f46e5;
-  --accent-foreground: #ffffff;
-  --accent-soft: #eef2ff;
-  --accent-2: #06b6d4;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --success: #16a34a;
-  --success-foreground: #0a0a0a;
-  --border: #e5e5e5;
-  --input: #e5e5e5;
-  --ring: #4f46e5;
-  --chart-1: #4f46e5;
-  --chart-2: #06b6d4;
-  --chart-3: #6b6b6b;
-  --chart-4: #c7d2fe;
-  --chart-5: #d4d4d4;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #0a0a0a;
-  --sidebar-primary: #4f46e5;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eef2ff;
-  --sidebar-accent-foreground: #0a0a0a;
-  --sidebar-border: #e5e5e5;
-  --sidebar-ring: #4f46e5;
-  --dark-bg: #0a0a0a;
-  --dark-fg: #fafafa;
-  --dark-card: #151515;
-}
-
-@font-face {
-  font-family: "Geist";
-  src: url("/fonts/geist-variable.woff2") format("woff2");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
+  --background: #faf6ee;
+  --foreground: #23201a;
+  --card: #fffdf8;
+  --card-foreground: #23201a;
+  --popover: #fffdf8;
+  --popover-foreground: #23201a;
+  --primary: #2f5d46;
+  --primary-foreground: #fdfaf3;
+  --primary-soft: #e7efe6;
+  --secondary: #f1e9d8;
+  --secondary-foreground: #23201a;
+  --muted: #f1e9d8;
+  --muted-foreground: #7c7362;
+  --accent: #2f5d46;
+  --accent-foreground: #fdfaf3;
+  --accent-soft: #e7efe6;
+  --accent-2: #c1613f;
+  --destructive: #b3432f;
+  --destructive-foreground: #fffdf8;
+  --success: #6ba34a;
+  --success-foreground: #151c10;
+  --border: #e6dcc8;
+  --input: #e6dcc8;
+  --ring: #2f5d46;
+  --chart-1: #2f5d46;
+  --chart-2: #c1613f;
+  --chart-3: #7c7362;
+  --chart-4: #cfe0cc;
+  --chart-5: #ded2b8;
+  --sidebar: #fffdf8;
+  --sidebar-foreground: #23201a;
+  --sidebar-primary: #2f5d46;
+  --sidebar-primary-foreground: #fdfaf3;
+  --sidebar-accent: #e7efe6;
+  --sidebar-accent-foreground: #23201a;
+  --sidebar-border: #e6dcc8;
+  --sidebar-ring: #2f5d46;
+  --dark-bg: #14190f;
+  --dark-fg: #f7f1e4;
+  --dark-card: #1c241a;
 }
 
 @layer base {
@@ -195,8 +189,8 @@
   h2,
   h3,
   h4 {
-    font-family: var(--font-sans);
-    font-weight: 500;
+    font-family: var(--font-display);
+    font-weight: 600;
     letter-spacing: var(--tracking-editorial);
     line-height: 1.1;
   }
@@ -219,11 +213,11 @@
 /* Hero + major page-title treatment — not applied to every heading indiscriminately. */
 @utility headline {
   font-weight: 600;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.01em;
   line-height: 1.05;
 }
 
-/* Editorial eyebrow label — small caps, wide tracking, gold */
+/* Editorial eyebrow label — small caps, wide tracking, accent-colored */
 @utility eyebrow {
   font-family: var(--font-sans);
   font-size: 0.6875rem;

@@ -30,7 +30,9 @@ import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as EventsIdRouteImport } from './routes/events.$id'
 import { Route as InfluencerIndexRouteImport } from './routes/influencer.index'
 import { Route as InfluencerOnboardingRouteImport } from './routes/influencer.onboarding'
+import { Route as InfluencerRequestsRouteImport } from './routes/influencer.requests'
 import { Route as InfluencerStatusRouteImport } from './routes/influencer.status'
+import { Route as OrganizerIdRouteImport } from './routes/organizer.$id'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminInfluencerApprovalsRouteImport } from './routes/_authenticated/admin/influencer-approvals'
 import { Route as AuthenticatedBusinessDashboardRouteRouteImport } from './routes/_authenticated/business/dashboard/route'
@@ -161,9 +163,19 @@ const InfluencerOnboardingRoute = InfluencerOnboardingRouteImport.update({
   path: '/influencer/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InfluencerRequestsRoute = InfluencerRequestsRouteImport.update({
+  id: '/influencer/requests',
+  path: '/influencer/requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InfluencerStatusRoute = InfluencerStatusRouteImport.update({
   id: '/influencer/status',
   path: '/influencer/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizerIdRoute = OrganizerIdRouteImport.update({
+  id: '/organizer/$id',
+  path: '/organizer/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
@@ -322,7 +334,9 @@ export interface FileRoutesByFullPath {
   '/business/$id': typeof BusinessIdRoute
   '/events/$id': typeof EventsIdRoute
   '/influencer/onboarding': typeof InfluencerOnboardingRoute
+  '/influencer/requests': typeof InfluencerRequestsRoute
   '/influencer/status': typeof InfluencerStatusRoute
+  '/organizer/$id': typeof OrganizerIdRoute
   '/browse/': typeof BrowseIndexRoute
   '/events/': typeof EventsIndexRoute
   '/influencer/': typeof InfluencerIndexRoute
@@ -366,7 +380,9 @@ export interface FileRoutesByTo {
   '/business/$id': typeof BusinessIdRoute
   '/events/$id': typeof EventsIdRoute
   '/influencer/onboarding': typeof InfluencerOnboardingRoute
+  '/influencer/requests': typeof InfluencerRequestsRoute
   '/influencer/status': typeof InfluencerStatusRoute
+  '/organizer/$id': typeof OrganizerIdRoute
   '/browse': typeof BrowseIndexRoute
   '/events': typeof EventsIndexRoute
   '/influencer': typeof InfluencerIndexRoute
@@ -413,7 +429,9 @@ export interface FileRoutesById {
   '/business/$id': typeof BusinessIdRoute
   '/events/$id': typeof EventsIdRoute
   '/influencer/onboarding': typeof InfluencerOnboardingRoute
+  '/influencer/requests': typeof InfluencerRequestsRoute
   '/influencer/status': typeof InfluencerStatusRoute
+  '/organizer/$id': typeof OrganizerIdRoute
   '/browse/': typeof BrowseIndexRoute
   '/events/': typeof EventsIndexRoute
   '/influencer/': typeof InfluencerIndexRoute
@@ -461,7 +479,9 @@ export interface FileRouteTypes {
     | '/business/$id'
     | '/events/$id'
     | '/influencer/onboarding'
+    | '/influencer/requests'
     | '/influencer/status'
+    | '/organizer/$id'
     | '/browse/'
     | '/events/'
     | '/influencer/'
@@ -505,7 +525,9 @@ export interface FileRouteTypes {
     | '/business/$id'
     | '/events/$id'
     | '/influencer/onboarding'
+    | '/influencer/requests'
     | '/influencer/status'
+    | '/organizer/$id'
     | '/browse'
     | '/events'
     | '/influencer'
@@ -551,7 +573,9 @@ export interface FileRouteTypes {
     | '/business/$id'
     | '/events/$id'
     | '/influencer/onboarding'
+    | '/influencer/requests'
     | '/influencer/status'
+    | '/organizer/$id'
     | '/browse/'
     | '/events/'
     | '/influencer/'
@@ -596,7 +620,9 @@ export interface RootRouteChildren {
   BusinessIdRoute: typeof BusinessIdRoute
   EventsIdRoute: typeof EventsIdRoute
   InfluencerOnboardingRoute: typeof InfluencerOnboardingRoute
+  InfluencerRequestsRoute: typeof InfluencerRequestsRoute
   InfluencerStatusRoute: typeof InfluencerStatusRoute
+  OrganizerIdRoute: typeof OrganizerIdRoute
   BrowseIndexRoute: typeof BrowseIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
   InfluencerIndexRoute: typeof InfluencerIndexRoute
@@ -751,11 +777,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InfluencerOnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/influencer/requests': {
+      id: '/influencer/requests'
+      path: '/influencer/requests'
+      fullPath: '/influencer/requests'
+      preLoaderRoute: typeof InfluencerRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/influencer/status': {
       id: '/influencer/status'
       path: '/influencer/status'
       fullPath: '/influencer/status'
       preLoaderRoute: typeof InfluencerStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organizer/$id': {
+      id: '/organizer/$id'
+      path: '/organizer/$id'
+      fullPath: '/organizer/$id'
+      preLoaderRoute: typeof OrganizerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
@@ -1050,7 +1090,9 @@ const rootRouteChildren: RootRouteChildren = {
   BusinessIdRoute: BusinessIdRoute,
   EventsIdRoute: EventsIdRoute,
   InfluencerOnboardingRoute: InfluencerOnboardingRoute,
+  InfluencerRequestsRoute: InfluencerRequestsRoute,
   InfluencerStatusRoute: InfluencerStatusRoute,
+  OrganizerIdRoute: OrganizerIdRoute,
   BrowseIndexRoute: BrowseIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
   InfluencerIndexRoute: InfluencerIndexRoute,

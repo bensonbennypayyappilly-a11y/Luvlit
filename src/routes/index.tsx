@@ -138,7 +138,7 @@ function HomePage({
           </div>
           <div className="ambient-glow absolute inset-0 -z-10" aria-hidden="true" />
 
-          <div className="mx-auto max-w-6xl px-6 pb-24 pt-28 md:pb-32 md:pt-40">
+          <div className="mx-auto max-w-6xl px-6 pb-12 pt-14 md:pb-14 md:pt-16">
             <p
               className="eyebrow rise-in text-dark-fg/80"
               style={{ animationDelay: "60ms" }}
@@ -235,21 +235,21 @@ function HomePage({
             </div>
           </Reveal>
 
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {categories.map((category, i) => (
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+            {categories.slice(0, 5).map((category, i) => (
               <Reveal key={category.id} delay={i * 60}>
                 <Link
                   to="/browse/$category"
                   params={{ category: category.name }}
                   search={city ? { city } : undefined}
-                  className="surface-card group relative block h-full overflow-hidden p-7 transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-28px_oklch(0_0_0/0.35)] active:scale-[0.98] active:duration-150"
+                  className="surface-card group relative block h-full overflow-hidden p-5 transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-28px_oklch(0_0_0/0.35)] active:scale-[0.98] active:duration-150"
                 >
                   <span className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-accent-soft opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                  <h3 className="relative text-xl">{category.name}</h3>
-                  <p className="relative mt-3 text-sm text-muted-foreground">
+                  <h3 className="relative text-base">{category.name}</h3>
+                  <p className="relative mt-2 text-sm text-muted-foreground">
                     Explore across {place}
                   </p>
-                  <span className="relative mt-6 inline-block text-sm text-accent opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100">
+                  <span className="relative mt-4 inline-block text-sm text-accent opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100">
                     Browse →
                   </span>
                 </Link>
@@ -313,31 +313,6 @@ function HomePage({
             ))}
           </div>
         </section>
-
-        {/* Cities */}
-        {cities.length > 0 && (
-          <section className="mx-auto max-w-6xl px-6 pb-8">
-            <Reveal>
-              <div className="surface-card p-10">
-                <p className="eyebrow">Across India</p>
-                <h2 className="mt-3 text-3xl">Find businesses in your city</h2>
-                <div className="mt-8 flex flex-wrap gap-2.5">
-                  {cities.slice(0, 24).map((c, i) => (
-                    <Link
-                      key={c.id}
-                      to="/browse"
-                      search={{ city: c.name }}
-                      style={{ transitionDelay: `${i * 15}ms` }}
-                      className="rounded-full border border-border px-4 py-2 text-sm transition-all hover:-translate-y-0.5 hover:border-accent hover:bg-accent-soft"
-                    >
-                      {c.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </Reveal>
-          </section>
-        )}
 
         {/* For owners */}
         <section className="mx-auto max-w-6xl px-6 py-24">
