@@ -84,6 +84,13 @@ export type StaffAvailability = {
   }[];
 };
 
+export type PublicOrganizer = {
+  id: string;
+  name: string;
+  city: string | null;
+  events: PublicEvent[];
+} | null;
+
 export type PublicEvent = {
   id: string;
   title: string;

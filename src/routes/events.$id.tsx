@@ -2,19 +2,35 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import type { PublicEvent } from "@/lib/public.types";
 
+type EventWithOrganizer = Pick<
+  PublicEvent,
+  "id" | "title" | "description" | "category" | "city" | "address" | "start_date" | "end_date" | "image_urls" | "is_featured"
+> & { organizer: { id: string; name: string } | null };
+
 /** Public single-event lookup — kept local to this route since it isn't shared elsewhere. */
 const getEventById = createServerFn({ method: "GET" })
   .validator((input: { id: string }) => input)
-  .handler(async ({ data }): Promise<PublicEvent | null> => {
+  .handler(async ({ data }): Promise<EventWithOrganizer | null> => {
     const { publicClient } = await import("@/lib/supabase-public.server");
-    const { data: event, error } = await publicClient()
+    const client = publicClient();
+    const { data: event, error } = await client
       .from("events")
-      .select("id,title,description,category,city,address,start_date,end_date,image_urls,is_featured")
+      .select("id,title,description,category,city,address,start_date,end_date,image_urls,is_featured,organizer_id")
       .eq("id", data.id)
       .eq("status", "published")
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return (event as PublicEvent) ?? null;
+    if (!event) return null;
+
+    const { data: organizer, error: organizerError } = await client
+      .from("organizer_profiles")
+      .select("id,name")
+      .eq("user_id", event.organizer_id)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (organizerError) throw new Error(organizerError.message);
+
+    return { ...event, organizer: organizer ?? null } as EventWithOrganizer;
   });
 
 export const Route = createFileRoute("/events/$id")({
@@ -132,6 +148,18 @@ function EventDetail() {
         {(event.city || event.address) && (
           <p className="mt-1 text-sm text-muted-foreground">
             {[event.address, event.city].filter(Boolean).join(", ")}
+          </p>
+        )}
+        {event.organizer && (
+          <p className="mt-1 text-sm text-muted-foreground">
+            Hosted by{" "}
+            <Link
+              to="/organizer/$id"
+              params={{ id: event.organizer.id }}
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              {event.organizer.name}
+            </Link>
           </p>
         )}
 

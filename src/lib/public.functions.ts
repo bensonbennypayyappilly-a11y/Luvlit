@@ -8,6 +8,7 @@ import type {
   PublicBusiness,
   PublicEvent,
   PublicInfluencer,
+  PublicOrganizer,
   StaffAvailability,
 } from "./public.types";
 
@@ -258,6 +259,40 @@ export const getEvents = createServerFn({ method: "GET" })
     const { data, error } = await query;
     if (error) throw new Error(error.message);
     return (data ?? []) as PublicEvent[];
+  });
+
+/**
+ * Public organizer profile — name, city, and their upcoming published events.
+ * organizer_profiles' only RLS policy is strictly owner-only (no public/anon read
+ * exists), which signals contact_email/contact_phone aren't meant to be public — so
+ * this deliberately never selects them, same as RLS would prevent if it were exposed.
+ */
+export const getOrganizerById = createServerFn({ method: "GET" })
+  .validator((input: { id: string }) => input)
+  .handler(async ({ data }): Promise<PublicOrganizer> => {
+    const { publicClient } = await import("./supabase-public.server");
+    const client = publicClient();
+    const { data: organizer, error } = await client
+      .from("organizer_profiles")
+      .select("id,user_id,name,city")
+      .eq("id", data.id)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!organizer) return null;
+
+    const { data: events, error: eventsError } = await client
+      .from("events")
+      .select(
+        "id,title,description,category,city,address,start_date,end_date,image_urls,is_featured,latitude,longitude",
+      )
+      .eq("organizer_id", organizer.user_id)
+      .eq("status", "published")
+      .gte("start_date", new Date().toISOString())
+      .order("start_date", { ascending: true });
+    if (eventsError) throw new Error(eventsError.message);
+
+    return { id: organizer.id, name: organizer.name, city: organizer.city, events: (events ?? []) as PublicEvent[] };
   });
 
 /** Public influencer application status lookup by the email/phone used to apply. */
