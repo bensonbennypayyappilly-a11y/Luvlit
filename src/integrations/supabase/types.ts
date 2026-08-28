@@ -10,7 +10,32 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -88,7 +113,7 @@ export type Database = {
           name: string
           owner_id: string
           short_video_urls: string[]
-          slug: string | null
+          slug: string
           view_count: number
           whatsapp: string | null
         }
@@ -111,7 +136,7 @@ export type Database = {
           name: string
           owner_id: string
           short_video_urls?: string[]
-          slug?: string | null
+          slug: string
           view_count?: number
           whatsapp?: string | null
         }
@@ -134,7 +159,7 @@ export type Database = {
           name?: string
           owner_id?: string
           short_video_urls?: string[]
-          slug?: string | null
+          slug?: string
           view_count?: number
           whatsapp?: string | null
         }
@@ -187,6 +212,70 @@ export type Database = {
           state?: string | null
         }
         Relationships: []
+      }
+      collaboration_requests: {
+        Row: {
+          brief: string
+          business_id: string
+          conversation_id: string | null
+          counter_rate: number | null
+          created_at: string
+          id: string
+          influencer_id: string
+          proposed_rate: number | null
+          rate_card_item: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          brief: string
+          business_id: string
+          conversation_id?: string | null
+          counter_rate?: number | null
+          created_at?: string
+          id?: string
+          influencer_id: string
+          proposed_rate?: number | null
+          rate_card_item?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          brief?: string
+          business_id?: string
+          conversation_id?: string | null
+          counter_rate?: number | null
+          created_at?: string
+          id?: string
+          influencer_id?: string
+          proposed_rate?: number | null
+          rate_card_item?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaboration_requests_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collaboration_requests_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {
@@ -863,6 +952,7 @@ export type Database = {
         }
         Returns: string
       }
+      cleanup_expired_events: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -877,6 +967,14 @@ export type Database = {
       }
       is_organizer: { Args: { _user_id: string }; Returns: boolean }
       owns_business: { Args: { _business_id: string }; Returns: boolean }
+      owns_influencer_profile: {
+        Args: { _influencer_id: string }
+        Returns: boolean
+      }
+      requirement_has_matched_business: {
+        Args: { _requirement_id: string }
+        Returns: boolean
+      }
       soft_delete_account: { Args: never; Returns: undefined }
     }
     Enums: {
@@ -1007,6 +1105,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       account_role: ["business", "customer"],

@@ -74,11 +74,13 @@ function Onboarding() {
       setError("You need to be signed in to continue.");
       return null;
     }
+    const initialSlug = await generateUniqueSlug(form.name || "Untitled business");
     const { data: business, error: businessError } = await supabase
       .from("businesses")
       .insert({
         owner_id: ownerId,
         name: form.name || "Untitled business",
+        slug: initialSlug,
         description: form.description,
         categories: form.categories,
         business_types: form.business_types,
@@ -109,19 +111,18 @@ function Onboarding() {
     setStep(step + 1);
   }
 
-  /** Generates a slug from `name`, retrying with -2/-3/... until it's neither reserved nor taken. */
-  async function generateUniqueSlug(name: string, ownId: string): Promise<string> {
+  /** Generates a slug from `name`, retrying with -2/-3/... until it's neither reserved nor taken.
+   * `ownId` excludes the business's own (already-inserted) row from the collision check —
+   * omit it when generating a slug for a row that doesn't exist yet. */
+  async function generateUniqueSlug(name: string, ownId?: string): Promise<string> {
     const base = slugify(name);
     let candidate = base;
     let suffix = 1;
     for (;;) {
       if (!isReservedSlug(candidate)) {
-        const { data: taken } = await supabase
-          .from("businesses")
-          .select("id")
-          .eq("slug", candidate)
-          .neq("id", ownId)
-          .maybeSingle();
+        let query = supabase.from("businesses").select("id").eq("slug", candidate);
+        if (ownId) query = query.neq("id", ownId);
+        const { data: taken } = await query.maybeSingle();
         if (!taken) return candidate;
       }
       suffix += 1;
