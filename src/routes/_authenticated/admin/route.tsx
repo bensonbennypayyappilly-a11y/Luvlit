@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { useAccount } from "@/hooks/use-session";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
@@ -30,7 +31,11 @@ function AdminLayout() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-20">
         {accountLoading || isLoading ? (
-          <p className="text-muted-foreground">Loading…</p>
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
         ) : isAdmin ? (
           <Outlet />
         ) : (

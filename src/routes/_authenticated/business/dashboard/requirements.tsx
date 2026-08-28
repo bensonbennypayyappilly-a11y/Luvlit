@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { isStoragePath, useMediaUrl } from "@/components/media-uploader";
+import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/requirements")({
   head: () => ({
@@ -86,7 +87,7 @@ function RequirementsPage() {
         </Link>
       </div>
 
-      {isLoading && <p className="mt-6 text-sm text-muted-foreground">Loading…</p>}
+      {isLoading && <CardListSkeleton />}
       {!isLoading && (requirements ?? []).length === 0 && (
         <p className="mt-6 text-sm text-muted-foreground">You haven't posted any requirements yet.</p>
       )}

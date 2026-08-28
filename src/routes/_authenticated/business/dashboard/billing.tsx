@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { PLANS, FREE_UNTIL_DATE } from "@/lib/constants";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/billing")({
   head: () => ({
@@ -45,7 +46,7 @@ function BillingPage() {
       <div className="surface-card mt-6 max-w-xl p-6 text-sm">
         <p className="text-xs text-muted-foreground">Current status</p>
         {isLoading ? (
-          <p className="mt-1">Loading…</p>
+          <Skeleton className="mt-1 h-5 w-40" />
         ) : subscription ? (
           <p className="mt-1 capitalize">
             {subscription.plan} · {subscription.status}

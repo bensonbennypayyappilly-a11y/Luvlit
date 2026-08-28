@@ -59,7 +59,7 @@ function BrowseIndex() {
               key={c.id}
               to="/browse/$category"
               params={{ category: c.name }}
-              className="rounded-full border border-border px-4 py-2 text-sm transition-colors hover:border-accent"
+              className="rounded-full border border-border px-4 py-2 text-sm transition-all hover:border-accent hover:bg-accent-soft active:scale-95"
             >
               {c.name}
             </Link>

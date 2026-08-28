@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { MediaUploader, useMediaUrl } from "@/components/media-uploader";
+import { TableRowsSkeleton } from "@/components/ui/skeleton-shapes";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/products")({
   head: () => ({
@@ -211,11 +212,7 @@ function ProductsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {isLoading && (
-              <tr>
-                <td colSpan={5} className="px-4 py-4 text-muted-foreground">Loading…</td>
-              </tr>
-            )}
+            {isLoading && <TableRowsSkeleton cols={5} />}
             {!isLoading && (items ?? []).length === 0 && (
               <tr>
                 <td colSpan={5} className="px-4 py-4 text-muted-foreground">No products yet.</td>

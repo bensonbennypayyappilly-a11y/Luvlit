@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/")({
   head: () => ({
@@ -91,7 +92,11 @@ function Overview() {
         {cards.map((c) => (
           <div key={c.label} className="surface-card p-5">
             <p className="text-xs text-muted-foreground">{c.label}</p>
-            <p className="mt-2 text-3xl font-medium">{isLoading ? "…" : c.value}</p>
+            {isLoading ? (
+              <Skeleton className="mt-2 h-8 w-16" />
+            ) : (
+              <p className="mt-2 text-3xl font-medium">{c.value}</p>
+            )}
           </div>
         ))}
       </div>

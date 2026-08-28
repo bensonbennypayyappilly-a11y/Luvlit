@@ -204,6 +204,16 @@
   p {
     line-height: 1.75;
   }
+
+  /* Sitewide press feedback for primary CTAs. There's no single shared Button component —
+   * every primary button hand-writes `bg-primary` — so this is the one global hook rather
+   * than touching dozens of files individually. */
+  :where(button, a)[class*="bg-primary"]:active {
+    transform: scale(0.97);
+  }
+  :where(button, a)[class*="bg-primary"] {
+    transition: transform 0.15s ease-out;
+  }
 }
 
 /* Hero + major page-title treatment — not applied to every heading indiscriminately. */
@@ -355,5 +365,13 @@
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+
+  /* Route-transition crossfades (router.tsx's defaultViewTransition) run in a separate
+   * pseudo-element tree that a plain `*` selector doesn't reach. */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

@@ -242,7 +242,7 @@ function HomePage({
                   to="/browse/$category"
                   params={{ category: category.name }}
                   search={city ? { city } : undefined}
-                  className="surface-card group relative block h-full overflow-hidden p-7 transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-28px_oklch(0_0_0/0.35)]"
+                  className="surface-card group relative block h-full overflow-hidden p-7 transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-28px_oklch(0_0_0/0.35)] active:scale-[0.98] active:duration-150"
                 >
                   <span className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-accent-soft opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                   <h3 className="relative text-xl">{category.name}</h3>

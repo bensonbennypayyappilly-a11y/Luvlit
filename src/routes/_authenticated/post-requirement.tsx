@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { CITIES } from "@/lib/constants";
 import { MediaUploader } from "@/components/media-uploader";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type MatchedBusiness = { id: string; name: string; categories: string[] };
 type Phase = "form" | "scanning" | "results";
@@ -301,7 +302,11 @@ function PostRequirement() {
                 ))}
               </div>
             ) : (
-              <p className="mt-3 text-sm text-muted-foreground">Loading…</p>
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-28 w-full" />
+                ))}
+              </div>
             )}
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

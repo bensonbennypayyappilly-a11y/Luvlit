@@ -9,6 +9,7 @@ import { BuilderSection, SaveStatus } from "@/components/website-builder/section
 import { GalleryEditor } from "@/components/website-builder/gallery-editor";
 import { LocationsEditor } from "@/components/website-builder/locations-editor";
 import { ACCENT_COLORS, ECO_CATEGORIES } from "@/lib/constants";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/website")({
   head: () => ({
@@ -124,7 +125,16 @@ function WebsiteBuilder() {
   });
 
   if (!businessId || isLoading || !draft) {
-    return <p className="p-6 text-sm text-muted-foreground">Loading your website…</p>;
+    return (
+      <div className="flex flex-1 flex-col gap-4 p-6 lg:flex-row">
+        <div className="w-full space-y-3 lg:w-[320px]">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <Skeleton className="h-96 flex-1" />
+      </div>
+    );
   }
 
   function patch(fields: Partial<Draft>) {

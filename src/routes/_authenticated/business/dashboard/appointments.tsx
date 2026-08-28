@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
+import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/appointments")({
   head: () => ({
@@ -108,7 +109,7 @@ function AppointmentsPage() {
         </select>
       </div>
 
-      {isLoading && <p className="mt-6 text-sm text-muted-foreground">Loading appointments…</p>}
+      {isLoading && <CardListSkeleton />}
       {!isLoading && byDate.length === 0 && (
         <p className="mt-6 text-sm text-muted-foreground">No appointments yet.</p>
       )}

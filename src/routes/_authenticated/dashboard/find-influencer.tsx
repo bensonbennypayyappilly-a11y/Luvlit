@@ -188,7 +188,10 @@ function FindInfluencer() {
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {(influencers ?? []).map((i) => (
-            <article key={i.id} className="surface-card p-7">
+            <article
+              key={i.id}
+              className="surface-card p-7 transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-28px_oklch(0_0_0/0.35)]"
+            >
               <h2 className="text-xl">{i.display_name}</h2>
               <p className="mt-1 text-sm text-muted-foreground">@{i.instagram_handle}</p>
               <p className="mt-4 text-sm text-muted-foreground">

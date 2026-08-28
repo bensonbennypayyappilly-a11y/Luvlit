@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { WEEKDAYS } from "@/lib/constants";
+import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/staff")({
   head: () => ({
@@ -293,7 +294,7 @@ function StaffPage() {
       {addError && <p className="mt-2 text-sm text-destructive">{addError}</p>}
       {removeError && <p className="mt-2 text-sm text-destructive">{removeError}</p>}
 
-      {isLoading && <p className="mt-6 text-sm text-muted-foreground">Loading staff…</p>}
+      {isLoading && <CardListSkeleton />}
       {!isLoading && (staff ?? []).length === 0 && (
         <p className="mt-6 text-sm text-muted-foreground">No staff yet — add your first team member above.</p>
       )}
