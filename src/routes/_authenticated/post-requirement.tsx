@@ -1,11 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { CITIES } from "@/lib/constants";
 import { MediaUploader } from "@/components/media-uploader";
+
+type MatchedBusiness = { id: string; name: string; categories: string[] };
+type Phase = "form" | "scanning" | "results";
 
 export const Route = createFileRoute("/_authenticated/post-requirement")({
   head: () => ({
@@ -39,13 +43,18 @@ function PostRequirement() {
     supabase.auth.getUser().then(({ data }) => setPosterId(data.user?.id ?? null));
   }, []);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [matchedCount, setMatchedCount] = useState<number | null>(null);
+  const [phase, setPhase] = useState<Phase>("form");
+  const [matchedBusinesses, setMatchedBusinesses] = useState<MatchedBusiness[]>([]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
+    setPhase("scanning");
     setError(null);
+    const startedAt = Date.now();
+    // 1.5–2.5s minimum so the scanning moment never feels like a flicker — but never
+    // padded beyond the real wait if the queries below happen to take longer than this.
+    const minDurationMs = 1500 + Math.random() * 1000;
+
     const { data: userData } = await supabase.auth.getUser();
     setPosterId(userData.user?.id ?? null);
     const { data: ownBusiness } = await supabase
@@ -74,15 +83,16 @@ function PostRequirement() {
       .single();
 
     if (insertError || !requirement) {
-      setBusy(false);
+      setPhase("form");
       return setError(insertError?.message ?? "Could not post requirement.");
     }
 
     // Find matching live businesses: same category AND (location in that city OR delivery area for that city OR pan-India delivery).
-    let matches: { id: string }[] = [];
+    // Same filter/candidate logic as before — only the select() gained `name,categories` to display matched cards.
+    let matches: MatchedBusiness[] = [];
     let query = supabase
       .from("businesses")
-      .select("id,locations(city),delivery_areas(city,is_pan_india)")
+      .select("id,name,categories,locations(city),delivery_areas(city,is_pan_india)")
       .eq("is_live", true)
       .is("deleted_at", null)
       .contains("categories", [form.category]);
@@ -107,7 +117,7 @@ function PostRequirement() {
         })),
       );
       if (leadsError) {
-        setBusy(false);
+        setPhase("form");
         return setError(leadsError.message);
       }
       const { error: conversationsError } = await supabase.from("conversations").insert(
@@ -120,34 +130,102 @@ function PostRequirement() {
         })),
       );
       if (conversationsError) {
-        setBusy(false);
+        setPhase("form");
         return setError(conversationsError.message);
       }
+
+      // Only hold for the scanning moment when there's something exciting to reveal —
+      // a zero-match result skips straight to the calmer empty state, never padded.
+      const remaining = minDurationMs - (Date.now() - startedAt);
+      if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining));
     }
 
-    setBusy(false);
-    setMatchedCount(matches.length);
+    setMatchedBusinesses(matches);
+    setPhase("results");
   }
 
-  if (matchedCount !== null) {
+  if (phase === "scanning") {
     return (
-      <div className="flex min-h-screen flex-col bg-background">
+      <div className="flex min-h-screen flex-col bg-dark-bg">
+        <SiteHeader />
+        <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center px-6 py-20 text-center">
+          <div className="relative flex h-24 w-24 items-center justify-center">
+            <div className="scan-ring absolute inset-0 rounded-full [mask-image:radial-gradient(farthest-side,transparent_calc(100%-3px),#000_calc(100%-3px))]" />
+            <div className="scan-pulse h-4 w-4 rounded-full bg-accent-2" />
+          </div>
+          <p className="eyebrow mt-8 text-dark-fg/70">Finding your matches</p>
+          <h1 className="headline mt-4 text-3xl text-dark-fg md:text-4xl">
+            Scanning businesses near you…
+          </h1>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  if (phase === "results") {
+    const matchedCount = matchedBusinesses.length;
+    if (matchedCount === 0) {
+      return (
+        <div className="flex min-h-screen flex-col bg-background">
+          <SiteHeader />
+          <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-20 text-center">
+            <p className="eyebrow">Requirement posted</p>
+            <h1 className="mt-4 text-4xl">No matches yet</h1>
+            <p className="mt-4 text-muted-foreground">
+              We couldn't find a matching business right now, but your requirement is live and new
+              businesses can still respond.
+            </p>
+            <button
+              onClick={() => navigate({ to: "/dashboard" })}
+              className="mt-8 rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground"
+            >
+              Go to dashboard
+            </button>
+          </main>
+          <SiteFooter />
+        </div>
+      );
+    }
+    return (
+      <div className="flex min-h-screen flex-col bg-dark-bg">
         <SiteHeader />
         <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-20 text-center">
-          <p className="eyebrow">Requirement posted</p>
-          <h1 className="mt-4 text-4xl">
-            {matchedCount > 0
-              ? `Matched with ${matchedCount} business${matchedCount === 1 ? "" : "es"}`
-              : "No matches yet"}
+          <p className="eyebrow text-dark-fg/70">Requirement posted</p>
+          <h1 className="headline mt-4 text-4xl text-dark-fg">
+            Matched with {matchedCount} business{matchedCount === 1 ? "" : "es"}
           </h1>
-          <p className="mt-4 text-muted-foreground">
-            {matchedCount > 0
-              ? "They can now respond with a quote — check your conversations soon."
-              : "We couldn't find a matching business right now, but your requirement is live and new businesses can still respond."}
+          <p className="mt-4 text-dark-fg/70">
+            They can now respond with a quote — check your conversations soon.
           </p>
+
+          <motion.div
+            className="mt-10 space-y-3 text-left"
+            initial="hidden"
+            animate="show"
+            variants={{ show: { transition: { staggerChildren: 0.12 } } }}
+          >
+            {matchedBusinesses.map((b) => (
+              <motion.div
+                key={b.id}
+                variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="card-glow-once relative overflow-hidden rounded-lg border border-dark-fg/15 bg-dark-card p-5"
+              >
+                <span className="absolute right-4 top-4 rounded-full bg-success px-2.5 py-1 text-[0.625rem] font-medium uppercase tracking-[0.1em] text-success-foreground">
+                  Matched
+                </span>
+                <h3 className="pr-16 text-lg font-medium text-dark-fg">{b.name}</h3>
+                {!!b.categories?.length && (
+                  <p className="mt-1 text-sm text-dark-fg/60">{b.categories.join(", ")}</p>
+                )}
+              </motion.div>
+            ))}
+          </motion.div>
+
           <button
             onClick={() => navigate({ to: "/dashboard" })}
-            className="mt-8 rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground"
+            className="mt-10 rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground"
           >
             Go to dashboard
           </button>
@@ -227,10 +305,7 @@ function PostRequirement() {
             )}
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <button
-            disabled={busy}
-            className="rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
-          >
+          <button className="rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground">
             Post requirement
           </button>
         </form>

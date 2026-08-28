@@ -242,6 +242,33 @@
   to { transform: translateX(-50%); }
 }
 
+/* "Finding your matches…" scanning moment (post-requirement.tsx) */
+@keyframes luv-scan-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.18); opacity: 1; }
+}
+@keyframes luv-scan-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@utility scan-pulse {
+  animation: luv-scan-pulse 1.6s ease-in-out infinite;
+}
+@utility scan-ring {
+  background: conic-gradient(from 0deg, transparent, var(--color-accent-2), transparent 30%);
+  animation: luv-scan-rotate 2.2s linear infinite;
+}
+
+/* One-shot glow played once when a matched-business card enters */
+@keyframes luv-card-glow {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-primary) 45%, transparent); }
+  40% { box-shadow: 0 0 28px 2px color-mix(in oklab, var(--color-primary) 30%, transparent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@utility card-glow-once {
+  animation: luv-card-glow 1s ease-out;
+}
+
 @keyframes luv-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
