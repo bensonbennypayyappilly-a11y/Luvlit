@@ -28,6 +28,7 @@ const customerItems: NavItem[] = [
 const influencerItems: NavItem[] = [
   { label: "Dashboard", to: "/influencer/status" },
   { label: "My Profile", to: "/influencer/onboarding" },
+  { label: "Requests", to: "/influencer/requests" },
   { label: "Chats", to: "/dashboard/chats" },
   { label: "Events", to: "/events" },
 ];
@@ -39,6 +40,7 @@ const KNOWN_ROUTES = new Set([
   "/dashboard/find-influencer",
   "/influencer/status",
   "/influencer/onboarding",
+  "/influencer/requests",
   "/events",
   "/organizer/dashboard",
 ]);
