@@ -5,6 +5,9 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { getInfluencers, getCategories } from "@/lib/public.functions";
 import { useCities } from "@/hooks/use-cities";
+import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
+import { supabase } from "@/integrations/supabase/client";
+import type { PublicInfluencer } from "@/lib/public.types";
 
 export const Route = createFileRoute("/_authenticated/dashboard/find-influencer")({
   head: () => ({
@@ -25,8 +28,98 @@ export const Route = createFileRoute("/_authenticated/dashboard/find-influencer"
   component: FindInfluencer,
 });
 
+/** Inline "Request a collaboration" form for one influencer card. */
+function CollaborationRequestForm({
+  influencer,
+  businessId,
+  onClose,
+}: {
+  influencer: PublicInfluencer;
+  businessId: string;
+  onClose: () => void;
+}) {
+  const rateItems = Object.entries(influencer.rate_card ?? {});
+  const [rateCardItem, setRateCardItem] = useState("");
+  const [proposedRate, setProposedRate] = useState("");
+  const [brief, setBrief] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!brief.trim()) return setError("Describe what you're looking for.");
+    setBusy(true);
+    setError(null);
+    const { error: insertError } = await supabase.from("collaboration_requests").insert({
+      business_id: businessId,
+      influencer_id: influencer.id,
+      rate_card_item: rateCardItem || null,
+      proposed_rate: proposedRate ? Number(proposedRate) : null,
+      brief: brief.trim(),
+    });
+    setBusy(false);
+    if (insertError) return setError(insertError.message);
+    setSent(true);
+  }
+
+  if (sent) {
+    return <p className="mt-4 text-sm text-muted-foreground">Request sent — you'll see their reply in your requests.</p>;
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-4 space-y-3 border-t border-border pt-4">
+      {rateItems.length > 0 && (
+        <select
+          value={rateCardItem}
+          onChange={(e) => setRateCardItem(e.target.value)}
+          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+        >
+          <option value="">Which rate card item? (optional)</option>
+          {rateItems.map(([key, value]) => (
+            <option key={key} value={key}>
+              {key}
+              {typeof value === "number" ? ` — ₹${value}` : ""}
+            </option>
+          ))}
+        </select>
+      )}
+      <input
+        type="number"
+        value={proposedRate}
+        onChange={(e) => setProposedRate(e.target.value)}
+        placeholder="Your proposed rate (₹, optional)"
+        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+      />
+      <textarea
+        required
+        rows={3}
+        value={brief}
+        onChange={(e) => setBrief(e.target.value)}
+        placeholder="What are you looking for?"
+        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+      />
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={busy}
+          className="rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+        >
+          {busy ? "Sending…" : "Send request"}
+        </button>
+        <button type="button" onClick={onClose} className="rounded-md border border-border px-5 py-2 text-sm">
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
 function FindInfluencer() {
   const cities = useCities();
+  const { data: business } = useDashboardBusiness();
+  const [openRequestId, setOpenRequestId] = useState<string | null>(null);
   const { data: categories } = useQuery({ queryKey: ["categories"], queryFn: () => getCategories() });
   const [filters, setFilters] = useState<{
     category?: string;
@@ -109,6 +202,22 @@ function FindInfluencer() {
                 </p>
               )}
               {i.is_verified && <p className="eyebrow mt-4">Verified stats</p>}
+              {business?.id &&
+                (openRequestId === i.id ? (
+                  <CollaborationRequestForm
+                    influencer={i}
+                    businessId={business.id}
+                    onClose={() => setOpenRequestId(null)}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setOpenRequestId(i.id)}
+                    className="mt-5 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
+                  >
+                    Request a collaboration
+                  </button>
+                ))}
             </article>
           ))}
           {!influencers?.length && (
