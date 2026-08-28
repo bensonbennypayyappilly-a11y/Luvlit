@@ -30,7 +30,7 @@ export function BusinessDashboardSidebar({ businessName }: { businessName: strin
             key={item.to}
             to={item.to}
             onClick={() => setOpen(false)}
-            className={`rounded-md px-3 py-2 text-sm transition-colors ${
+            className={`flex min-h-11 items-center rounded-md px-3 text-sm transition-colors ${
               active
                 ? "bg-accent-soft text-accent-foreground font-medium"
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -49,7 +49,7 @@ export function BusinessDashboardSidebar({ businessName }: { businessName: strin
         <p className="text-sm font-medium">{businessName}</p>
         <button
           onClick={() => setOpen((v) => !v)}
-          className="rounded-md border border-border px-3 py-1.5 text-xs"
+          className="flex min-h-11 items-center rounded-md border border-border px-4 text-sm"
         >
           {open ? "Close" : "Menu"}
         </button>

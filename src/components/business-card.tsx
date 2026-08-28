@@ -35,9 +35,9 @@ export function BusinessCard({ business }: { business: BusinessCardData }) {
     <Link
       to="/business/$id"
       params={{ id: business.id }}
-      className="surface-card group flex aspect-square flex-col overflow-hidden rounded-3xl transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-24px_oklch(0.221_0.006_56/0.45)] active:scale-[0.98] active:duration-150"
+      className="surface-card group flex flex-col overflow-hidden rounded-3xl transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-24px_oklch(0.221_0.006_56/0.45)] active:scale-[0.98] active:duration-150"
     >
-      <div className="relative h-[55%] w-full shrink-0 overflow-hidden bg-secondary">
+      <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-secondary">
         {hasHero ? (
           <img
             src={business.hero_image_url!}
@@ -72,7 +72,7 @@ export function BusinessCard({ business }: { business: BusinessCardData }) {
         )}
       </div>
 
-      <div className="flex h-[45%] flex-col p-4">
+      <div className="flex flex-1 flex-col p-4">
         <h3 className="truncate text-base transition-colors group-hover:text-primary">{business.name}</h3>
         {(city || moreCities > 0) && (
           <div className="mt-1.5 flex items-center gap-2">

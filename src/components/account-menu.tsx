@@ -38,7 +38,7 @@ export function AccountMenu({ label, role }: { label: string; role: AppRole }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent"
+        className="flex min-h-11 items-center gap-1.5 rounded-md border border-border px-4 text-sm font-medium text-foreground transition-colors hover:border-accent"
       >
         {label} <span aria-hidden>▾</span>
       </button>
@@ -46,21 +46,21 @@ export function AccountMenu({ label, role }: { label: string; role: AppRole }) {
         <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-md border border-border bg-card py-1 text-sm surface-card">
           <a
             href="/profile"
-            className="block px-4 py-2.5 text-foreground transition-colors hover:bg-accent-soft"
+            className="flex min-h-11 items-center px-4 text-foreground transition-colors hover:bg-accent-soft"
           >
             Profile
           </a>
           {role === "business" && (
             <a
               href="/business/dashboard/billing"
-              className="block px-4 py-2.5 text-foreground transition-colors hover:bg-accent-soft"
+              className="flex min-h-11 items-center px-4 text-foreground transition-colors hover:bg-accent-soft"
             >
               Billing
             </a>
           )}
           <button
             onClick={signOut}
-            className="block w-full px-4 py-2.5 text-left text-foreground transition-colors hover:bg-accent-soft"
+            className="flex min-h-11 w-full items-center px-4 text-left text-foreground transition-colors hover:bg-accent-soft"
           >
             Sign out
           </button>
@@ -69,7 +69,7 @@ export function AccountMenu({ label, role }: { label: string; role: AppRole }) {
               setShowDelete(true);
               setOpen(false);
             }}
-            className="block w-full px-4 py-2.5 text-left text-destructive transition-colors hover:bg-accent-soft"
+            className="flex min-h-11 w-full items-center px-4 text-left text-destructive transition-colors hover:bg-accent-soft"
           >
             Delete account
           </button>
