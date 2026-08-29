@@ -109,7 +109,7 @@ export function SiteHeader() {
   }
 
   const accountLabel =
-    role === "business" ? businessName ?? "Your business" : displayName ?? "Account";
+    role === "business" ? (businessName ?? "Your business") : (displayName ?? "Account");
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
@@ -119,14 +119,14 @@ export function SiteHeader() {
           <span className="text-2xl font-semibold tracking-editorial">LuvLit</span>
         </Link>
 
-        <nav className="hidden items-center gap-9 md:flex">
+        <nav className="hidden items-center gap-9 lg:flex">
           {items.map((item) => (
             <NavLink key={item.label} item={item} />
           ))}
         </nav>
 
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden items-center gap-3 lg:flex">
             {!loading && role && <AccountMenu label={accountLabel} role={role} />}
             {!loading && !role && (
               <>
@@ -149,7 +149,7 @@ export function SiteHeader() {
 
           <button
             onClick={() => setMobileOpen((o) => !o)}
-            className="flex h-11 w-11 items-center justify-center rounded-md border border-border text-base md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-md border border-border text-base lg:hidden"
             aria-label="Toggle menu"
           >
             ☰
@@ -158,7 +158,7 @@ export function SiteHeader() {
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-border px-6 py-2 md:hidden">
+        <div className="border-t border-border px-6 py-2 lg:hidden">
           <nav className="flex flex-col divide-y divide-border">
             {items.map((item) => (
               <NavLink key={item.label} item={item} block />

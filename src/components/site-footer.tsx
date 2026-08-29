@@ -34,25 +34,24 @@ const columns: { title: string; links: FooterLink[] }[] = [
 
 export function SiteFooter() {
   return (
-    <footer className="hairline mt-32 bg-secondary/40">
-      <div className="mx-auto max-w-6xl px-6 py-20">
-        <div className="grid gap-14 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+    <footer className="hairline mt-4 bg-secondary/30">
+      <div className="mx-auto max-w-6xl px-6 py-10">
+        <div className="grid gap-8 md:grid-cols-[1.4fr_repeat(3,1fr)]">
           <div className="max-w-xs">
-            <Link to="/" className="text-2xl font-semibold tracking-editorial text-primary">
+            <Link to="/" className="text-lg font-semibold tracking-editorial text-primary">
               LuvLit
             </Link>
-            <p className="mt-4 text-sm text-muted-foreground">
-              A pan-India marketplace for small businesses, brands and influencers — discoverable by
-              what they do and where they are.
+            <p className="mt-2 text-sm text-muted-foreground">
+              Discover India&rsquo;s local businesses.
             </p>
           </div>
 
           {columns.map((column) => (
             <div key={column.title}>
-              <h3 className="font-sans text-xs font-medium uppercase tracking-[0.16em] text-foreground">
+              <h3 className="font-sans text-xs font-medium uppercase tracking-[0.14em] text-foreground">
                 {column.title}
               </h3>
-              <ul className="mt-5 space-y-3">
+              <ul className="mt-3 space-y-2">
                 {column.links.map((link) => (
                   <li key={link.label}>
                     <Link
@@ -68,7 +67,7 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="hairline mt-16 flex flex-col gap-2 pt-8 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <div className="hairline mt-8 flex flex-col gap-2 pt-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} LuvLit. Made in India.</p>
           <p>Listing is free for every business until 30 November.</p>
         </div>

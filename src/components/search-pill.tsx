@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { SlidersHorizontal } from "lucide-react";
+import { MapPin, SlidersHorizontal } from "lucide-react";
 import { useCities } from "@/hooks/use-cities";
 import type { CategoryRow } from "@/lib/public.types";
 
 const REQUIREMENT_EXAMPLES = [
-  "Wedding photographer in Jaipur",
-  "Home cleaning service in Bengaluru",
   "Mehndi artist for a Delhi wedding",
-  "Event caterer for 100 guests, Mumbai",
-  "AC repair technician, Koramangala",
+  "Home cleaning service in Bengaluru",
+  "Custom cake for a birthday",
+  "Wedding photographer in Kochi",
+  "Handmade jewellery in Jaipur",
+  "Interior designer near me",
 ];
 
 function useCyclingIndex(length: number, intervalMs: number) {
@@ -75,20 +76,26 @@ export function SearchPill({
       }}
       className="relative w-full"
     >
-      <div className="search-pill flex w-full flex-col gap-2 p-2 sm:rounded-3xl md:flex-row md:items-center md:gap-0 md:rounded-full md:p-2 md:h-16">
-        <select
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          aria-label="Select your city"
-          className="min-w-0 rounded-full bg-transparent px-5 py-3 text-sm text-foreground focus:outline-none md:h-full md:w-48 md:border-r md:border-border"
-        >
-          <option value="">All of India</option>
-          {cities.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+      <div className="search-pill flex w-full flex-col gap-2 p-2.5 sm:rounded-3xl md:h-[76px] md:flex-row md:items-center md:gap-0 md:rounded-full md:p-3">
+        <div className="flex min-w-0 items-center gap-2 md:h-full md:w-40 md:border-r md:border-border lg:w-48">
+          <MapPin
+            className="ml-4 h-4 w-4 shrink-0 text-muted-foreground md:ml-5"
+            aria-hidden="true"
+          />
+          <select
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            aria-label="Select your city"
+            className="min-w-0 flex-1 rounded-full bg-transparent py-3.5 pl-1 pr-3 text-base text-foreground focus:outline-none"
+          >
+            <option value="">All of India</option>
+            {cities.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className="relative min-w-0 flex-1">
           <input
@@ -98,7 +105,7 @@ export function SearchPill({
               onQueryChange?.(e.target.value);
             }}
             aria-label="Search"
-            className="w-full rounded-full bg-transparent px-5 py-3 text-sm text-foreground focus:outline-none"
+            className="w-full rounded-full bg-transparent px-5 py-3.5 text-base text-foreground focus:outline-none"
           />
           {!q && (
             <div className="pointer-events-none absolute inset-y-0 left-5 right-5 flex items-center overflow-hidden">
@@ -109,7 +116,7 @@ export function SearchPill({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.3 }}
-                  className="block truncate text-sm text-muted-foreground"
+                  className="block truncate text-base text-muted-foreground"
                 >
                   Search "{REQUIREMENT_EXAMPLES[placeholderIndex]}"…
                 </motion.span>
@@ -124,7 +131,7 @@ export function SearchPill({
             onClick={() => setFiltersOpen((v) => !v)}
             aria-expanded={filtersOpen}
             aria-label="Filters"
-            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
+            className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
           >
             <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
             {(category || openNow) && (
@@ -136,9 +143,9 @@ export function SearchPill({
           </button>
           <button
             type="submit"
-            className="whitespace-nowrap rounded-full bg-primary px-7 py-3 text-sm font-medium text-primary-foreground transition-all hover:scale-[1.02] hover:opacity-95 active:scale-100"
+            className="whitespace-nowrap rounded-full bg-primary px-6 py-3.5 text-base font-medium text-primary-foreground transition-all hover:scale-[1.02] hover:opacity-95 active:scale-100 lg:px-8"
           >
-            Search
+            Search →
           </button>
         </div>
       </div>

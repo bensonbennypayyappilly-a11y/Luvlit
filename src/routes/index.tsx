@@ -8,12 +8,17 @@ import { Reveal } from "@/components/reveal";
 import { SearchPill } from "@/components/search-pill";
 import { LiveResultsPanel } from "@/components/live-results-panel";
 import { EventsSection } from "@/components/events-section";
-import { getCategories, getBusinesses, getSubdomainBusiness } from "@/lib/public.functions";
+import { DiscoveryStrip, IndiaDiscoveryMap } from "@/components/india-discovery-map";
+import {
+  getCategories,
+  getBusinesses,
+  getCities,
+  getSubdomainBusiness,
+} from "@/lib/public.functions";
 import { buildBusinessHead, toProfileBusiness } from "@/lib/business-seo";
 import { BusinessProfilePreview } from "@/components/business-profile-preview";
-import type { CategoryRow, PublicBusiness } from "@/lib/public.types";
+import type { CategoryRow, CityRow, PublicBusiness } from "@/lib/public.types";
 import { PLANS } from "@/lib/constants";
-import heroImage from "@/assets/luvlit-hero.jpg";
 
 export const Route = createFileRoute("/")({
   head: ({ loaderData }) => {
@@ -53,10 +58,22 @@ export const Route = createFileRoute("/")({
       type: "home" as const,
       categories: await getCategories(),
       featured: await getBusinesses({ data: {} }),
+      cities: await getCities(),
     };
   },
   component: Index,
 });
+
+const POPULAR_SEARCHES = [
+  "Home Cleaning",
+  "Salons",
+  "Photographers",
+  "Cafes",
+  "Fitness Studios",
+  "Event Planners",
+  "Bakeries",
+  "Interior Designers",
+];
 
 const HOW_IT_WORKS = [
   {
@@ -98,20 +115,27 @@ const OWNER_PERKS = [
 function Index() {
   const data = Route.useLoaderData() as
     | { type: "business"; business: NonNullable<import("@/lib/public.types").BusinessDetail> }
-    | { type: "home"; categories: CategoryRow[]; featured: PublicBusiness[] };
+    | {
+        type: "home";
+        categories: CategoryRow[];
+        featured: PublicBusiness[];
+        cities: CityRow[];
+      };
 
   if (data.type === "business") {
     return <BusinessProfilePreview business={toProfileBusiness(data.business)} />;
   }
-  return <HomePage categories={data.categories} featured={data.featured} />;
+  return <HomePage categories={data.categories} featured={data.featured} cities={data.cities} />;
 }
 
 function HomePage({
   categories,
   featured,
+  cities,
 }: {
   categories: CategoryRow[];
   featured: PublicBusiness[];
+  cities: CityRow[];
 }) {
   const [city, setCity] = useState("");
   const [query, setQuery] = useState("");
@@ -119,75 +143,91 @@ function HomePage({
   const recent = featured.slice(0, 6);
   const place = city || "India";
 
+  const stats = [
+    { value: `${featured.length || 0}+`, label: "Businesses listed" },
+    { value: `${cities.length || 0}`, label: "Cities live" },
+    { value: `${categories.length || 0}`, label: "Categories" },
+    { value: "₹0", label: "To list until 30 Nov" },
+  ];
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
 
       <main className="flex-1">
-        <section className="relative isolate overflow-hidden bg-dark-bg">
-          <div className="absolute inset-0 -z-10">
-            <img
-              src={heroImage}
-              alt=""
-              width={1920}
-              height={1088}
-              className="h-full w-full object-cover grayscale"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-dark-bg via-dark-bg/35 to-transparent" />
-          </div>
+        {/* Hero — search-first, India-outline discovery map on the right, no photo */}
+        <section className="relative isolate overflow-hidden bg-background">
+          <div className="mx-auto max-w-6xl px-6 pb-10 pt-12 md:pb-12 md:pt-14">
+            <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+              <div>
+                <p className="eyebrow rise-in" style={{ animationDelay: "60ms" }}>
+                  Pan-India marketplace for local businesses
+                </p>
+                <h1
+                  className="headline rise-in mt-5 max-w-xl text-4xl sm:text-5xl lg:text-6xl"
+                  style={{ animationDelay: "160ms" }}
+                >
+                  Find local businesses you&rsquo;ll <em className="text-accent italic">love</em> to
+                  support.
+                </h1>
+                <p
+                  className="rise-in mt-5 max-w-md text-base text-muted-foreground md:text-lg"
+                  style={{ animationDelay: "260ms" }}
+                >
+                  Discover trusted makers, studios, salons, neighbourhood brands and service
+                  providers near you.
+                </p>
 
-          <div className="mx-auto max-w-6xl px-6 pb-24 pt-14 md:pb-28 md:pt-16">
-            <p className="eyebrow rise-in text-dark-fg/80" style={{ animationDelay: "60ms" }}>
-              Pan-India marketplace for local businesses
-            </p>
-            <h1
-              className="headline rise-in mt-5 max-w-2xl text-4xl text-dark-fg sm:text-5xl lg:text-6xl"
-              style={{ animationDelay: "160ms" }}
-            >
-              Local businesses worth knowing.
-            </h1>
-            <p
-              className="rise-in mt-6 max-w-xl text-lg text-dark-fg/85"
-              style={{ animationDelay: "260ms" }}
-            >
-              Makers, studios, salons and neighbourhood brands — each with their own page. Book,
-              message, or get a quote in minutes.
-            </p>
-          </div>
-        </section>
+                <div className="rise-in mt-8 max-w-2xl" style={{ animationDelay: "340ms" }}>
+                  <SearchPill
+                    categories={categories}
+                    city={city}
+                    onCityChange={setCity}
+                    onQueryChange={setQuery}
+                  />
+                  <LiveResultsPanel query={query} businesses={featured} />
+                </div>
 
-        <section className="relative z-10 mx-auto -mt-16 max-w-4xl px-6 md:-mt-20">
-          <div
-            className="rise-in surface-card p-4 shadow-[0_30px_70px_-30px_oklch(0_0_0/0.4)] sm:p-5"
-            style={{ animationDelay: "360ms" }}
-          >
-            <SearchPill
-              categories={categories}
-              city={city}
-              onCityChange={setCity}
-              onQueryChange={setQuery}
-            />
-            <LiveResultsPanel query={query} businesses={featured} />
-          </div>
+                <div
+                  className="rise-in mt-4 flex max-w-2xl flex-wrap items-center gap-2"
+                  style={{ animationDelay: "420ms" }}
+                >
+                  <span className="text-xs text-muted-foreground">Popular:</span>
+                  {POPULAR_SEARCHES.map((term) => (
+                    <Link
+                      key={term}
+                      to="/browse"
+                      search={{ q: term }}
+                      className="rounded-full border border-border bg-card px-3.5 py-1.5 text-xs text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-accent hover:text-accent"
+                    >
+                      {term}
+                    </Link>
+                  ))}
+                </div>
+              </div>
 
-          <div
-            className="rise-in mt-6 flex flex-wrap items-center justify-between gap-4"
-            style={{ animationDelay: "460ms" }}
-          >
-            <Link
-              to="/post-requirement"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-accent transition-all hover:gap-2.5"
-            >
-              Can't find it? Post a requirement instead →
-            </Link>
-            <span className="inline-flex items-center gap-2 rounded-full bg-accent-soft px-4 py-2 text-xs font-medium text-accent">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
-              Now live across India — free to list until 30 November
-            </span>
+              <div className="rise-in" style={{ animationDelay: "220ms" }}>
+                <IndiaDiscoveryMap />
+                <DiscoveryStrip className="mt-6" />
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 py-20">
+        {/* Stats — compact supporting strip, not a headline section */}
+        <section className="border-y border-border bg-secondary/30">
+          <div className="mx-auto grid max-w-6xl grid-cols-3 gap-4 px-6 py-5 sm:flex sm:flex-wrap sm:items-center sm:gap-x-10">
+            {stats.map((s) => (
+              <div key={s.label}>
+                <span className="font-display text-xl text-foreground md:text-2xl">{s.value}</span>
+                <span className="ml-1.5 text-xs text-muted-foreground">{s.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Categories */}
+        <section className="mx-auto max-w-6xl px-6 py-14">
           <Reveal>
             <div className="flex items-end justify-between gap-6">
               <div>
@@ -203,7 +243,7 @@ function HomePage({
             </div>
           </Reveal>
 
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
             {categories.slice(0, 5).map((category, i) => (
               <Reveal key={category.id} delay={i * 60}>
                 <Link
@@ -212,7 +252,7 @@ function HomePage({
                   search={city ? { city } : undefined}
                   className="surface-card group relative block h-full overflow-hidden p-5 transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-28px_oklch(0_0_0/0.35)] active:scale-[0.98] active:duration-150"
                 >
-                  <span className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-accent-soft opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                  <span className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-accent-soft opacity-0 transition-all duration-500 group-hover:scale-110 group-hover:opacity-100" />
                   <h3 className="relative text-base">{category.name}</h3>
                   <p className="relative mt-2 text-sm text-muted-foreground">
                     Explore across {place}
@@ -226,8 +266,9 @@ function HomePage({
           </div>
         </section>
 
+        {/* Listings */}
         {(featuredList.length > 0 || recent.length > 0) && (
-          <section className="bg-secondary/40 py-20">
+          <section className="bg-secondary/40 py-14">
             <div className="mx-auto max-w-6xl px-6">
               <Reveal>
                 <p className="eyebrow">{featuredList.length ? "Featured" : "Recently joined"}</p>
@@ -235,7 +276,7 @@ function HomePage({
                   {featuredList.length ? "In the spotlight" : "New on LuvLit"}
                 </h2>
               </Reveal>
-              <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+              <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
                 {(featuredList.length ? featuredList : recent).map((b, i) => (
                   <Reveal key={b.id} delay={i * 80}>
                     <BusinessCard business={b} />
@@ -243,7 +284,7 @@ function HomePage({
                 ))}
               </div>
               <Reveal>
-                <div className="mt-12 text-center">
+                <div className="mt-10 text-center">
                   <Link
                     to="/browse"
                     className="inline-block rounded-md border border-border bg-card px-8 py-3.5 text-sm transition-colors hover:border-accent"
@@ -256,16 +297,15 @@ function HomePage({
           </section>
         )}
 
-        <EventsSection city={city || undefined} />
-
-        <section className="mx-auto max-w-6xl px-6 py-20">
+        {/* How it works */}
+        <section className="mx-auto max-w-6xl px-6 py-12">
           <Reveal>
             <p className="eyebrow">How LuvLit works</p>
             <h2 className="mt-3 max-w-2xl text-3xl md:text-4xl">
               From a search to a booking, in three steps.
             </h2>
           </Reveal>
-          <div className="mt-14 grid gap-8 md:grid-cols-3">
+          <div className="mt-10 grid gap-8 md:grid-cols-3">
             {HOW_IT_WORKS.map((s, i) => (
               <Reveal key={s.step} delay={i * 120}>
                 <div className="group h-full border-t border-border pt-6 transition-colors hover:border-accent">
@@ -280,46 +320,58 @@ function HomePage({
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 py-20">
-          <Reveal>
-            <p className="eyebrow">For business owners</p>
-            <h2 className="mt-3 max-w-2xl text-3xl md:text-4xl">
-              Your own website, and the leads to fill it.
-            </h2>
-          </Reveal>
-          <div className="mt-12 grid gap-5 sm:grid-cols-2">
-            {OWNER_PERKS.map((p, i) => (
-              <Reveal key={p.title} delay={i * 90}>
-                <div className="surface-card h-full p-8 transition-all duration-500 hover:-translate-y-1 hover:border-accent">
-                  <h3 className="text-xl">{p.title}</h3>
-                  <p className="mt-3 text-sm text-muted-foreground">{p.body}</p>
+        {/* For businesses — secondary, editorial two-column, compact */}
+        <section className="mx-auto max-w-6xl px-6 py-14">
+          <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+            <Reveal>
+              <div>
+                <p className="eyebrow">For businesses</p>
+                <h2 className="mt-3 max-w-sm text-3xl md:text-4xl">
+                  Get discovered by the people looking for you.
+                </h2>
+              </div>
+            </Reveal>
+
+            <div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                {OWNER_PERKS.map((p, i) => (
+                  <Reveal key={p.title} delay={i * 80}>
+                    <div className="border-t border-border pt-4 transition-colors hover:border-accent">
+                      <h3 className="text-base font-medium">{p.title}</h3>
+                      <p className="mt-1.5 text-sm text-muted-foreground">{p.body}</p>
+                    </div>
+                  </Reveal>
+                ))}
+              </div>
+
+              <Reveal>
+                <div className="mt-8 rounded-xl bg-primary p-8 text-primary-foreground md:p-10">
+                  <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h2 className="text-2xl text-primary-foreground md:text-3xl">
+                        Ready to get discovered?
+                      </h2>
+                      <p className="mt-3 max-w-lg text-sm text-primary-foreground/80">
+                        Create your LuvLit page and start reaching customers looking for what you
+                        offer. Free to list until 30 November — then ₹{PLANS.base.introPrice} for
+                        your first month, ₹{PLANS.base.price}/month after.
+                      </p>
+                    </div>
+                    <Link
+                      to="/auth"
+                      search={{ role: "business" }}
+                      className="shrink-0 rounded-md bg-background px-8 py-3.5 text-sm font-medium text-foreground transition-transform hover:scale-[1.03]"
+                    >
+                      List your business →
+                    </Link>
+                  </div>
                 </div>
               </Reveal>
-            ))}
-          </div>
-
-          <Reveal>
-            <div className="mt-12 flex flex-col items-start gap-6 rounded-lg bg-primary p-12 text-primary-foreground md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="eyebrow">Launch offer</p>
-                <h2 className="mt-3 text-3xl text-primary-foreground">
-                  Free listing until 30 November.
-                </h2>
-                <p className="mt-4 max-w-lg text-primary-foreground/80">
-                  Guided setup, appointments, leads and chat included. ₹{PLANS.base.introPrice} for
-                  your first month after, then ₹{PLANS.base.price}/month.
-                </p>
-              </div>
-              <Link
-                to="/auth"
-                search={{ role: "business" }}
-                className="rounded-md bg-background px-8 py-3.5 text-sm font-medium text-foreground transition-transform hover:scale-[1.03]"
-              >
-                List your business
-              </Link>
             </div>
-          </Reveal>
+          </div>
         </section>
+
+        <EventsSection city={city || undefined} />
 
         <FaqSection />
       </main>

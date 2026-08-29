@@ -6,20 +6,20 @@ const FAQS: { audience: string; items: { q: string; a: string }[] }[] = [
     audience: "For customers",
     items: [
       {
-        q: "Is it free to browse and contact businesses?",
-        a: "Yes. Browsing, searching, booking appointments and messaging businesses on LuvLit is completely free for customers, and always will be.",
-      },
-      {
-        q: "Do I need an account to book an appointment?",
-        a: "No. You can book an appointment as a guest with just your name and phone number. An account is only needed if you want to chat with a business, save favourites, or keep a history of your quotes.",
-      },
-      {
-        q: "How do I get quotes from multiple businesses for something custom?",
-        a: "Post a requirement: pick a category, describe what you need, set your city and an optional budget, and attach up to three photos. We match it to live businesses in that category who cover your location, and they reply with quotes in your inbox.",
+        q: "What is LuvLit?",
+        a: "A discovery platform for local businesses across India — search by what you need and where you are, then book, message or get a quote directly from the business.",
       },
       {
         q: "How do I find businesses in my city?",
         a: "Choose your city in the search bar on the homepage, or open the Cities page. Results include businesses located in your city, plus those that deliver or serve there.",
+      },
+      {
+        q: "Can I request quotes?",
+        a: "Yes — post a requirement: pick a category, describe what you need, set your city and an optional budget. We match it to live businesses who cover your location, and they reply with quotes in your inbox.",
+      },
+      {
+        q: "Do I need an account?",
+        a: "No. You can book an appointment as a guest with just your name and phone number. An account is only needed if you want to chat with a business, save favourites, or keep a history of your quotes.",
       },
     ],
   },
@@ -27,20 +27,20 @@ const FAQS: { audience: string; items: { q: string; a: string }[] }[] = [
     audience: "For businesses",
     items: [
       {
-        q: "How much does it cost to list my business?",
-        a: "Listing is completely free for every business until 30 November. Your page, appointments, leads and chat are all included.",
+        q: "How much does it cost?",
+        a: `Listing is completely free until 30 November. After that, it's ₹${PLANS.base.introPrice} for your first month, then ₹${PLANS.base.price}/month.`,
       },
       {
-        q: "What happens after the free period ends?",
-        a: `If your subscription starts after 30 November, your first billing month is ₹${PLANS.base.introPrice}, then ₹${PLANS.base.price} per month from the second month onwards. Yearly billing is available at a two-months-free equivalent discount.`,
+        q: "How do I list my business?",
+        a: "Sign up as a business, add your details, photos and categories, and your page goes live in minutes — no developer needed.",
       },
       {
-        q: "Can I list more than one location or category?",
-        a: "Yes. You can add multiple branches with their own addresses, select several categories (or suggest a new one), and set a delivery area by city or across all of India.",
+        q: "Can I list multiple locations?",
+        a: "Yes. You can add multiple branches with their own addresses, select several categories, and set a delivery area by city or across all of India.",
       },
       {
-        q: "How does Featured placement work?",
-        a: "Featured placement pins your business to the top of a category in a chosen city (₹499/month) or across all of India (₹999/month). Slots are capped per category and location, so the spotlight stays scarce and worth having.",
+        q: "How do leads work?",
+        a: "Customers post requirements describing what they need. If it matches your category and location, you're notified instantly and can respond directly with a quote.",
       },
     ],
   },
@@ -49,41 +49,39 @@ const FAQS: { audience: string; items: { q: string; a: string }[] }[] = [
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="surface-card overflow-hidden">
+    <div className="border-b border-border py-4 last:border-b-0">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-start justify-between gap-6 p-7 text-left"
+        className="flex w-full items-center justify-between gap-6 text-left"
       >
-        <span className="text-base">{q}</span>
+        <span className="text-sm font-medium">{q}</span>
         <span
           aria-hidden
-          className={`mt-1 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-45" : ""}`}
+          className={`shrink-0 text-muted-foreground transition-transform ${open ? "rotate-45" : ""}`}
         >
           +
         </span>
       </button>
-      {open && <p className="px-7 pb-7 text-sm leading-relaxed text-muted-foreground">{a}</p>}
+      {open && <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{a}</p>}
     </div>
   );
 }
 
 export function FaqSection() {
   return (
-    <section className="mx-auto max-w-6xl px-6 py-16">
-      <div className="hairline pt-14">
-        <p className="eyebrow">Questions</p>
-        <h2 className="mt-3 text-3xl md:text-4xl">Frequently asked</h2>
-      </div>
+    <section className="mx-auto max-w-6xl px-6 py-12">
+      <p className="eyebrow">FAQ</p>
+      <h2 className="mt-3 text-3xl md:text-4xl">Frequently asked questions</h2>
 
-      <div className="mt-12 grid gap-10 md:grid-cols-2">
+      <div className="mt-8 grid gap-x-12 gap-y-8 md:grid-cols-2">
         {FAQS.map((group) => (
           <div key={group.audience}>
-            <h3 className="font-sans text-xs font-medium uppercase tracking-[0.16em] text-foreground">
+            <h3 className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
               {group.audience}
             </h3>
-            <div className="mt-5 space-y-3">
+            <div className="mt-2">
               {group.items.map((item) => (
                 <FaqItem key={item.q} {...item} />
               ))}
