@@ -6,9 +6,14 @@ import { BusinessCard } from "@/components/business-card";
 import { FaqSection } from "@/components/faq-section";
 import { Reveal } from "@/components/reveal";
 import { SearchPill } from "@/components/search-pill";
-import { FeaturedSpotlightPanel } from "@/components/featured-spotlight-panel";
+import { LiveResultsPanel } from "@/components/live-results-panel";
 import { EventsSection } from "@/components/events-section";
-import { getCategories, getBusinesses, getCities, getSubdomainBusiness } from "@/lib/public.functions";
+import {
+  getCategories,
+  getBusinesses,
+  getCities,
+  getSubdomainBusiness,
+} from "@/lib/public.functions";
 import { buildBusinessHead, toProfileBusiness } from "@/lib/business-seo";
 import { BusinessProfilePreview } from "@/components/business-profile-preview";
 import type { CategoryRow, CityRow, PublicBusiness } from "@/lib/public.types";
@@ -18,7 +23,10 @@ import heroImage from "@/assets/luvlit-hero.jpg";
 export const Route = createFileRoute("/")({
   head: ({ loaderData }) => {
     if (loaderData?.type === "business") {
-      return buildBusinessHead(loaderData.business, `https://${loaderData.business.slug}.luvlit.in/`);
+      return buildBusinessHead(
+        loaderData.business,
+        `https://${loaderData.business.slug}.luvlit.in/`,
+      );
     }
     return {
       meta: [
@@ -79,10 +87,22 @@ const HOW_IT_WORKS = [
 ];
 
 const OWNER_PERKS = [
-  { title: "A website of your own", body: "A branded page with your colours, catalog and videos — live in minutes, no developer." },
-  { title: "AI-matched leads", body: "Customers post requirements; our engine matches them to your business instantly — no manual searching." },
-  { title: "Appointments on autopilot", body: "Publish staff, working hours and slots. Customers book without a phone call." },
-  { title: "Made for Indian shops", body: "WhatsApp-first contact, multi-city franchises, pan-India delivery and UPI-friendly pricing." },
+  {
+    title: "A website of your own",
+    body: "A branded page with your colours, catalog and videos — live in minutes, no developer.",
+  },
+  {
+    title: "AI-matched leads",
+    body: "Customers post requirements; our engine matches them to your business instantly — no manual searching.",
+  },
+  {
+    title: "Appointments on autopilot",
+    body: "Publish staff, working hours and slots. Customers book without a phone call.",
+  },
+  {
+    title: "Made for Indian shops",
+    body: "WhatsApp-first contact, multi-city franchises, pan-India delivery and UPI-friendly pricing.",
+  },
 ];
 
 /** Scroll-triggered count-up for a stat string like "54", "0+" or "₹0" — animates the numeric part, keeps any prefix/suffix. */
@@ -151,11 +171,11 @@ function HomePage({
   cities: CityRow[];
 }) {
   const [city, setCity] = useState("");
-  const [spotlightOpen, setSpotlightOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [presetQuery, setPresetQuery] = useState<string | undefined>(undefined);
   const featuredList = featured.filter((b) => b.featured).slice(0, 6);
   const recent = featured.slice(0, 6);
   const place = city || "India";
-  const marquee = [...categories, ...categories];
 
   const stats = [
     { value: `${featured.length || 0}+`, label: "Businesses listed" },
@@ -197,32 +217,22 @@ function HomePage({
                   className="rise-in mt-5 inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent-soft px-3.5 py-1.5 text-xs font-medium text-accent"
                   style={{ animationDelay: "320ms" }}
                 >
-                  <span className="scan-pulse h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                  <span
+                    className="scan-pulse h-1.5 w-1.5 shrink-0 rounded-full bg-accent"
+                    aria-hidden="true"
+                  />
                   AI-powered Business Finder — smarter search, instant matches
                 </div>
 
                 <div className="rise-in mt-6" style={{ animationDelay: "380ms" }}>
-                  <SearchPill categories={categories} city={city} onCityChange={setCity} />
+                  <SearchPill
+                    categories={categories}
+                    city={city}
+                    onCityChange={setCity}
+                    onQueryChange={setQuery}
+                    presetQuery={presetQuery}
+                  />
                 </div>
-
-                {categories.length > 0 && (
-                  <div
-                    className="rise-in mt-4 flex flex-wrap items-center gap-2"
-                    style={{ animationDelay: "440ms" }}
-                  >
-                    <span className="text-xs text-muted-foreground">Popular:</span>
-                    {categories.slice(0, 6).map((c) => (
-                      <Link
-                        key={c.id}
-                        to="/browse"
-                        search={{ q: c.name }}
-                        className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-accent hover:text-accent"
-                      >
-                        {c.name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {/* Photo collage + floating cards — desktop only */}
@@ -232,7 +242,11 @@ function HomePage({
                   aria-hidden="true"
                 />
                 <div className="ken-burns absolute right-0 top-0 h-[340px] w-[68%] overflow-hidden rounded-[2rem] shadow-2xl">
-                  <img src={heroImage} alt="Local business owner at work" className="h-full w-full object-cover" />
+                  <img
+                    src={heroImage}
+                    alt="Local business owner at work"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <div className="absolute bottom-0 left-0 h-[190px] w-[46%] overflow-hidden rounded-3xl border-[6px] border-background shadow-xl">
                   <img
@@ -246,8 +260,13 @@ function HomePage({
                   className="float-slow surface-card absolute left-2 top-8 w-36 p-4 shadow-lg"
                   style={{ animationDelay: "0.4s" }}
                 >
-                  <p className="text-[0.65rem] uppercase tracking-[0.1em] text-muted-foreground">Live now</p>
-                  <AnimatedStat value={`${cities.length || 0}`} className="mt-1 font-display text-2xl text-foreground" />
+                  <p className="text-[0.65rem] uppercase tracking-[0.1em] text-muted-foreground">
+                    Live now
+                  </p>
+                  <AnimatedStat
+                    value={`${cities.length || 0}`}
+                    className="mt-1 font-display text-2xl text-foreground"
+                  />
                   <p className="mt-1 text-[0.65rem] text-muted-foreground">cities across India</p>
                 </div>
                 <div
@@ -272,6 +291,17 @@ function HomePage({
               </div>
             </div>
 
+            {/* Live results — the hinge: trending chips when idle, matching businesses inline while typing */}
+            <div className="rise-in mt-2" style={{ animationDelay: "420ms" }}>
+              <LiveResultsPanel
+                query={query}
+                businesses={featured}
+                categories={categories}
+                cities={cities}
+                onChipClick={setPresetQuery}
+              />
+            </div>
+
             {/* Stats bar */}
             <div
               className="rise-in mt-8 grid grid-cols-2 gap-6 rounded-2xl border border-border bg-card/70 p-6 sm:grid-cols-4"
@@ -279,38 +309,18 @@ function HomePage({
             >
               {stats.map((s) => (
                 <div key={s.label}>
-                  <AnimatedStat value={s.value} className="font-display text-2xl text-foreground md:text-3xl" />
-                  <p className="mt-1 text-[0.65rem] uppercase tracking-[0.12em] text-muted-foreground">{s.label}</p>
+                  <AnimatedStat
+                    value={s.value}
+                    className="font-display text-2xl text-foreground md:text-3xl"
+                  />
+                  <p className="mt-1 text-[0.65rem] uppercase tracking-[0.12em] text-muted-foreground">
+                    {s.label}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
         </section>
-
-        {/* Floating featured panel — expands the spotlight grid below */}
-        <FeaturedSpotlightPanel
-          businesses={featured}
-          city={city}
-          expanded={spotlightOpen}
-          onToggle={() => setSpotlightOpen((v) => !v)}
-        />
-
-        {/* Scrolling category ribbon */}
-        {categories.length > 0 && (
-          <section className="mt-8 overflow-hidden border-y border-border bg-secondary/60 py-4">
-            <div className="marquee-track gap-8 whitespace-nowrap">
-              {marquee.map((c, i) => (
-                <span
-                  key={`${c.id}-${i}`}
-                  className="flex items-center gap-8 text-xs uppercase tracking-[0.2em] text-muted-foreground"
-                >
-                  {c.name}
-                  <span className="text-accent">◆</span>
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Categories */}
         <section className="mx-auto max-w-6xl px-6 py-16">
@@ -352,8 +362,8 @@ function HomePage({
           </div>
         </section>
 
-        {/* Listings — expanded by the floating spotlight panel above */}
-        {(featuredList.length > 0 || recent.length > 0) && spotlightOpen && (
+        {/* Listings — always visible */}
+        {(featuredList.length > 0 || recent.length > 0) && (
           <section className="bg-secondary/40 py-16">
             <div className="mx-auto max-w-6xl px-6">
               <Reveal>
@@ -422,8 +432,9 @@ function HomePage({
                         Free listing until 30 November.
                       </h2>
                       <p className="mt-3 max-w-lg text-sm text-primary-foreground/80">
-                        Guided setup, appointments, leads and chat included. ₹{PLANS.base.introPrice} for your first
-                        month after, then ₹{PLANS.base.price}/month.
+                        Guided setup, appointments, leads and chat included. ₹
+                        {PLANS.base.introPrice} for your first month after, then ₹{PLANS.base.price}
+                        /month.
                       </p>
                     </div>
                     <Link

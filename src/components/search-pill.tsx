@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCities } from "@/hooks/use-cities";
 import type { CategoryRow } from "@/lib/public.types";
 
-/** Cycled in the search input when it's empty — real Indian SMB requirement examples. */
 const REQUIREMENT_EXAMPLES = [
   "Wedding photographer in Jaipur",
   "Home cleaning service in Bengaluru",
@@ -22,19 +21,18 @@ function useCyclingIndex(length: number, intervalMs: number) {
   return index;
 }
 
-/**
- * One large full-width search pill: city, free-text and a filter dropdown
- * (category, city, "open now", and a disabled price-range placeholder).
- * Submits to /browse with the params that route already accepts.
- */
 export function SearchPill({
   categories = [],
   city: controlledCity,
   onCityChange,
+  onQueryChange,
+  presetQuery,
 }: {
   categories?: CategoryRow[];
   city?: string;
   onCityChange?: (city: string) => void;
+  onQueryChange?: (q: string) => void;
+  presetQuery?: string;
 }) {
   const cities = useCities();
   const navigate = useNavigate();
@@ -49,6 +47,14 @@ export function SearchPill({
   const [openNow, setOpenNow] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const placeholderIndex = useCyclingIndex(REQUIREMENT_EXAMPLES.length, 3000);
+
+  useEffect(() => {
+    if (presetQuery !== undefined) {
+      setQ(presetQuery);
+      onQueryChange?.(presetQuery);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presetQuery]);
 
   const submit = () => {
     void navigate({
@@ -86,7 +92,10 @@ export function SearchPill({
         <div className="relative min-w-0 flex-1">
           <input
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => {
+              setQ(e.target.value);
+              onQueryChange?.(e.target.value);
+            }}
             aria-label="Search"
             className="w-full rounded-full bg-transparent px-5 py-3 text-sm text-foreground focus:outline-none"
           />
