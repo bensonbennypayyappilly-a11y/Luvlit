@@ -20,7 +20,7 @@ export function FeaturedSpotlightPanel({
   if (top.length === 0) return null;
 
   return (
-    <div className="relative z-10 mx-auto -mt-14 max-w-4xl px-6 md:-mt-16">
+    <div className="relative z-10 mx-auto -mt-6 max-w-4xl px-6 md:-mt-8">
       <button
         type="button"
         onClick={onToggle}

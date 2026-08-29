@@ -74,28 +74,28 @@
   --radius: 1rem;
 
   --background: #faf6ee;
-  --foreground: #23201a;
+  --foreground: #172a1e;
 
   --card: #fffdf8;
-  --card-foreground: #23201a;
+  --card-foreground: #172a1e;
   --popover: #fffdf8;
-  --popover-foreground: #23201a;
+  --popover-foreground: #172a1e;
 
-  /* pine-green primary */
-  --primary: #2f5d46;
+  /* forest-green primary */
+  --primary: #1f6b4d;
   --primary-foreground: #fdfaf3;
-  --primary-soft: #e7efe6;
+  --primary-soft: #e2ede4;
 
-  --secondary: #f1e9d8;
-  --secondary-foreground: #23201a;
+  --secondary: #ecf0e4;
+  --secondary-foreground: #172a1e;
 
-  --muted: #f1e9d8;
-  --muted-foreground: #7c7362;
+  --muted: #ecf0e4;
+  --muted-foreground: #63705f;
 
   /* single accent — same as primary; accent-2 (terracotta) is the only second hue, gradient-only */
-  --accent: #2f5d46;
+  --accent: #1f6b4d;
   --accent-foreground: #fdfaf3;
-  --accent-soft: #e7efe6;
+  --accent-soft: #e2ede4;
   --accent-2: #c1613f;
 
   --destructive: #b3432f;
@@ -105,24 +105,24 @@
   /* white-on-this-green fails WCAG AA — dark text passes */
   --success-foreground: #151c10;
 
-  --border: #e6dcc8;
-  --input: #e6dcc8;
-  --ring: #2f5d46;
+  --border: #dfe6d8;
+  --input: #dfe6d8;
+  --ring: #1f6b4d;
 
-  --chart-1: #2f5d46;
+  --chart-1: #1f6b4d;
   --chart-2: #c1613f;
-  --chart-3: #7c7362;
+  --chart-3: #63705f;
   --chart-4: #cfe0cc;
   --chart-5: #ded2b8;
 
   --sidebar: #fffdf8;
-  --sidebar-foreground: #23201a;
-  --sidebar-primary: #2f5d46;
+  --sidebar-foreground: #172a1e;
+  --sidebar-primary: #1f6b4d;
   --sidebar-primary-foreground: #fdfaf3;
-  --sidebar-accent: #e7efe6;
-  --sidebar-accent-foreground: #23201a;
-  --sidebar-border: #e6dcc8;
-  --sidebar-ring: #2f5d46;
+  --sidebar-accent: #e2ede4;
+  --sidebar-accent-foreground: #172a1e;
+  --sidebar-border: #dfe6d8;
+  --sidebar-ring: #1f6b4d;
 
   /* Dark-moment tokens — hero + matching-results only, see @theme inline note above. */
   --dark-bg: #14190f;
@@ -132,42 +132,42 @@
 
 .dark {
   --background: #faf6ee;
-  --foreground: #23201a;
+  --foreground: #172a1e;
   --card: #fffdf8;
-  --card-foreground: #23201a;
+  --card-foreground: #172a1e;
   --popover: #fffdf8;
-  --popover-foreground: #23201a;
-  --primary: #2f5d46;
+  --popover-foreground: #172a1e;
+  --primary: #1f6b4d;
   --primary-foreground: #fdfaf3;
-  --primary-soft: #e7efe6;
-  --secondary: #f1e9d8;
-  --secondary-foreground: #23201a;
-  --muted: #f1e9d8;
-  --muted-foreground: #7c7362;
-  --accent: #2f5d46;
+  --primary-soft: #e2ede4;
+  --secondary: #ecf0e4;
+  --secondary-foreground: #172a1e;
+  --muted: #ecf0e4;
+  --muted-foreground: #63705f;
+  --accent: #1f6b4d;
   --accent-foreground: #fdfaf3;
-  --accent-soft: #e7efe6;
+  --accent-soft: #e2ede4;
   --accent-2: #c1613f;
   --destructive: #b3432f;
   --destructive-foreground: #fffdf8;
   --success: #6ba34a;
   --success-foreground: #151c10;
-  --border: #e6dcc8;
-  --input: #e6dcc8;
-  --ring: #2f5d46;
-  --chart-1: #2f5d46;
+  --border: #dfe6d8;
+  --input: #dfe6d8;
+  --ring: #1f6b4d;
+  --chart-1: #1f6b4d;
   --chart-2: #c1613f;
-  --chart-3: #7c7362;
+  --chart-3: #63705f;
   --chart-4: #cfe0cc;
   --chart-5: #ded2b8;
   --sidebar: #fffdf8;
-  --sidebar-foreground: #23201a;
-  --sidebar-primary: #2f5d46;
+  --sidebar-foreground: #172a1e;
+  --sidebar-primary: #1f6b4d;
   --sidebar-primary-foreground: #fdfaf3;
-  --sidebar-accent: #e7efe6;
-  --sidebar-accent-foreground: #23201a;
-  --sidebar-border: #e6dcc8;
-  --sidebar-ring: #2f5d46;
+  --sidebar-accent: #e2ede4;
+  --sidebar-accent-foreground: #172a1e;
+  --sidebar-border: #dfe6d8;
+  --sidebar-ring: #1f6b4d;
   --dark-bg: #14190f;
   --dark-fg: #f7f1e4;
   --dark-card: #1c241a;
@@ -308,6 +308,14 @@
   animation: luv-float 7s ease-in-out infinite;
 }
 
+@keyframes luv-spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@utility spin-slow {
+  animation: luv-spin-slow 50s linear infinite;
+}
+
 @utility rise-in {
   animation: luv-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -342,6 +350,16 @@
   background-size: 70% 70%, 60% 60%;
   background-repeat: no-repeat;
   animation: luv-ambient-drift 26s ease-in-out infinite;
+}
+
+/* Same drift, tuned low-opacity for light (non-dark-moment) sections — hero backdrop. */
+@utility ambient-glow-soft {
+  background-image:
+    radial-gradient(circle, color-mix(in oklab, var(--color-primary) 14%, transparent), transparent 45%),
+    radial-gradient(circle, color-mix(in oklab, var(--color-accent-2) 10%, transparent), transparent 45%);
+  background-size: 65% 65%, 55% 55%;
+  background-repeat: no-repeat;
+  animation: luv-ambient-drift 30s ease-in-out infinite;
 }
 
 /* Large full-width search pill used on the homepage + browse */
