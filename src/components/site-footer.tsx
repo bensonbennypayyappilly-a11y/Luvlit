@@ -35,7 +35,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
 export function SiteFooter() {
   return (
     <footer className="hairline mt-4 bg-secondary/30">
-      <div className="mx-auto max-w-6xl px-6 py-10">
+      <div className="mx-auto max-w-7xl px-6 py-10">
         <div className="grid gap-8 md:grid-cols-[1.4fr_repeat(3,1fr)]">
           <div className="max-w-xs">
             <Link to="/" className="text-lg font-semibold tracking-editorial text-primary">

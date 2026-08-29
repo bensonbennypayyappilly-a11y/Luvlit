@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * India border outline, traced coastline only — no state boundaries, no labels.
@@ -111,18 +111,40 @@ const SIZE_CLASSES: Record<DiscoveryImageData["size"], string> = {
   lg: "h-20 w-20 sm:h-24 sm:w-24",
 };
 
-const TIER_CLASSES: Record<DiscoveryImageData["tier"], string> = {
-  tablet: "block",
-  desktop: "hidden lg:block",
-};
+/** Predefined map slots a card can appear at — decoupled from any one image, so image and position are chosen independently each cycle. */
+const MAP_POSITIONS: { top: string; left: string; size: DiscoveryImageData["size"] }[] =
+  DISCOVERY_IMAGES.map((d) => ({ top: d.position.top, left: d.position.left, size: d.size }));
+
+const FADE_MS = 600;
+
+function randomIndex(length: number, exclude: number): number {
+  if (length <= 1) return 0;
+  let i = Math.floor(Math.random() * length);
+  while (i === exclude) i = Math.floor(Math.random() * length);
+  return i;
+}
 
 /** Floating placeholder card — renders the real photo once it exists at `src`, a dark square until then. */
-function DiscoveryCard({ item, floatDelay }: { item: DiscoveryImageData; floatDelay: string }) {
+function DiscoveryCard({
+  item,
+  position,
+  size,
+  visible,
+}: {
+  item: DiscoveryImageData;
+  position: { top: string; left: string };
+  size: DiscoveryImageData["size"];
+  visible: boolean;
+}) {
   const [errored, setErrored] = useState(false);
+  useEffect(() => {
+    setErrored(false);
+  }, [item.src]);
+
   return (
     <div
-      className={`float-slow absolute overflow-hidden rounded-xl border border-background/40 bg-foreground shadow-[0_10px_28px_-14px_oklch(0_0_0/0.45)] ${SIZE_CLASSES[item.size]} ${TIER_CLASSES[item.tier]}`}
-      style={{ top: item.position.top, left: item.position.left, animationDelay: floatDelay }}
+      className={`absolute overflow-hidden rounded-xl border border-background/40 bg-foreground shadow-[0_10px_28px_-14px_oklch(0_0_0/0.45)] transition-opacity ease-in-out ${SIZE_CLASSES[size]} ${visible ? "opacity-100" : "opacity-0"}`}
+      style={{ top: position.top, left: position.left, transitionDuration: `${FADE_MS}ms` }}
       title={item.region}
     >
       {!errored && (
@@ -138,8 +160,43 @@ function DiscoveryCard({ item, floatDelay }: { item: DiscoveryImageData; floatDe
   );
 }
 
-/** India outline + floating discovery cards — desktop/tablet composition. Hidden below `sm`. */
+/**
+ * India outline with a single discovery card cycling across it — one image, one
+ * position at a time: fade in (~600ms) → hold (~1.8–2.5s) → fade out (~600ms) →
+ * repeat with a different image and a different slot. Hidden below `sm`.
+ */
 export function IndiaDiscoveryMap({ className = "" }: { className?: string }) {
+  // Deterministic initial indices — SSR and the first client render must match exactly.
+  // The real random pick happens client-side once "fade-out" resolves below.
+  const [imageIdx, setImageIdx] = useState(0);
+  const [posIdx, setPosIdx] = useState(0);
+  const [phase, setPhase] = useState<"fade-in" | "hold" | "fade-out">("fade-out");
+  const isFirstRef = useRef(true);
+
+  useEffect(() => {
+    let delay: number;
+    if (phase === "fade-in") delay = FADE_MS;
+    else if (phase === "hold") delay = 1800 + Math.random() * 700;
+    else delay = isFirstRef.current ? 60 : FADE_MS;
+
+    const timer = setTimeout(() => {
+      if (phase === "fade-out") {
+        isFirstRef.current = false;
+        setImageIdx((prev) => randomIndex(DISCOVERY_IMAGES.length, prev));
+        setPosIdx((prev) => randomIndex(MAP_POSITIONS.length, prev));
+        setPhase("fade-in");
+      } else if (phase === "fade-in") {
+        setPhase("hold");
+      } else {
+        setPhase("fade-out");
+      }
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [phase]);
+
+  const item = DISCOVERY_IMAGES[imageIdx];
+  const pos = MAP_POSITIONS[posIdx];
+
   return (
     <div
       className={`relative mx-auto hidden aspect-[667/777] w-full max-w-sm sm:block ${className}`}
@@ -159,9 +216,7 @@ export function IndiaDiscoveryMap({ className = "" }: { className?: string }) {
           strokeLinejoin="round"
         />
       </svg>
-      {DISCOVERY_IMAGES.map((item, i) => (
-        <DiscoveryCard key={item.region} item={item} floatDelay={`${(i % 5) * 0.6}s`} />
-      ))}
+      <DiscoveryCard item={item} position={pos} size={pos.size} visible={phase !== "fade-out"} />
     </div>
   );
 }

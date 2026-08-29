@@ -71,7 +71,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 export function FaqSection() {
   return (
-    <section className="mx-auto max-w-6xl px-6 py-12">
+    <section className="mx-auto max-w-7xl px-6 py-10">
       <p className="eyebrow">FAQ</p>
       <h2 className="mt-3 text-3xl md:text-4xl">Frequently asked questions</h2>
 
