@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
+import { SlidersHorizontal } from "lucide-react";
 import { useCities } from "@/hooks/use-cities";
 import type { CategoryRow } from "@/lib/public.types";
 
@@ -122,9 +123,16 @@ export function SearchPill({
             type="button"
             onClick={() => setFiltersOpen((v) => !v)}
             aria-expanded={filtersOpen}
-            className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border px-4 py-2.5 text-xs uppercase tracking-[0.1em] text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
+            aria-label="Filters"
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
           >
-            Filters {category || openNow ? "•" : ""}
+            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+            {(category || openNow) && (
+              <span
+                className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent"
+                aria-hidden="true"
+              />
+            )}
           </button>
           <button
             type="submit"

@@ -8,15 +8,10 @@ import { Reveal } from "@/components/reveal";
 import { SearchPill } from "@/components/search-pill";
 import { LiveResultsPanel } from "@/components/live-results-panel";
 import { EventsSection } from "@/components/events-section";
-import {
-  getCategories,
-  getBusinesses,
-  getCities,
-  getSubdomainBusiness,
-} from "@/lib/public.functions";
+import { getCategories, getBusinesses, getSubdomainBusiness } from "@/lib/public.functions";
 import { buildBusinessHead, toProfileBusiness } from "@/lib/business-seo";
 import { BusinessProfilePreview } from "@/components/business-profile-preview";
-import type { CategoryRow, CityRow, PublicBusiness } from "@/lib/public.types";
+import type { CategoryRow, PublicBusiness } from "@/lib/public.types";
 import { PLANS } from "@/lib/constants";
 import heroImage from "@/assets/luvlit-hero.jpg";
 
@@ -58,7 +53,6 @@ export const Route = createFileRoute("/")({
       type: "home" as const,
       categories: await getCategories(),
       featured: await getBusinesses({ data: {} }),
-      cities: await getCities(),
     };
   },
   component: Index,
@@ -104,26 +98,23 @@ const OWNER_PERKS = [
 function Index() {
   const data = Route.useLoaderData() as
     | { type: "business"; business: NonNullable<import("@/lib/public.types").BusinessDetail> }
-    | { type: "home"; categories: CategoryRow[]; featured: PublicBusiness[]; cities: CityRow[] };
+    | { type: "home"; categories: CategoryRow[]; featured: PublicBusiness[] };
 
   if (data.type === "business") {
     return <BusinessProfilePreview business={toProfileBusiness(data.business)} />;
   }
-  return <HomePage categories={data.categories} featured={data.featured} cities={data.cities} />;
+  return <HomePage categories={data.categories} featured={data.featured} />;
 }
 
 function HomePage({
   categories,
   featured,
-  cities,
 }: {
   categories: CategoryRow[];
   featured: PublicBusiness[];
-  cities: CityRow[];
 }) {
   const [city, setCity] = useState("");
   const [query, setQuery] = useState("");
-  const [presetQuery, setPresetQuery] = useState<string | undefined>(undefined);
   const featuredList = featured.filter((b) => b.featured).slice(0, 6);
   const recent = featured.slice(0, 6);
   const place = city || "India";
@@ -134,7 +125,7 @@ function HomePage({
 
       <main className="flex-1">
         <section className="relative isolate overflow-hidden bg-dark-bg">
-          <div className="absolute inset-0 -z-20">
+          <div className="absolute inset-0 -z-10">
             <img
               src={heroImage}
               alt=""
@@ -142,9 +133,8 @@ function HomePage({
               height={1088}
               className="h-full w-full object-cover grayscale"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-dark-bg/75 via-dark-bg/65 to-dark-bg/90" />
+            <div className="absolute inset-0 bg-gradient-to-t from-dark-bg via-dark-bg/35 to-transparent" />
           </div>
-          <div className="ambient-glow absolute inset-0 -z-10" aria-hidden="true" />
 
           <div className="mx-auto max-w-6xl px-6 pb-24 pt-14 md:pb-28 md:pt-16">
             <p className="eyebrow rise-in text-dark-fg/80" style={{ animationDelay: "60ms" }}>
@@ -176,15 +166,8 @@ function HomePage({
               city={city}
               onCityChange={setCity}
               onQueryChange={setQuery}
-              presetQuery={presetQuery}
             />
-            <LiveResultsPanel
-              query={query}
-              businesses={featured}
-              categories={categories}
-              cities={cities}
-              onChipClick={setPresetQuery}
-            />
+            <LiveResultsPanel query={query} businesses={featured} />
           </div>
 
           <div

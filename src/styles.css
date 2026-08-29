@@ -73,7 +73,7 @@
 :root {
   --radius: 1rem;
 
-  --background: #faf6ee;
+  --background: #ffffff;
   --foreground: #172a1e;
 
   --card: #fffdf8;
@@ -131,7 +131,7 @@
 }
 
 .dark {
-  --background: #faf6ee;
+  --background: #ffffff;
   --foreground: #172a1e;
   --card: #fffdf8;
   --card-foreground: #172a1e;
