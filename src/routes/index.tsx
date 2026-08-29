@@ -8,7 +8,7 @@ import { Reveal } from "@/components/reveal";
 import { SearchPill } from "@/components/search-pill";
 import { LiveResultsPanel } from "@/components/live-results-panel";
 import { EventsSection } from "@/components/events-section";
-import { DiscoveryStrip, IndiaDiscoveryMap } from "@/components/india-discovery-map";
+import { IndiaDiscoveryMap } from "@/components/india-discovery-map";
 import {
   getCategories,
   getBusinesses,
@@ -153,10 +153,10 @@ function HomePage({
                   Pan-India marketplace for local businesses
                 </p>
                 <h1
-                  className="headline rise-in mt-5 max-w-xl text-4xl leading-[1.05] sm:text-5xl lg:text-[56px]"
+                  className="headline rise-in mt-5 max-w-xl text-4xl sm:text-5xl lg:text-[56px]"
                   style={{ animationDelay: "160ms" }}
                 >
-                  Find local businesses you&rsquo;ll <em className="text-accent italic">love</em> to
+                  Find local businesses you&rsquo;ll <span className="text-accent">love</span> to
                   support.
                 </h1>
                 <p
@@ -176,11 +176,34 @@ function HomePage({
                   />
                   <LiveResultsPanel query={query} businesses={featured} />
                 </div>
+
+                <Link
+                  to="/post-requirement"
+                  className="rise-in group mt-4 inline-flex max-w-2xl items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  style={{ animationDelay: "420ms" }}
+                >
+                  Can&rsquo;t find what you&rsquo;re looking for?
+                  <span className="inline-flex items-center gap-1 font-medium text-accent">
+                    Post a requirement
+                    <span
+                      aria-hidden="true"
+                      className="inline-block transition-transform group-hover:translate-x-0.5"
+                    >
+                      →
+                    </span>
+                  </span>
+                </Link>
               </div>
 
               <div className="rise-in" style={{ animationDelay: "220ms" }}>
                 <IndiaDiscoveryMap />
-                <DiscoveryStrip className="mt-6" />
+                <div className="mt-4 flex items-center justify-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
+                  </span>
+                  Discovering across India
+                </div>
               </div>
             </div>
           </div>
@@ -215,23 +238,27 @@ function HomePage({
             </div>
           </Reveal>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-8 grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-5">
             {categories.slice(0, 5).map((category, i) => (
               <Reveal key={category.id} delay={i * 60}>
                 <Link
                   to="/browse/$category"
                   params={{ category: category.name }}
                   search={city ? { city } : undefined}
-                  className="surface-card group relative block h-full overflow-hidden p-5 transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-28px_oklch(0_0_0/0.35)] active:scale-[0.98] active:duration-150"
+                  className="group relative block border-t border-border pt-4 transition-colors hover:border-accent"
                 >
-                  <span className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-accent-soft opacity-0 transition-all duration-500 group-hover:scale-110 group-hover:opacity-100" />
-                  <h3 className="relative text-base">{category.name}</h3>
-                  <p className="relative mt-2 text-sm text-muted-foreground">
-                    Explore across {place}
-                  </p>
-                  <span className="relative mt-4 inline-block text-sm text-accent opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100">
-                    Browse →
-                  </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-base font-medium transition-colors group-hover:text-accent">
+                      {category.name}
+                    </h3>
+                    <span
+                      aria-hidden="true"
+                      className="text-muted-foreground transition-all duration-300 group-hover:translate-x-1 group-hover:text-accent"
+                    >
+                      →
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-sm text-muted-foreground">Explore across {place}</p>
                 </Link>
               </Reveal>
             ))}
@@ -245,7 +272,7 @@ function HomePage({
               <Reveal>
                 <p className="eyebrow">{featuredList.length ? "Featured" : "Recently joined"}</p>
                 <h2 className="mt-3 text-3xl md:text-4xl">
-                  {featuredList.length ? "In the spotlight" : "New on LuvLit"}
+                  {featuredList.length ? "Worth discovering" : "New on LuvLit"}
                 </h2>
               </Reveal>
               <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">

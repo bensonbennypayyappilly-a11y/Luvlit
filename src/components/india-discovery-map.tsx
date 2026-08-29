@@ -12,108 +12,104 @@ export type DiscoveryImageData = {
   src: string;
   alt: string;
   region: string;
-  position: { top: string; left: string };
-  size: "sm" | "md" | "lg";
-  /** "tablet" images show from the sm breakpoint up; "desktop" images only from lg up. */
-  tier: "tablet" | "desktop";
 };
 
 /**
- * Single source of truth for the 10 floating discovery cards. Swap `src` for the
- * real photos when they land in /public/images/discovery/ — nothing else changes.
+ * Single source of truth for the 10 discovery images. Swap `src` for the real
+ * photos when they land in /public/images/discovery/ — nothing else changes.
  */
 export const DISCOVERY_IMAGES: DiscoveryImageData[] = [
   {
     src: "/images/discovery/business-01.jpg",
     alt: "Local business in North India",
     region: "North",
-    position: { top: "4%", left: "36%" },
-    size: "md",
-    tier: "tablet",
   },
-  {
-    src: "/images/discovery/business-02.jpg",
-    alt: "Local business in Delhi NCR",
-    region: "Delhi NCR",
-    position: { top: "16%", left: "58%" },
-    size: "sm",
-    tier: "tablet",
-  },
+  { src: "/images/discovery/business-02.jpg", alt: "Local business in Delhi NCR", region: "North" },
   {
     src: "/images/discovery/business-03.jpg",
-    alt: "Local business in West India",
+    alt: "Local business in western India",
     region: "West",
-    position: { top: "40%", left: "0%" },
-    size: "lg",
-    tier: "tablet",
   },
   {
     src: "/images/discovery/business-04.jpg",
-    alt: "Local business in North-East India",
+    alt: "Local business in north-east India",
     region: "North-East",
-    position: { top: "28%", left: "82%" },
-    size: "sm",
-    tier: "tablet",
   },
   {
     src: "/images/discovery/business-05.jpg",
-    alt: "Local business in Central India",
+    alt: "Local business in central India",
     region: "Central",
-    position: { top: "48%", left: "44%" },
-    size: "sm",
-    tier: "desktop",
   },
   {
     src: "/images/discovery/business-06.jpg",
-    alt: "Local business in East India",
+    alt: "Local business in eastern India",
     region: "East",
-    position: { top: "54%", left: "76%" },
-    size: "md",
-    tier: "tablet",
   },
   {
     src: "/images/discovery/business-07.jpg",
-    alt: "Local business on the West Coast",
-    region: "West Coast",
-    position: { top: "68%", left: "18%" },
-    size: "sm",
-    tier: "desktop",
+    alt: "Local business on the west coast",
+    region: "West",
   },
   {
     src: "/images/discovery/business-08.jpg",
-    alt: "Local business in South-West India",
+    alt: "Local business in south-west India",
     region: "South-West",
-    position: { top: "80%", left: "14%" },
-    size: "lg",
-    tier: "tablet",
   },
   {
     src: "/images/discovery/business-09.jpg",
-    alt: "Local business in South-East India",
+    alt: "Local business in south-east India",
     region: "South-East",
-    position: { top: "72%", left: "58%" },
-    size: "md",
-    tier: "desktop",
   },
   {
     src: "/images/discovery/business-10.jpg",
-    alt: "Local business in South India",
+    alt: "Local business in southern India",
     region: "South",
-    position: { top: "92%", left: "40%" },
-    size: "sm",
-    tier: "desktop",
   },
 ];
 
-const SIZE_CLASSES: Record<DiscoveryImageData["size"], string> = {
-  sm: "h-12 w-12 sm:h-14 sm:w-14",
-  md: "h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]",
-  lg: "h-20 w-20 sm:h-24 sm:w-24",
-};
+type CardSize = "xs" | "sm" | "md" | "lg";
 
-/** Predefined map slots a card can appear at — decoupled from any one image, so image and position are chosen independently each cycle. */
-const MAP_POSITIONS: { top: string; left: string; size: DiscoveryImageData["size"] }[] =
-  DISCOVERY_IMAGES.map((d) => ({ top: d.position.top, left: d.position.left, size: d.size }));
+type MapSlot = { region: string; top: number; left: number; size: CardSize };
+
+/**
+ * Predefined map slots, decoupled from any one image — each cycle picks an image
+ * and a slot independently. Positions are percentages of the map container, so
+ * they hold at any container size — but the CARD is a fixed pixel size (SIZE_PX),
+ * which becomes a larger fraction of a smaller container. Every slot below was
+ * solved and confirmed at both ends of the range this component actually ships
+ * at: the ~300px mobile floor (this container's `max-w-[300px]`) and the ~384px
+ * desktop size (`sm:max-w-sm`). Verification method: the real card element's
+ * bounding box — including its actual border-radius, so probes sit on the
+ * rounded corner's arc rather than the sharp mathematical corner — converted
+ * through a live getBoundingClientRect() into the SVG's viewBox space and tested
+ * with SVGGeometryElement.isPointInFill() against the actual traced outline path,
+ * not just the center point and not eyeballed. North and North-East are the two
+ * genuinely narrow spots (North-East is the real "chicken's neck" corridor);
+ * both needed the smallest size tier to clear every probe at the 300px floor.
+ * If you resize the container, change SIZE_PX, or move a slot, re-solve and
+ * re-verify at BOTH widths with the same method — do not eyeball new values.
+ */
+const MAP_SLOTS: MapSlot[] = [
+  { region: "North", top: 10, left: 28.5, size: "xs" },
+  { region: "North-West", top: 34, left: 27.5, size: "sm" },
+  { region: "West", top: 42, left: 20.5, size: "sm" },
+  { region: "Central", top: 42.5, left: 30.5, size: "lg" },
+  { region: "East", top: 45.5, left: 50, size: "md" },
+  { region: "North-East", top: 33.5, left: 88, size: "xs" },
+  { region: "South-West", top: 55, left: 28.5, size: "md" },
+  { region: "South", top: 68, left: 28.5, size: "sm" },
+  { region: "South-East", top: 46, left: 36, size: "md" },
+];
+
+const SIZE_PX: Record<CardSize, number> = { xs: 30, sm: 52, md: 68, lg: 88 };
+const RING_PX: Record<CardSize, number> = { xs: 48, sm: 80, md: 100, lg: 124 };
+/** Smaller cards use a proportionally smaller radius — rounded-xl at 30px would read as a circle. */
+const CARD_ROUNDING: Record<CardSize, string> = {
+  xs: "rounded-lg",
+  sm: "rounded-xl",
+  md: "rounded-xl",
+  lg: "rounded-2xl",
+};
 
 const FADE_MS = 600;
 
@@ -124,17 +120,38 @@ function randomIndex(length: number, exclude: number): number {
   return i;
 }
 
-/** Floating placeholder card — renders the real photo once it exists at `src`, a dark square until then. */
-function DiscoveryCard({
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const onChange = () => setReduced(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return reduced;
+}
+
+/**
+ * One discovery card centered on a map slot, with a brief signal ring on arrival.
+ * Position is the slot's own top/left percentage plus a translate(-50%,-50%), so
+ * the percentage marks the card's CENTER, not its corner — required for the
+ * boundary math above to hold at any container size.
+ */
+function DiscoverySlot({
   item,
-  position,
-  size,
+  slot,
   visible,
+  showRing,
+  cycleKey,
+  reducedMotion,
 }: {
   item: DiscoveryImageData;
-  position: { top: string; left: string };
-  size: DiscoveryImageData["size"];
+  slot: MapSlot;
   visible: boolean;
+  showRing: boolean;
+  cycleKey: number;
+  reducedMotion: boolean;
 }) {
   const [errored, setErrored] = useState(false);
   useEffect(() => {
@@ -143,37 +160,60 @@ function DiscoveryCard({
 
   return (
     <div
-      className={`absolute overflow-hidden rounded-xl border border-background/40 bg-foreground shadow-[0_10px_28px_-14px_oklch(0_0_0/0.45)] transition-opacity ease-in-out ${SIZE_CLASSES[size]} ${visible ? "opacity-100" : "opacity-0"}`}
-      style={{ top: position.top, left: position.left, transitionDuration: `${FADE_MS}ms` }}
-      title={item.region}
+      className="absolute -translate-x-1/2 -translate-y-1/2"
+      style={{ top: `${slot.top}%`, left: `${slot.left}%` }}
     >
-      {!errored && (
-        <img
-          src={item.src}
-          alt={item.alt}
-          loading="lazy"
-          onError={() => setErrored(true)}
-          className="h-full w-full object-cover"
-        />
-      )}
+      <div className="relative flex items-center justify-center">
+        {showRing && !reducedMotion && (
+          <span
+            key={cycleKey}
+            aria-hidden="true"
+            className="discovery-ping pointer-events-none absolute rounded-full border border-accent/50"
+            style={{ width: RING_PX[slot.size], height: RING_PX[slot.size] }}
+          />
+        )}
+        <div
+          className={`overflow-hidden border border-background/40 bg-foreground shadow-[0_10px_28px_-14px_oklch(0_0_0/0.45)] ${CARD_ROUNDING[slot.size]} ${reducedMotion ? "" : "transition-opacity ease-in-out"} ${visible ? "opacity-100" : "opacity-0"}`}
+          style={{
+            width: SIZE_PX[slot.size],
+            height: SIZE_PX[slot.size],
+            transitionDuration: reducedMotion ? "0ms" : `${FADE_MS}ms`,
+          }}
+          title={slot.region}
+        >
+          {!errored && (
+            <img
+              src={item.src}
+              alt={item.alt}
+              loading="lazy"
+              onError={() => setErrored(true)}
+              className="h-full w-full object-cover"
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
 /**
  * India outline with a single discovery card cycling across it — one image, one
- * position at a time: fade in (~600ms) → hold (~1.8–2.5s) → fade out (~600ms) →
- * repeat with a different image and a different slot. Hidden below `sm`.
+ * slot at a time: fade in (~600ms, with a brief signal ring) → hold (~1.8–2.5s) →
+ * fade out (~600ms) → repeat with a different image and a different slot.
+ * Respects prefers-reduced-motion: shows one static image, no cycling, no ring.
  */
 export function IndiaDiscoveryMap({ className = "" }: { className?: string }) {
+  const reducedMotion = usePrefersReducedMotion();
   // Deterministic initial indices — SSR and the first client render must match exactly.
   // The real random pick happens client-side once "fade-out" resolves below.
   const [imageIdx, setImageIdx] = useState(0);
-  const [posIdx, setPosIdx] = useState(0);
+  const [slotIdx, setSlotIdx] = useState(0);
   const [phase, setPhase] = useState<"fade-in" | "hold" | "fade-out">("fade-out");
+  const [cycleKey, setCycleKey] = useState(0);
   const isFirstRef = useRef(true);
 
   useEffect(() => {
+    if (reducedMotion) return;
     let delay: number;
     if (phase === "fade-in") delay = FADE_MS;
     else if (phase === "hold") delay = 1800 + Math.random() * 700;
@@ -183,7 +223,8 @@ export function IndiaDiscoveryMap({ className = "" }: { className?: string }) {
       if (phase === "fade-out") {
         isFirstRef.current = false;
         setImageIdx((prev) => randomIndex(DISCOVERY_IMAGES.length, prev));
-        setPosIdx((prev) => randomIndex(MAP_POSITIONS.length, prev));
+        setSlotIdx((prev) => randomIndex(MAP_SLOTS.length, prev));
+        setCycleKey((k) => k + 1);
         setPhase("fade-in");
       } else if (phase === "fade-in") {
         setPhase("hold");
@@ -192,15 +233,17 @@ export function IndiaDiscoveryMap({ className = "" }: { className?: string }) {
       }
     }, delay);
     return () => clearTimeout(timer);
-  }, [phase]);
+  }, [phase, reducedMotion]);
 
   const item = DISCOVERY_IMAGES[imageIdx];
-  const pos = MAP_POSITIONS[posIdx];
+  const slot = MAP_SLOTS[slotIdx];
+  const visible = reducedMotion || phase !== "fade-out";
 
   return (
     <div
-      className={`relative mx-auto hidden aspect-[667/777] w-full max-w-sm sm:block ${className}`}
+      className={`relative mx-auto aspect-[667/777] w-full max-w-[300px] sm:max-w-sm ${className}`}
     >
+      <div className="discovery-glow absolute inset-0 -z-10" aria-hidden="true" />
       <svg
         viewBox="0 0 666.66669 777.33331"
         className="absolute inset-0 h-full w-full"
@@ -216,39 +259,14 @@ export function IndiaDiscoveryMap({ className = "" }: { className?: string }) {
           strokeLinejoin="round"
         />
       </svg>
-      <DiscoveryCard item={item} position={pos} size={pos.size} visible={phase !== "fade-out"} />
-    </div>
-  );
-}
-
-/** Mobile fallback — a compact horizontal strip instead of the floating collage. */
-export function DiscoveryStrip({ className = "" }: { className?: string }) {
-  const items = DISCOVERY_IMAGES.slice(0, 6);
-  return (
-    <div className={`flex gap-3 overflow-x-auto pb-1 sm:hidden ${className}`}>
-      {items.map((item) => (
-        <MobileDiscoveryThumb key={item.region} item={item} />
-      ))}
-    </div>
-  );
-}
-
-function MobileDiscoveryThumb({ item }: { item: DiscoveryImageData }) {
-  const [errored, setErrored] = useState(false);
-  return (
-    <div
-      className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-border bg-foreground shadow-sm"
-      title={item.region}
-    >
-      {!errored && (
-        <img
-          src={item.src}
-          alt={item.alt}
-          loading="lazy"
-          onError={() => setErrored(true)}
-          className="h-full w-full object-cover"
-        />
-      )}
+      <DiscoverySlot
+        item={item}
+        slot={slot}
+        visible={visible}
+        showRing={phase === "fade-in"}
+        cycleKey={cycleKey}
+        reducedMotion={reducedMotion}
+      />
     </div>
   );
 }

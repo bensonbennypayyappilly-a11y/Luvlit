@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { MapPin, SlidersHorizontal } from "lucide-react";
+import { MapPin, Search, SlidersHorizontal } from "lucide-react";
 import { useCities } from "@/hooks/use-cities";
 import type { CategoryRow } from "@/lib/public.types";
 
@@ -76,7 +76,7 @@ export function SearchPill({
       }}
       className="relative w-full"
     >
-      <div className="search-pill flex w-full flex-col gap-2 p-2 sm:rounded-3xl md:h-16 md:flex-row md:items-center md:gap-0 md:rounded-full md:p-2">
+      <div className="search-pill focus-within:ring-accent/25 flex w-full flex-col gap-2 p-2 transition-shadow focus-within:ring-2 sm:rounded-3xl md:h-16 md:flex-row md:items-center md:gap-0 md:rounded-full md:p-2">
         <div className="flex min-w-0 items-center gap-2 md:h-full md:w-40 md:border-r md:border-border lg:w-44">
           <MapPin
             className="ml-4 h-3.5 w-3.5 shrink-0 text-muted-foreground md:ml-4"
@@ -97,7 +97,11 @@ export function SearchPill({
           </select>
         </div>
 
-        <div className="relative min-w-0 flex-1">
+        <div className="relative flex min-w-0 flex-1 items-center">
+          <Search
+            className="pointer-events-none ml-4 h-3.5 w-3.5 shrink-0 text-muted-foreground md:ml-5"
+            aria-hidden="true"
+          />
           <input
             value={q}
             onChange={(e) => {
@@ -105,10 +109,10 @@ export function SearchPill({
               onQueryChange?.(e.target.value);
             }}
             aria-label="Search"
-            className="w-full rounded-full bg-transparent px-5 py-2.5 text-[15px] text-foreground focus:outline-none"
+            className="w-full rounded-full bg-transparent px-3 py-2.5 text-[15px] text-foreground focus:outline-none"
           />
           {!q && (
-            <div className="pointer-events-none absolute inset-y-0 left-5 right-5 flex items-center overflow-hidden">
+            <div className="pointer-events-none absolute inset-y-0 left-11 right-3 flex items-center overflow-hidden md:left-12">
               <AnimatePresence mode="wait">
                 <motion.span
                   key={placeholderIndex}
@@ -143,9 +147,12 @@ export function SearchPill({
           </button>
           <button
             type="submit"
-            className="whitespace-nowrap rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:scale-[1.02] hover:opacity-95 active:scale-100"
+            className="group whitespace-nowrap rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-95"
           >
-            Search →
+            Search
+            <span className="ml-1 inline-block transition-transform group-hover:translate-x-0.5">
+              →
+            </span>
           </button>
         </div>
       </div>
