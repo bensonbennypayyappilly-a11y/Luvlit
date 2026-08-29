@@ -139,7 +139,7 @@ export function SiteHeader() {
                 <Link
                   to="/auth"
                   search={{ role: "business" }}
-                  className="rounded-md border border-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-soft"
+                  className="rounded-md border border-accent px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent-soft"
                 >
                   List your business
                 </Link>
@@ -180,7 +180,7 @@ export function SiteHeader() {
                   <Link
                     to="/auth"
                     search={{ role: "business" }}
-                    className="flex min-h-11 w-fit items-center rounded-md border border-accent px-4 text-sm font-medium text-accent-foreground hover:bg-accent-soft"
+                    className="flex min-h-11 w-fit items-center rounded-md border border-accent px-4 text-sm font-medium text-accent hover:bg-accent-soft"
                   >
                     List your business
                   </Link>

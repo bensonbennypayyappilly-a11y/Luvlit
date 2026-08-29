@@ -216,7 +216,7 @@ export function MediaUploader({
           e.target.value = "";
           if (file) void upload(file);
         }}
-        className="mt-4 block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border file:border-accent file:bg-transparent file:px-4 file:py-2 file:text-sm file:text-accent-foreground"
+        className="mt-4 block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border file:border-accent file:bg-transparent file:px-4 file:py-2 file:text-sm file:text-accent"
       />
 
       {progress != null && (

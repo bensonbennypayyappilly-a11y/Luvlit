@@ -139,25 +139,21 @@ function HomePage({
           <div className="ambient-glow absolute inset-0 -z-10" aria-hidden="true" />
 
           <div className="mx-auto max-w-6xl px-6 pb-12 pt-14 md:pb-14 md:pt-16">
-            <p
-              className="eyebrow rise-in text-dark-fg/80"
-              style={{ animationDelay: "60ms" }}
-            >
+            <p className="eyebrow rise-in text-dark-fg/80" style={{ animationDelay: "60ms" }}>
               Pan-India marketplace for local businesses
             </p>
             <h1
-              className="headline rise-in mt-6 max-w-4xl text-6xl text-dark-fg md:text-8xl"
-              style={{ animationDelay: "160ms", ["--shimmer-color" as string]: "var(--dark-fg)" }}
+              className="headline rise-in mt-5 max-w-2xl text-4xl text-dark-fg sm:text-5xl lg:text-6xl"
+              style={{ animationDelay: "160ms" }}
             >
-              The small businesses worth
-              <span className="shimmer-text"> knowing</span>, near you.
+              Local businesses worth knowing.
             </h1>
             <p
-              className="rise-in mt-7 max-w-xl text-lg text-dark-fg/85"
+              className="rise-in mt-6 max-w-xl text-lg text-dark-fg/85"
               style={{ animationDelay: "260ms" }}
             >
-              Makers, studios, salons and neighbourhood brands — each with their own page. Book an
-              appointment, request a quote, or find the right influencer for your brand.
+              Makers, studios, salons and neighbourhood brands — each with their own page. Book,
+              message, or get a quote in minutes.
             </p>
 
             <div className="rise-in mt-10" style={{ animationDelay: "360ms" }}>
@@ -292,7 +288,7 @@ function HomePage({
         <EventsSection city={city || undefined} />
 
         {/* How it works */}
-        <section className="mx-auto max-w-6xl px-6 py-24">
+        <section className="mx-auto max-w-6xl px-6 py-20">
           <Reveal>
             <p className="eyebrow">How LuvLit works</p>
             <h2 className="mt-3 max-w-2xl text-3xl md:text-4xl">
@@ -315,7 +311,7 @@ function HomePage({
         </section>
 
         {/* For owners */}
-        <section className="mx-auto max-w-6xl px-6 py-24">
+        <section className="mx-auto max-w-6xl px-6 py-20">
           <Reveal>
             <p className="eyebrow">For business owners</p>
             <h2 className="mt-3 max-w-2xl text-3xl md:text-4xl">

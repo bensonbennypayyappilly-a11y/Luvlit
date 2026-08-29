@@ -258,7 +258,7 @@ function ProductsPage() {
                   </td>
                   <td className="px-4 py-2 text-muted-foreground">{item.is_active ? "Active" : "Inactive"}</td>
                   <td className="px-4 py-2 text-right align-top">
-                    <button onClick={() => saveEdit(item.id)} className="mr-2 text-accent-foreground">Save</button>
+                    <button onClick={() => saveEdit(item.id)} className="mr-2 text-accent">Save</button>
                     <button
                       onClick={() => {
                         setEditingId(null);
@@ -291,14 +291,14 @@ function ProductsPage() {
                     <button
                       onClick={() => toggleActive(item)}
                       className={`rounded-full border px-3 py-1 text-xs ${
-                        item.is_active ? "border-accent bg-accent-soft text-accent-foreground" : "border-border text-muted-foreground"
+                        item.is_active ? "border-accent bg-accent-soft text-accent" : "border-border text-muted-foreground"
                       }`}
                     >
                       {item.is_active ? "Active" : "Inactive"}
                     </button>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => startEdit(item)} className="mr-3 text-accent-foreground">Edit</button>
+                    <button onClick={() => startEdit(item)} className="mr-3 text-accent">Edit</button>
                     <button onClick={() => remove(item.id)} className="text-destructive">Remove</button>
                   </td>
                 </tr>

@@ -47,7 +47,7 @@ function toLocalInput(iso: string | null) {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    published: "bg-accent-soft text-accent-foreground border-accent/40",
+    published: "bg-accent-soft text-accent border-accent/40",
     draft: "border-border text-muted-foreground",
     cancelled: "border-destructive/40 text-destructive",
   };

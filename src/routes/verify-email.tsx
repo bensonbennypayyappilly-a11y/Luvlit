@@ -125,7 +125,7 @@ function VerifyEmailPage() {
         </p>
 
         {status.type === "success" && (
-          <p className="mt-6 text-sm text-accent-foreground">{status.message}</p>
+          <p className="mt-6 text-sm text-accent">{status.message}</p>
         )}
         {status.type === "error" && (
           <p className="mt-6 text-sm text-destructive">{status.message}</p>
@@ -134,7 +134,7 @@ function VerifyEmailPage() {
         <button
           onClick={resend}
           disabled={cooldown > 0}
-          className="mt-8 rounded-md border border-accent px-6 py-3 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-soft disabled:opacity-50"
+          className="mt-8 rounded-md border border-accent px-6 py-3 text-sm font-medium text-accent transition-colors hover:bg-accent-soft disabled:opacity-50"
         >
           {cooldown > 0 ? `Resend verification email (${cooldown}s)` : "Resend verification email"}
         </button>

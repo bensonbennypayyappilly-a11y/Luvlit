@@ -322,7 +322,7 @@ function StaffPage() {
                             <span
                               key={key}
                               className={`rounded-full border px-2 py-1 ${
-                                h ? "border-accent bg-accent-soft text-accent-foreground" : "border-border"
+                                h ? "border-accent bg-accent-soft text-accent" : "border-border"
                               }`}
                             >
                               {label.slice(0, 3)}
@@ -333,7 +333,7 @@ function StaffPage() {
                       </div>
                     </div>
                     <div className="flex shrink-0 gap-3 text-sm">
-                      <button onClick={() => startEdit(s)} className="text-accent-foreground">
+                      <button onClick={() => startEdit(s)} className="text-accent">
                         Edit
                       </button>
                       <button onClick={() => remove(s.id)} className="text-destructive">
@@ -376,7 +376,7 @@ function StaffPage() {
                             onClick={() => toggleSpec(c)}
                             className={`rounded-full border px-3 py-1 text-xs ${
                               editDraft.specializations.includes(c)
-                                ? "border-accent bg-accent-soft text-accent-foreground"
+                                ? "border-accent bg-accent-soft text-accent"
                                 : "border-border text-muted-foreground"
                             }`}
                           >

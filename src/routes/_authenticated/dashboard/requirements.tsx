@@ -104,7 +104,7 @@ function Requirements() {
                 </div>
                 <button
                   onClick={() => setOpenId(openId === r.id ? null : r.id)}
-                  className="rounded-md border border-accent px-5 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-soft"
+                  className="rounded-md border border-accent px-5 py-2.5 text-sm font-medium text-accent hover:bg-accent-soft"
                 >
                   {r.quoteCount} {r.quoteCount === 1 ? "quote" : "quotes"} →
                 </button>

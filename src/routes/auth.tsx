@@ -187,7 +187,7 @@ function AuthPage() {
             </DialogDescription>
           </DialogHeader>
           {resendStatus.type === "success" && (
-            <p className="text-sm text-accent-foreground">{resendStatus.message}</p>
+            <p className="text-sm text-accent">{resendStatus.message}</p>
           )}
           {resendStatus.type === "error" && (
             <p className="text-sm text-destructive">{resendStatus.message}</p>
@@ -197,7 +197,7 @@ function AuthPage() {
               type="button"
               onClick={resend}
               disabled={resendCooldown > 0}
-              className="rounded-md border border-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-soft disabled:opacity-50"
+              className="rounded-md border border-accent px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent-soft disabled:opacity-50"
             >
               {resendCooldown > 0 ? `Resend (${resendCooldown}s)` : "Resend"}
             </button>

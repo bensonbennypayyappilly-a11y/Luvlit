@@ -114,7 +114,7 @@ function AdminIndex() {
       <div className="mt-8">
         <Link
           to="/admin/influencer-approvals"
-          className="rounded-md border border-accent px-6 py-3 text-sm font-medium text-accent-foreground hover:bg-accent-soft"
+          className="rounded-md border border-accent px-6 py-3 text-sm font-medium text-accent hover:bg-accent-soft"
         >
           Influencer approvals →
         </Link>
@@ -196,7 +196,7 @@ function AdminIndex() {
                   )}
                   <button
                     onClick={() => approveCategory(c.id)}
-                    className="rounded-md border border-accent px-4 py-2 text-sm text-accent-foreground hover:bg-accent-soft"
+                    className="rounded-md border border-accent px-4 py-2 text-sm text-accent hover:bg-accent-soft"
                   >
                     Approve
                   </button>

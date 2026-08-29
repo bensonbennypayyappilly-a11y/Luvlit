@@ -67,7 +67,7 @@ function Dashboard() {
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/dashboard/find-influencer"
-                className="rounded-md border border-accent px-6 py-3 text-sm font-medium text-accent-foreground hover:bg-accent-soft"
+                className="rounded-md border border-accent px-6 py-3 text-sm font-medium text-accent hover:bg-accent-soft"
               >
                 Find an influencer
               </Link>

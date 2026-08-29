@@ -134,7 +134,7 @@ function EventsIndex() {
             type="button"
             onClick={toggleNearMe}
             className={`rounded-md border px-3 py-2 text-sm transition-colors ${
-              nearMe ? "border-accent bg-accent-soft text-accent-foreground" : "border-border"
+              nearMe ? "border-accent bg-accent-soft text-accent" : "border-border"
             }`}
           >
             {nearMe ? "Near me ✓" : "Near me"}

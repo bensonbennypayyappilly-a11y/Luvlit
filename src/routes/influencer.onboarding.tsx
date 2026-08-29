@@ -118,7 +118,7 @@ function InfluencerOnboarding() {
             </p>
             <Link
               to="/influencer/status"
-              className="mt-8 inline-block rounded-md border border-accent px-6 py-3 text-sm font-medium text-accent-foreground hover:bg-accent-soft"
+              className="mt-8 inline-block rounded-md border border-accent px-6 py-3 text-sm font-medium text-accent hover:bg-accent-soft"
             >
               Check application status
             </Link>

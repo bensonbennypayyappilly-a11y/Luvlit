@@ -64,7 +64,7 @@ function BillingPage() {
           </p>
           <p>Yearly billing gives you <strong className="text-foreground">2 months free</strong>.</p>
           {isFreePeriod ? (
-            <p className="text-accent-foreground">You're currently in the free period.</p>
+            <p className="text-accent">You're currently in the free period.</p>
           ) : (
             <p>The free period has ended — standard pricing applies to new subscriptions.</p>
           )}

@@ -57,7 +57,7 @@ function Chats() {
                 onClick={() => setActiveId(c.id)}
                 className={`w-full rounded-md border px-4 py-3 text-left text-sm ${
                   activeId === c.id
-                    ? "border-accent bg-accent-soft text-accent-foreground"
+                    ? "border-accent bg-accent-soft text-accent"
                     : "border-border hover:border-accent"
                 }`}
               >

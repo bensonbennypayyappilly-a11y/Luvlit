@@ -32,7 +32,7 @@ export function BusinessDashboardSidebar({ businessName }: { businessName: strin
             onClick={() => setOpen(false)}
             className={`flex min-h-11 items-center rounded-md px-3 text-sm transition-colors ${
               active
-                ? "bg-accent-soft text-accent-foreground font-medium"
+                ? "bg-accent-soft text-accent font-medium"
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground"
             }`}
           >
