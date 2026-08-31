@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { WEEKDAYS } from "@/lib/constants";
 import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
+import { localDateString } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/staff")({
   head: () => ({
@@ -224,33 +225,76 @@ function StaffPage() {
       const duration = s.slot_duration_minutes || 30;
       const dayIndexToKey = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
+      // The same rolling 30-day window (today .. today+29) this function has always generated
+      // for. Recorded up front so both the "add missing" and the new "remove stale" pass below
+      // are scoped to exactly this window — never further into the future or past.
+      const windowDays: { iso: string; dayKey: string }[] = [];
+      for (let day = 0; day < 30; day++) {
+        const date = new Date();
+        date.setDate(date.getDate() + day);
+        windowDays.push({ iso: localDateString(date), dayKey: dayIndexToKey[date.getDay()] });
+      }
+      const windowStart = windowDays[0].iso;
+      const windowEnd = windowDays[windowDays.length - 1].iso;
+
       const { data: existing, error: fetchError } = await supabase
         .from("slots")
-        .select("date,start_time,booked_count")
-        .eq("staff_id", s.id);
+        .select("id,date,start_time,booked_count")
+        .eq("staff_id", s.id)
+        .gte("date", windowStart)
+        .lte("date", windowEnd);
       if (fetchError) {
         setRegenError((m) => ({ ...m, [s.id]: fetchError.message }));
         return;
       }
       const existingKeys = new Set((existing ?? []).map((r) => `${r.date}_${String(r.start_time).slice(0, 8)}`));
 
+      // Every slot key that SHOULD exist for this staff member's *current* working hours, over
+      // the same window. Doubles as the "what's missing" set (drives toInsert below) and, by
+      // elimination against `existing`, the "what no longer belongs" set (drives cleanup below)
+      // — so narrowing hours and widening hours are handled by the same computation.
+      const validKeys = new Set<string>();
       const toInsert: { staff_id: string; date: string; start_time: string; capacity: number }[] = [];
-      for (let day = 0; day < 30; day++) {
-        const date = new Date();
-        date.setDate(date.getDate() + day);
-        const dayKey = dayIndexToKey[date.getDay()];
+      for (const { iso, dayKey } of windowDays) {
         const dayHours = hours[dayKey] as DayHours;
         if (!dayHours) continue;
-        const iso = date.toISOString().slice(0, 10);
         const [sh, sm] = dayHours.start.split(":").map(Number);
         const [eh, em] = dayHours.end.split(":").map(Number);
         for (let t = sh * 60 + sm; t + duration <= eh * 60 + em; t += duration) {
           const startTime = `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}:00`;
           const key = `${iso}_${startTime}`;
+          validKeys.add(key);
           if (existingKeys.has(key)) continue;
           toInsert.push({ staff_id: s.id, date: iso, start_time: startTime, capacity });
         }
       }
+
+      // Slots that exist in-window but fall outside the (possibly narrowed) hours now — stale,
+      // and candidates for removal. A slot with an active booking must survive regardless:
+      // deleting it would cascade-delete the booking row (bookings.slot_id references slots(id)
+      // on delete cascade — see supabase/migrations/20260729061423_...sql), which must never
+      // happen silently. This checks the bookings table itself rather than trusting
+      // booked_count, so a drifted counter can never let a booked slot slip through and get
+      // deleted.
+      const staleRows = (existing ?? []).filter((r) => !validKeys.has(`${r.date}_${String(r.start_time).slice(0, 8)}`));
+      let bookedStaleIds = new Set<string>();
+      if (staleRows.length) {
+        const { data: activeBookings, error: bookingsError } = await supabase
+          .from("bookings")
+          .select("slot_id")
+          .in(
+            "slot_id",
+            staleRows.map((r) => r.id),
+          )
+          .neq("status", "cancelled");
+        if (bookingsError) {
+          setRegenError((m) => ({ ...m, [s.id]: bookingsError.message }));
+          return;
+        }
+        bookedStaleIds = new Set((activeBookings ?? []).map((b) => b.slot_id));
+      }
+      const toDelete = staleRows.filter((r) => !bookedStaleIds.has(r.id));
+      const keptBookedCount = staleRows.length - toDelete.length;
 
       for (let i = 0; i < toInsert.length; i += 500) {
         const { error: insertError } = await supabase.from("slots").insert(toInsert.slice(i, i + 500));
@@ -259,9 +303,34 @@ function StaffPage() {
           return;
         }
       }
+
+      for (let i = 0; i < toDelete.length; i += 500) {
+        const { error: deleteError } = await supabase
+          .from("slots")
+          .delete()
+          .in(
+            "id",
+            toDelete.slice(i, i + 500).map((r) => r.id),
+          );
+        if (deleteError) {
+          setRegenError((m) => ({ ...m, [s.id]: deleteError.message }));
+          return;
+        }
+      }
+
+      const parts: string[] = [];
+      if (toInsert.length) parts.push(`Added ${toInsert.length} new slot(s).`);
+      if (toDelete.length) parts.push(`Removed ${toDelete.length} slot(s) no longer in your working hours.`);
+      if (keptBookedCount) {
+        parts.push(
+          `${keptBookedCount} slot(s) outside your new hours ${keptBookedCount === 1 ? "was" : "were"} kept because ${
+            keptBookedCount === 1 ? "it has" : "they have"
+          } a booking — cancel it first if you want ${keptBookedCount === 1 ? "it" : "them"} removed.`,
+        );
+      }
       setRegenMsg((m) => ({
         ...m,
-        [s.id]: toInsert.length ? `Added ${toInsert.length} new slot(s).` : "No new slots needed — all up to date.",
+        [s.id]: parts.length ? parts.join(" ") : "No changes needed — all up to date.",
       }));
     } finally {
       setRegenBusy((m) => ({ ...m, [s.id]: false }));

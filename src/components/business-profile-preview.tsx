@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { EcoBadge } from "@/components/eco-badge";
+import { FavoriteButton } from "@/components/favorite-button";
 import { BookingWidget } from "@/components/booking-widget";
 import { GalleryGrid } from "@/components/gallery-grid";
 import { Reveal } from "@/components/reveal";
@@ -151,6 +152,7 @@ export function BusinessProfilePreview({ business }: { business: ProfileBusiness
                 </span>
               ))}
               {business.is_eco_friendly && <EcoBadge />}
+              <FavoriteButton businessId={business.id} />
             </div>
             {business.description && (
               <p className="mt-8 max-w-2xl text-lg text-white/90">{business.description}</p>
@@ -179,6 +181,7 @@ export function BusinessProfilePreview({ business }: { business: ProfileBusiness
                 </span>
               ))}
               {business.is_eco_friendly && <EcoBadge />}
+              <FavoriteButton businessId={business.id} />
             </div>
             {business.description && (
               <p className="mt-8 max-w-2xl text-lg text-muted-foreground">{business.description}</p>

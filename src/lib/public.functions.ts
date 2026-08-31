@@ -1,10 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isReservedSlug } from "@/lib/reserved-slugs";
+import { istDateString } from "@/lib/utils";
+import { isOpenNow, matchCategoriesForQuery } from "@/lib/search-helpers";
 import type {
   BusinessDetail,
   CategoryRow,
   CityRow,
+  OperatingHours,
   PublicBusiness,
   PublicEvent,
   PublicInfluencer,
@@ -230,7 +233,7 @@ export const getStaffAvailability = createServerFn({ method: "GET" })
       .select("id,staff_id,date,start_time,status,capacity,booked_count")
       .in("staff_id", ids)
       .eq("status", "open")
-      .gte("date", new Date().toISOString().slice(0, 10))
+      .gte("date", istDateString())
       .order("date")
       .order("start_time")
       .limit(600);

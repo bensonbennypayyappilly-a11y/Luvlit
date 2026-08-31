@@ -953,6 +953,10 @@ export type Database = {
         Returns: string
       }
       cleanup_expired_events: { Args: never; Returns: undefined }
+      get_conversation_partner_names: {
+        Args: { _conversation_ids: string[] }
+        Returns: { conversation_id: string; partner_name: string | null }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -34,6 +34,7 @@ import { Route as InfluencerRequestsRouteImport } from './routes/influencer.requ
 import { Route as InfluencerStatusRouteImport } from './routes/influencer.status'
 import { Route as OrganizerIdRouteImport } from './routes/organizer.$id'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminBusinessApprovalsRouteImport } from './routes/_authenticated/admin/business-approvals'
 import { Route as AuthenticatedAdminInfluencerApprovalsRouteImport } from './routes/_authenticated/admin/influencer-approvals'
 import { Route as AuthenticatedBusinessDashboardRouteRouteImport } from './routes/_authenticated/business/dashboard/route'
 import { Route as AuthenticatedBusinessOnboardingRouteImport } from './routes/_authenticated/business/onboarding'
@@ -41,6 +42,7 @@ import { Route as AuthenticatedBusinessSetupStaffRouteImport } from './routes/_a
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
 import { Route as AuthenticatedDashboardChatsRouteImport } from './routes/_authenticated/dashboard/chats'
 import { Route as AuthenticatedDashboardFindInfluencerRouteImport } from './routes/_authenticated/dashboard/find-influencer'
+import { Route as AuthenticatedDashboardNotificationsRouteImport } from './routes/_authenticated/dashboard/notifications'
 import { Route as AuthenticatedDashboardRequirementsRouteImport } from './routes/_authenticated/dashboard/requirements'
 import { Route as AuthenticatedDashboardSavedRouteImport } from './routes/_authenticated/dashboard/saved'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard/settings'
@@ -51,6 +53,7 @@ import { Route as AuthenticatedBusinessDashboardAppointmentsRouteImport } from '
 import { Route as AuthenticatedBusinessDashboardBillingRouteImport } from './routes/_authenticated/business/dashboard/billing'
 import { Route as AuthenticatedBusinessDashboardFeaturedRouteImport } from './routes/_authenticated/business/dashboard/featured'
 import { Route as AuthenticatedBusinessDashboardLeadsRouteImport } from './routes/_authenticated/business/dashboard/leads'
+import { Route as AuthenticatedBusinessDashboardNotificationsRouteImport } from './routes/_authenticated/business/dashboard/notifications'
 import { Route as AuthenticatedBusinessDashboardProductsRouteImport } from './routes/_authenticated/business/dashboard/products'
 import { Route as AuthenticatedBusinessDashboardProfileRouteImport } from './routes/_authenticated/business/dashboard/profile'
 import { Route as AuthenticatedBusinessDashboardRequirementsRouteImport } from './routes/_authenticated/business/dashboard/requirements'
@@ -183,6 +186,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminBusinessApprovalsRoute =
+  AuthenticatedAdminBusinessApprovalsRouteImport.update({
+    id: '/business-approvals',
+    path: '/business-approvals',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminInfluencerApprovalsRoute =
   AuthenticatedAdminInfluencerApprovalsRouteImport.update({
     id: '/influencer-approvals',
@@ -223,6 +232,12 @@ const AuthenticatedDashboardFindInfluencerRoute =
   AuthenticatedDashboardFindInfluencerRouteImport.update({
     id: '/find-influencer',
     path: '/find-influencer',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
+const AuthenticatedDashboardNotificationsRoute =
+  AuthenticatedDashboardNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
     getParentRoute: () => AuthenticatedDashboardRouteRoute,
   } as any)
 const AuthenticatedDashboardRequirementsRoute =
@@ -285,6 +300,12 @@ const AuthenticatedBusinessDashboardLeadsRoute =
     path: '/leads',
     getParentRoute: () => AuthenticatedBusinessDashboardRouteRoute,
   } as any)
+const AuthenticatedBusinessDashboardNotificationsRoute =
+  AuthenticatedBusinessDashboardNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedBusinessDashboardRouteRoute,
+  } as any)
 const AuthenticatedBusinessDashboardProductsRoute =
   AuthenticatedBusinessDashboardProductsRouteImport.update({
     id: '/products',
@@ -341,11 +362,13 @@ export interface FileRoutesByFullPath {
   '/events/': typeof EventsIndexRoute
   '/influencer/': typeof InfluencerIndexRoute
   '/business/dashboard': typeof AuthenticatedBusinessDashboardRouteRouteWithChildren
+  '/admin/business-approvals': typeof AuthenticatedAdminBusinessApprovalsRoute
   '/admin/influencer-approvals': typeof AuthenticatedAdminInfluencerApprovalsRoute
   '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
   '/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
   '/dashboard/chats': typeof AuthenticatedDashboardChatsRoute
   '/dashboard/find-influencer': typeof AuthenticatedDashboardFindInfluencerRoute
+  '/dashboard/notifications': typeof AuthenticatedDashboardNotificationsRoute
   '/dashboard/requirements': typeof AuthenticatedDashboardRequirementsRoute
   '/dashboard/saved': typeof AuthenticatedDashboardSavedRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -357,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/business/dashboard/billing': typeof AuthenticatedBusinessDashboardBillingRoute
   '/business/dashboard/featured': typeof AuthenticatedBusinessDashboardFeaturedRoute
   '/business/dashboard/leads': typeof AuthenticatedBusinessDashboardLeadsRoute
+  '/business/dashboard/notifications': typeof AuthenticatedBusinessDashboardNotificationsRoute
   '/business/dashboard/products': typeof AuthenticatedBusinessDashboardProductsRoute
   '/business/dashboard/profile': typeof AuthenticatedBusinessDashboardProfileRoute
   '/business/dashboard/requirements': typeof AuthenticatedBusinessDashboardRequirementsRoute
@@ -386,11 +410,13 @@ export interface FileRoutesByTo {
   '/browse': typeof BrowseIndexRoute
   '/events': typeof EventsIndexRoute
   '/influencer': typeof InfluencerIndexRoute
+  '/admin/business-approvals': typeof AuthenticatedAdminBusinessApprovalsRoute
   '/admin/influencer-approvals': typeof AuthenticatedAdminInfluencerApprovalsRoute
   '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
   '/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
   '/dashboard/chats': typeof AuthenticatedDashboardChatsRoute
   '/dashboard/find-influencer': typeof AuthenticatedDashboardFindInfluencerRoute
+  '/dashboard/notifications': typeof AuthenticatedDashboardNotificationsRoute
   '/dashboard/requirements': typeof AuthenticatedDashboardRequirementsRoute
   '/dashboard/saved': typeof AuthenticatedDashboardSavedRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -402,6 +428,7 @@ export interface FileRoutesByTo {
   '/business/dashboard/billing': typeof AuthenticatedBusinessDashboardBillingRoute
   '/business/dashboard/featured': typeof AuthenticatedBusinessDashboardFeaturedRoute
   '/business/dashboard/leads': typeof AuthenticatedBusinessDashboardLeadsRoute
+  '/business/dashboard/notifications': typeof AuthenticatedBusinessDashboardNotificationsRoute
   '/business/dashboard/products': typeof AuthenticatedBusinessDashboardProductsRoute
   '/business/dashboard/profile': typeof AuthenticatedBusinessDashboardProfileRoute
   '/business/dashboard/requirements': typeof AuthenticatedBusinessDashboardRequirementsRoute
@@ -436,11 +463,13 @@ export interface FileRoutesById {
   '/events/': typeof EventsIndexRoute
   '/influencer/': typeof InfluencerIndexRoute
   '/_authenticated/business/dashboard': typeof AuthenticatedBusinessDashboardRouteRouteWithChildren
+  '/_authenticated/admin/business-approvals': typeof AuthenticatedAdminBusinessApprovalsRoute
   '/_authenticated/admin/influencer-approvals': typeof AuthenticatedAdminInfluencerApprovalsRoute
   '/_authenticated/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
   '/_authenticated/business/setup-staff': typeof AuthenticatedBusinessSetupStaffRoute
   '/_authenticated/dashboard/chats': typeof AuthenticatedDashboardChatsRoute
   '/_authenticated/dashboard/find-influencer': typeof AuthenticatedDashboardFindInfluencerRoute
+  '/_authenticated/dashboard/notifications': typeof AuthenticatedDashboardNotificationsRoute
   '/_authenticated/dashboard/requirements': typeof AuthenticatedDashboardRequirementsRoute
   '/_authenticated/dashboard/saved': typeof AuthenticatedDashboardSavedRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
@@ -452,6 +481,7 @@ export interface FileRoutesById {
   '/_authenticated/business/dashboard/billing': typeof AuthenticatedBusinessDashboardBillingRoute
   '/_authenticated/business/dashboard/featured': typeof AuthenticatedBusinessDashboardFeaturedRoute
   '/_authenticated/business/dashboard/leads': typeof AuthenticatedBusinessDashboardLeadsRoute
+  '/_authenticated/business/dashboard/notifications': typeof AuthenticatedBusinessDashboardNotificationsRoute
   '/_authenticated/business/dashboard/products': typeof AuthenticatedBusinessDashboardProductsRoute
   '/_authenticated/business/dashboard/profile': typeof AuthenticatedBusinessDashboardProfileRoute
   '/_authenticated/business/dashboard/requirements': typeof AuthenticatedBusinessDashboardRequirementsRoute
@@ -486,11 +516,13 @@ export interface FileRouteTypes {
     | '/events/'
     | '/influencer/'
     | '/business/dashboard'
+    | '/admin/business-approvals'
     | '/admin/influencer-approvals'
     | '/business/onboarding'
     | '/business/setup-staff'
     | '/dashboard/chats'
     | '/dashboard/find-influencer'
+    | '/dashboard/notifications'
     | '/dashboard/requirements'
     | '/dashboard/saved'
     | '/dashboard/settings'
@@ -502,6 +534,7 @@ export interface FileRouteTypes {
     | '/business/dashboard/billing'
     | '/business/dashboard/featured'
     | '/business/dashboard/leads'
+    | '/business/dashboard/notifications'
     | '/business/dashboard/products'
     | '/business/dashboard/profile'
     | '/business/dashboard/requirements'
@@ -531,11 +564,13 @@ export interface FileRouteTypes {
     | '/browse'
     | '/events'
     | '/influencer'
+    | '/admin/business-approvals'
     | '/admin/influencer-approvals'
     | '/business/onboarding'
     | '/business/setup-staff'
     | '/dashboard/chats'
     | '/dashboard/find-influencer'
+    | '/dashboard/notifications'
     | '/dashboard/requirements'
     | '/dashboard/saved'
     | '/dashboard/settings'
@@ -547,6 +582,7 @@ export interface FileRouteTypes {
     | '/business/dashboard/billing'
     | '/business/dashboard/featured'
     | '/business/dashboard/leads'
+    | '/business/dashboard/notifications'
     | '/business/dashboard/products'
     | '/business/dashboard/profile'
     | '/business/dashboard/requirements'
@@ -580,11 +616,13 @@ export interface FileRouteTypes {
     | '/events/'
     | '/influencer/'
     | '/_authenticated/business/dashboard'
+    | '/_authenticated/admin/business-approvals'
     | '/_authenticated/admin/influencer-approvals'
     | '/_authenticated/business/onboarding'
     | '/_authenticated/business/setup-staff'
     | '/_authenticated/dashboard/chats'
     | '/_authenticated/dashboard/find-influencer'
+    | '/_authenticated/dashboard/notifications'
     | '/_authenticated/dashboard/requirements'
     | '/_authenticated/dashboard/saved'
     | '/_authenticated/dashboard/settings'
@@ -596,6 +634,7 @@ export interface FileRouteTypes {
     | '/_authenticated/business/dashboard/billing'
     | '/_authenticated/business/dashboard/featured'
     | '/_authenticated/business/dashboard/leads'
+    | '/_authenticated/business/dashboard/notifications'
     | '/_authenticated/business/dashboard/products'
     | '/_authenticated/business/dashboard/profile'
     | '/_authenticated/business/dashboard/requirements'
@@ -805,6 +844,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/business-approvals': {
+      id: '/_authenticated/admin/business-approvals'
+      path: '/business-approvals'
+      fullPath: '/admin/business-approvals'
+      preLoaderRoute: typeof AuthenticatedAdminBusinessApprovalsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/influencer-approvals': {
       id: '/_authenticated/admin/influencer-approvals'
       path: '/influencer-approvals'
@@ -852,6 +898,13 @@ declare module '@tanstack/react-router' {
       path: '/find-influencer'
       fullPath: '/dashboard/find-influencer'
       preLoaderRoute: typeof AuthenticatedDashboardFindInfluencerRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/notifications': {
+      id: '/_authenticated/dashboard/notifications'
+      path: '/notifications'
+      fullPath: '/dashboard/notifications'
+      preLoaderRoute: typeof AuthenticatedDashboardNotificationsRouteImport
       parentRoute: typeof AuthenticatedDashboardRouteRoute
     }
     '/_authenticated/dashboard/requirements': {
@@ -924,6 +977,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessDashboardLeadsRouteImport
       parentRoute: typeof AuthenticatedBusinessDashboardRouteRoute
     }
+    '/_authenticated/business/dashboard/notifications': {
+      id: '/_authenticated/business/dashboard/notifications'
+      path: '/notifications'
+      fullPath: '/business/dashboard/notifications'
+      preLoaderRoute: typeof AuthenticatedBusinessDashboardNotificationsRouteImport
+      parentRoute: typeof AuthenticatedBusinessDashboardRouteRoute
+    }
     '/_authenticated/business/dashboard/products': {
       id: '/_authenticated/business/dashboard/products'
       path: '/products'
@@ -963,12 +1023,15 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminBusinessApprovalsRoute: typeof AuthenticatedAdminBusinessApprovalsRoute
   AuthenticatedAdminInfluencerApprovalsRoute: typeof AuthenticatedAdminInfluencerApprovalsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
+    AuthenticatedAdminBusinessApprovalsRoute:
+      AuthenticatedAdminBusinessApprovalsRoute,
     AuthenticatedAdminInfluencerApprovalsRoute:
       AuthenticatedAdminInfluencerApprovalsRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -982,6 +1045,7 @@ const AuthenticatedAdminRouteRouteWithChildren =
 interface AuthenticatedDashboardRouteRouteChildren {
   AuthenticatedDashboardChatsRoute: typeof AuthenticatedDashboardChatsRoute
   AuthenticatedDashboardFindInfluencerRoute: typeof AuthenticatedDashboardFindInfluencerRoute
+  AuthenticatedDashboardNotificationsRoute: typeof AuthenticatedDashboardNotificationsRoute
   AuthenticatedDashboardRequirementsRoute: typeof AuthenticatedDashboardRequirementsRoute
   AuthenticatedDashboardSavedRoute: typeof AuthenticatedDashboardSavedRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
@@ -993,6 +1057,8 @@ const AuthenticatedDashboardRouteRouteChildren: AuthenticatedDashboardRouteRoute
     AuthenticatedDashboardChatsRoute: AuthenticatedDashboardChatsRoute,
     AuthenticatedDashboardFindInfluencerRoute:
       AuthenticatedDashboardFindInfluencerRoute,
+    AuthenticatedDashboardNotificationsRoute:
+      AuthenticatedDashboardNotificationsRoute,
     AuthenticatedDashboardRequirementsRoute:
       AuthenticatedDashboardRequirementsRoute,
     AuthenticatedDashboardSavedRoute: AuthenticatedDashboardSavedRoute,
@@ -1010,6 +1076,7 @@ interface AuthenticatedBusinessDashboardRouteRouteChildren {
   AuthenticatedBusinessDashboardBillingRoute: typeof AuthenticatedBusinessDashboardBillingRoute
   AuthenticatedBusinessDashboardFeaturedRoute: typeof AuthenticatedBusinessDashboardFeaturedRoute
   AuthenticatedBusinessDashboardLeadsRoute: typeof AuthenticatedBusinessDashboardLeadsRoute
+  AuthenticatedBusinessDashboardNotificationsRoute: typeof AuthenticatedBusinessDashboardNotificationsRoute
   AuthenticatedBusinessDashboardProductsRoute: typeof AuthenticatedBusinessDashboardProductsRoute
   AuthenticatedBusinessDashboardProfileRoute: typeof AuthenticatedBusinessDashboardProfileRoute
   AuthenticatedBusinessDashboardRequirementsRoute: typeof AuthenticatedBusinessDashboardRequirementsRoute
@@ -1028,6 +1095,8 @@ const AuthenticatedBusinessDashboardRouteRouteChildren: AuthenticatedBusinessDas
       AuthenticatedBusinessDashboardFeaturedRoute,
     AuthenticatedBusinessDashboardLeadsRoute:
       AuthenticatedBusinessDashboardLeadsRoute,
+    AuthenticatedBusinessDashboardNotificationsRoute:
+      AuthenticatedBusinessDashboardNotificationsRoute,
     AuthenticatedBusinessDashboardProductsRoute:
       AuthenticatedBusinessDashboardProductsRoute,
     AuthenticatedBusinessDashboardProfileRoute:

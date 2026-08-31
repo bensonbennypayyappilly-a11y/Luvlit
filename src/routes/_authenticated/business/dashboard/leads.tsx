@@ -51,30 +51,51 @@ function LeadsPage() {
   const qc = useQueryClient();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
 
-  const { data: leads } = useQuery({
+  const {
+    data: leads,
+    error: leadsError,
+    refetch: refetchLeads,
+  } = useQuery({
     queryKey: ["dashboard-leads", businessId],
     enabled: !!businessId,
-    queryFn: async () =>
-      (
-        await supabase
-          .from("leads")
-          .select("id,status,created_at,requirement_id,requirements(id,description,category,city,image_urls)")
-          .eq("matched_business_id", businessId!)
-          .order("created_at", { ascending: false })
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("leads")
+        .select("id,status,created_at,requirement_id,requirements(id,description,category,city,image_urls)")
+        .eq("matched_business_id", businessId!)
+        .order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
 
-  const { data: conversations } = useQuery({
+  const {
+    data: conversations,
+    error: conversationsError,
+    refetch: refetchConversations,
+  } = useQuery({
     queryKey: ["dashboard-conversations", businessId],
     enabled: !!businessId,
-    queryFn: async () =>
-      (
-        await supabase
-          .from("conversations")
-          .select("id,party_a_id,party_a_type,party_b_id,party_b_type,requirement_id,created_at")
-          .or(`party_a_id.eq.${businessId},party_b_id.eq.${businessId}`)
-          .order("created_at", { ascending: false })
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("conversations")
+        .select("id,party_a_id,party_a_type,party_b_id,party_b_type,requirement_id,created_at")
+        .or(`party_a_id.eq.${businessId},party_b_id.eq.${businessId}`)
+        .order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      const rows = data ?? [];
+      if (!rows.length) return [];
+
+      // Who's on the other end: a customer for a requirement-sourced lead, or another
+      // business/an influencer for a direct chat. profiles (customer names) can't be read
+      // client-side by anyone but the profile's own owner, so this is resolved server-side.
+      const { data: names, error: namesError } = await supabase.rpc("get_conversation_partner_names", {
+        _conversation_ids: rows.map((c) => c.id),
+      });
+      if (namesError) throw new Error(namesError.message);
+      const nameById = new Map((names ?? []).map((n) => [n.conversation_id, n.partner_name]));
+      return rows.map((c) => ({ ...c, partnerName: nameById.get(c.id) ?? null }));
+    },
   });
 
   const conversationIds = useMemo(() => (conversations ?? []).map((c) => c.id), [conversations]);
@@ -100,7 +121,7 @@ function LeadsPage() {
     const conv = (conversations ?? []).map((c) => ({
       id: c.id,
       conversationId: c.id,
-      title: c.requirement_id ? "Requirement conversation" : "Direct conversation",
+      title: c.partnerName ?? (c.requirement_id ? "Requirement conversation" : "Direct conversation"),
       subtitle: new Date(c.created_at).toLocaleDateString(),
       unread: unreadMap?.has(c.id) ?? false,
     }));
@@ -136,8 +157,25 @@ function LeadsPage() {
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[22rem_1fr]">
         <div className="surface-card divide-y divide-border p-0">
-          {rows.length === 0 && <p className="p-5 text-sm text-muted-foreground">No leads or conversations yet.</p>}
-          {rows.map((row) => (
+          {(leadsError || conversationsError) && (
+            <div className="flex flex-wrap items-center justify-between gap-3 p-5">
+              <p className="text-sm text-destructive">Couldn't load this information. Try again.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  if (leadsError) refetchLeads();
+                  if (conversationsError) refetchConversations();
+                }}
+                className="min-h-11 rounded-md border border-destructive px-4 text-sm font-medium text-destructive hover:bg-destructive/10"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+          {!leadsError && !conversationsError && rows.length === 0 && (
+            <p className="p-5 text-sm text-muted-foreground">No leads or conversations yet.</p>
+          )}
+          {!leadsError && !conversationsError && rows.map((row) => (
             <button
               key={row.id}
               onClick={() => row.conversationId && openConversation(row.conversationId)}
@@ -162,7 +200,7 @@ function LeadsPage() {
               conversationId={activeConversationId}
               senderType="business"
               senderId={businessId}
-              title="Conversation"
+              title={rows.find((r) => r.conversationId === activeConversationId)?.title ?? "Conversation"}
             />
           ) : (
             <div className="surface-card flex min-h-[24rem] items-center justify-center text-sm text-muted-foreground">

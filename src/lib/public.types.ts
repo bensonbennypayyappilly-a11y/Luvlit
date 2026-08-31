@@ -2,6 +2,8 @@ export type CategoryRow = { id: string; name: string };
 
 export type CityRow = { id: string; name: string; state: string | null };
 
+export type OperatingHours = { start: string; end: string; days: number[] } | null;
+
 export type PublicBusiness = {
   id: string;
   name: string;

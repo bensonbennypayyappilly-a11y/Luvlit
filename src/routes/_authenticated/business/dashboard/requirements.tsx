@@ -39,29 +39,37 @@ function RequirementsPage() {
   const { data: business } = useDashboardBusiness();
   const businessId = business?.id ?? null;
 
-  const { data: requirements, isLoading } = useQuery({
+  const {
+    data: requirements,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["dashboard-own-requirements", businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const { data: reqs } = await supabase
+      const { data: reqs, error: reqsError } = await supabase
         .from("requirements")
         .select("id,category,description,city,budget,created_at,image_urls")
         .eq("posted_by_business_id", businessId!)
         .order("created_at", { ascending: false });
+      if (reqsError) throw new Error(reqsError.message);
       const reqIds = (reqs ?? []).map((r) => r.id);
       if (!reqIds.length) return [];
-      const { data: convs } = await supabase
+      const { data: convs, error: convsError } = await supabase
         .from("conversations")
         .select("id,requirement_id,created_at")
         .in("requirement_id", reqIds);
+      if (convsError) throw new Error(convsError.message);
       const convIds = (convs ?? []).map((c) => c.id);
       let latestByConv = new Map<string, { content: string; created_at: string }>();
       if (convIds.length) {
-        const { data: msgs } = await supabase
+        const { data: msgs, error: msgsError } = await supabase
           .from("messages")
           .select("conversation_id,content,created_at")
           .in("conversation_id", convIds)
           .order("created_at", { ascending: false });
+        if (msgsError) throw new Error(msgsError.message);
         for (const m of msgs ?? []) {
           if (!latestByConv.has(m.conversation_id)) latestByConv.set(m.conversation_id, m);
         }
@@ -88,12 +96,24 @@ function RequirementsPage() {
       </div>
 
       {isLoading && <CardListSkeleton />}
-      {!isLoading && (requirements ?? []).length === 0 && (
+      {!isLoading && error && (
+        <div className="surface-card mt-6 flex flex-wrap items-center justify-between gap-4 p-5">
+          <p className="text-sm text-destructive">Couldn't load this information. Try again.</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="min-h-11 rounded-md border border-destructive px-4 text-sm font-medium text-destructive hover:bg-destructive/10"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+      {!isLoading && !error && (requirements ?? []).length === 0 && (
         <p className="mt-6 text-sm text-muted-foreground">You haven't posted any requirements yet.</p>
       )}
 
       <div className="mt-6 space-y-4">
-        {(requirements ?? []).map((r) => (
+        {!error && (requirements ?? []).map((r) => (
           <div key={r.id} className="surface-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="font-medium">{r.category}</p>

@@ -23,11 +23,15 @@ export const Route = createFileRoute("/_authenticated/dashboard/")({
 function Dashboard() {
   const { userId, displayName, role } = useAccount();
 
-  const { data } = useQuery({
+  const { data, error: overviewError, refetch: refetchOverview } = useQuery({
     queryKey: ["customer-dashboard-overview", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const [{ data: bookings }, { data: requirements }, { data: favorites }] = await Promise.all([
+      const [
+        { data: bookings, error: bookingsError },
+        { data: requirements, error: requirementsError },
+        { data: favorites, error: favoritesError },
+      ] = await Promise.all([
         supabase
           .from("bookings")
           .select("id,status,businesses(name),slots(date,start_time,staff(name))")
@@ -46,6 +50,9 @@ function Dashboard() {
           .eq("user_id", userId!)
           .limit(4),
       ]);
+      if (bookingsError) throw new Error(bookingsError.message);
+      if (requirementsError) throw new Error(requirementsError.message);
+      if (favoritesError) throw new Error(favoritesError.message);
       return { bookings: bookings ?? [], requirements: requirements ?? [], favorites: favorites ?? [] };
     },
   });
@@ -60,6 +67,19 @@ function Dashboard() {
           Here's a warm little snapshot of your appointments, requirements, chats and favourite
           businesses.
         </p>
+
+        {overviewError && (
+          <div className="surface-card mt-8 flex flex-wrap items-center justify-between gap-4 p-6">
+            <p className="text-sm text-destructive">Couldn't load this information. Try again.</p>
+            <button
+              type="button"
+              onClick={() => refetchOverview()}
+              className="min-h-11 rounded-md border border-destructive px-5 text-sm font-medium text-destructive hover:bg-destructive/10"
+            >
+              Try again
+            </button>
+          </div>
+        )}
 
         {role === "business" && (
           <div className="surface-card mt-10 flex flex-wrap items-center justify-between gap-4 p-8">
@@ -84,12 +104,12 @@ function Dashboard() {
         <section className="mt-14 grid gap-6 sm:grid-cols-2">
           <Link to="/dashboard/requirements" className="surface-card p-8 hover:border-accent">
             <p className="eyebrow">My requirements</p>
-            <p className="mt-3 text-2xl">{data?.requirements.length ?? 0} recent</p>
+            <p className="mt-3 text-2xl">{overviewError ? "—" : `${data?.requirements.length ?? 0} recent`}</p>
             <p className="mt-2 text-sm text-muted-foreground">See quotes coming in and reply.</p>
           </Link>
           <Link to="/dashboard/saved" className="surface-card p-8 hover:border-accent">
             <p className="eyebrow">Saved businesses</p>
-            <p className="mt-3 text-2xl">{data?.favorites.length ?? 0} favourites</p>
+            <p className="mt-3 text-2xl">{overviewError ? "—" : `${data?.favorites.length ?? 0} favourites`}</p>
             <p className="mt-2 text-sm text-muted-foreground">Your shortlist, all in one place.</p>
           </Link>
           <Link to="/dashboard/chats" className="surface-card p-8 hover:border-accent">
@@ -109,17 +129,21 @@ function Dashboard() {
             <h2 className="text-2xl">Upcoming appointments</h2>
           </div>
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
-            {(data?.bookings ?? []).map((b) => (
-              <div key={b.id} className="surface-card p-7">
-                <p className="text-lg">{b.businesses?.name ?? "Business"}</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {b.slots?.date} · {b.slots?.start_time}
-                  {b.slots?.staff?.name ? ` · with ${b.slots.staff.name}` : ""}
-                </p>
-                <p className="mt-3 eyebrow">{b.status}</p>
-              </div>
-            ))}
-            {!data?.bookings.length && (
+            {!overviewError &&
+              (data?.bookings ?? []).map((b) => (
+                <div key={b.id} className="surface-card p-7">
+                  <p className="text-lg">{b.businesses?.name ?? "Business"}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {b.slots?.date} · {b.slots?.start_time}
+                    {b.slots?.staff?.name ? ` · with ${b.slots.staff.name}` : ""}
+                  </p>
+                  <p className="mt-3 eyebrow">{b.status}</p>
+                </div>
+              ))}
+            {overviewError && (
+              <p className="text-destructive">Couldn't load this information. Try again.</p>
+            )}
+            {!overviewError && !data?.bookings.length && (
               <p className="text-muted-foreground">No appointments booked yet.</p>
             )}
           </div>

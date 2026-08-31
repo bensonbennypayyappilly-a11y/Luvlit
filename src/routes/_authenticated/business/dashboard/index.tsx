@@ -1,8 +1,33 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { Skeleton } from "@/components/ui/skeleton";
+import { localDateString } from "@/lib/utils";
+import type { Section, ServicesContent } from "@/lib/website-sections";
+
+type ChecklistItem = { key: string; label: string; done: boolean; href: string };
+
+/**
+ * A pure appointment/services business can describe what it offers entirely through the
+ * website builder's "Services" section (freeform content living in a section's `content`,
+ * see website-sections.ts) instead of ever adding a row to `items` (which is really for
+ * sellable products). The completeness checklist should recognise either path.
+ *
+ * Only the *published* `sections` array is considered — not draft_sections — so this matches
+ * what's actually live, same as the rest of this checklist (description/hero/gallery/contact
+ * all read the live business row too). A section only counts if it's visible and has at least
+ * one service with a real (non-blank) name — an empty list or a placeholder row a business
+ * added but never filled in shouldn't read as "done".
+ */
+function hasVisibleServicesContent(sections: Section[] | null | undefined): boolean {
+  if (!Array.isArray(sections)) return false;
+  return sections.some((section) => {
+    if (!section || section.type !== "services" || !section.visible) return false;
+    const services = (section.content as ServicesContent | undefined)?.services;
+    return Array.isArray(services) && services.some((svc) => typeof svc?.name === "string" && svc.name.trim().length > 0);
+  });
+}
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/")({
   head: () => ({
@@ -31,23 +56,35 @@ function Overview() {
     queryKey: ["dashboard-overview", businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const todayEnd = new Date();
-      todayEnd.setHours(23, 59, 59, 999);
-      const todayDate = todayStart.toISOString().slice(0, 10);
+      const todayDate = localDateString();
 
-      const [{ count: newLeads }, { data: staffRows }, { data: conversations }] = await Promise.all([
+      const [
+        { count: newLeads },
+        { count: uncontactedLeads },
+        { data: staffRows },
+        { data: conversations },
+        { count: locationsCount },
+        { count: deliveryAreasCount },
+        { count: itemsCount },
+      ] = await Promise.all([
         supabase
           .from("leads")
           .select("id", { count: "exact", head: true })
           .eq("matched_business_id", businessId!)
           .gte("created_at", startOfWeekISO()),
+        supabase
+          .from("leads")
+          .select("id", { count: "exact", head: true })
+          .eq("matched_business_id", businessId!)
+          .eq("status", "new"),
         supabase.from("staff").select("id").eq("business_id", businessId!),
         supabase
           .from("conversations")
           .select("id")
           .or(`party_a_id.eq.${businessId},party_b_id.eq.${businessId}`),
+        supabase.from("locations").select("id", { count: "exact", head: true }).eq("business_id", businessId!),
+        supabase.from("delivery_areas").select("id", { count: "exact", head: true }).eq("business_id", businessId!),
+        supabase.from("items").select("id", { count: "exact", head: true }).eq("business_id", businessId!),
       ]);
 
       const staffIds = (staffRows ?? []).map((s) => s.id);
@@ -69,13 +106,58 @@ function Overview() {
         }
       }
 
+      const conversationIds = (conversations ?? []).map((c) => c.id);
+      let unreadCount = 0;
+      if (conversationIds.length) {
+        const { data: unread } = await supabase
+          .from("messages")
+          .select("sender_id")
+          .in("conversation_id", conversationIds)
+          .is("read_at", null);
+        unreadCount = (unread ?? []).filter((m) => m.sender_id !== businessId).length;
+      }
+
       return {
         newLeads: newLeads ?? 0,
+        uncontactedLeads: uncontactedLeads ?? 0,
         upcomingToday,
-        activeConversations: (conversations ?? []).length,
+        activeConversations: conversationIds.length,
+        unreadCount,
+        hasLocation: (locationsCount ?? 0) > 0 || (deliveryAreasCount ?? 0) > 0,
+        // Only the `items` half of this check — combined with the website-builder Services
+        // section (read straight off `business.sections`, already fetched by
+        // useDashboardBusiness) when building the checklist below.
+        hasItemsOffering: (itemsCount ?? 0) > 0,
       };
     },
   });
+
+  const checklist: ChecklistItem[] = business
+    ? [
+        { key: "description", label: "Add a business description", done: !!business.description, href: "/business/dashboard/profile" },
+        { key: "hero", label: "Add a hero photo", done: !!business.hero_image_url, href: "/business/dashboard/website" },
+        { key: "gallery", label: "Add photos to your gallery", done: (business.gallery_urls ?? []).length > 0, href: "/business/dashboard/website" },
+        { key: "contact", label: "Add a way to contact you", done: !!(business.whatsapp || business.contact_email || business.instagram_url), href: "/business/dashboard/website" },
+        { key: "location", label: "Add a location or delivery area", done: stats?.hasLocation ?? false, href: "/business/dashboard/website" },
+        {
+          key: "offering",
+          label: "Add your products or services",
+          done: (stats?.hasItemsOffering ?? false) || hasVisibleServicesContent(business.sections),
+          href: "/business/dashboard/products",
+        },
+      ]
+    : [];
+  const completePct = checklist.length ? Math.round((checklist.filter((c) => c.done).length / checklist.length) * 100) : 0;
+
+  const attention = [
+    stats?.uncontactedLeads
+      ? { label: `${stats.uncontactedLeads} lead${stats.uncontactedLeads === 1 ? "" : "s"} awaiting a response`, href: "/business/dashboard/leads" }
+      : null,
+    stats?.unreadCount
+      ? { label: `${stats.unreadCount} unread message${stats.unreadCount === 1 ? "" : "s"}`, href: "/business/dashboard/leads" }
+      : null,
+    ...checklist.filter((c) => !c.done).map((c) => ({ label: c.label, href: c.href })),
+  ].filter((x): x is { label: string; href: string } => !!x);
 
   const cards = [
     { label: "New leads this week", value: stats?.newLeads ?? 0 },
@@ -103,6 +185,59 @@ function Overview() {
       <p className="mt-6 text-xs text-muted-foreground">
         "Profile views" is a running total since your page went live, not just this month.
       </p>
+
+      <div className="mt-10 grid gap-6 lg:grid-cols-2">
+        <div className="surface-card p-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium">Profile completeness</p>
+            <p className="text-sm text-muted-foreground">{completePct}%</p>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
+            <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${completePct}%` }} />
+          </div>
+          <ul className="mt-4 space-y-2">
+            {checklist.map((c) => (
+              <li key={c.key} className="flex items-center gap-2 text-sm">
+                <span
+                  className={`flex size-4 shrink-0 items-center justify-center rounded-full text-[0.625rem] ${
+                    c.done ? "bg-accent text-accent-foreground" : "border border-border"
+                  }`}
+                >
+                  {c.done ? "✓" : ""}
+                </span>
+                {c.done ? (
+                  <span className="text-muted-foreground line-through">{c.label}</span>
+                ) : (
+                  <Link to={c.href} className="hover:text-accent">
+                    {c.label}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="surface-card p-6">
+          <p className="text-sm font-medium">Needs attention</p>
+          {attention.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">You're all caught up.</p>
+          ) : (
+            <ul className="mt-4 space-y-1">
+              {attention.map((a) => (
+                <li key={a.label}>
+                  <Link
+                    to={a.href}
+                    className="flex min-h-11 items-center justify-between rounded-md px-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  >
+                    {a.label}
+                    <span aria-hidden>→</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

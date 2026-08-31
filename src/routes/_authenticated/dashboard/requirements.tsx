@@ -45,39 +45,62 @@ function Requirements() {
   const { userId } = useAccount();
   const [openId, setOpenId] = useState<string | null>(null);
 
-  const { data } = useQuery({
+  const { data, error, refetch } = useQuery({
     queryKey: ["my-requirements", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data: requirements } = await supabase
+      const { data: requirements, error: requirementsError } = await supabase
         .from("requirements")
         .select("*")
         .eq("posted_by_user_id", userId!)
         .order("created_at", { ascending: false });
+      if (requirementsError) throw new Error(requirementsError.message);
 
-      const withCounts = await Promise.all(
-        (requirements ?? []).map(async (r) => {
-          const { count } = await supabase
-            .from("conversations")
-            .select("id", { count: "exact", head: true })
-            .eq("requirement_id", r.id);
-          return { ...r, quoteCount: count ?? 0 };
-        }),
-      );
-      return withCounts;
+      const reqIds = (requirements ?? []).map((r) => r.id);
+      if (!reqIds.length) return [];
+
+      // Batched instead of one count query per requirement: fetch every conversation for
+      // this customer's requirements in one shot, then tally counts client-side.
+      const { data: convs, error: convsError } = await supabase
+        .from("conversations")
+        .select("id,requirement_id")
+        .in("requirement_id", reqIds);
+      if (convsError) throw new Error(convsError.message);
+      const countByReq = new Map<string, number>();
+      for (const c of convs ?? []) {
+        if (!c.requirement_id) continue;
+        countByReq.set(c.requirement_id, (countByReq.get(c.requirement_id) ?? 0) + 1);
+      }
+      return (requirements ?? []).map((r) => ({ ...r, quoteCount: countByReq.get(r.id) ?? 0 }));
     },
   });
 
-  const { data: conversations } = useQuery({
+  const {
+    data: conversations,
+    error: conversationsError,
+    refetch: refetchConversations,
+  } = useQuery({
     queryKey: ["requirement-conversations", openId],
     enabled: !!openId,
-    queryFn: async () =>
-      (
-        await supabase
-          .from("conversations")
-          .select("id, party_a_id, party_a_type, party_b_id, party_b_type")
-          .eq("requirement_id", openId!)
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("conversations")
+        .select("id, party_a_id, party_a_type, party_b_id, party_b_type")
+        .eq("requirement_id", openId!);
+      if (error) throw new Error(error.message);
+      const rows = data ?? [];
+      if (!rows.length) return [];
+
+      // Each conversation here is a business that quoted this requirement — resolve its
+      // name so every ChatPanel below is labeled with who's actually quoting, not the
+      // static word "Conversation".
+      const { data: names, error: namesError } = await supabase.rpc("get_conversation_partner_names", {
+        _conversation_ids: rows.map((c) => c.id),
+      });
+      if (namesError) throw new Error(namesError.message);
+      const nameById = new Map((names ?? []).map((n) => [n.conversation_id, n.partner_name]));
+      return rows.map((c) => ({ ...c, partnerName: nameById.get(c.id) ?? null }));
+    },
   });
 
   return (
@@ -121,7 +144,7 @@ function Requirements() {
                       conversationId={c.id}
                       senderType="customer"
                       senderId={userId!}
-                      title="Conversation"
+                      title={c.partnerName ?? "Conversation"}
                     />
                   ))}
                 </div>

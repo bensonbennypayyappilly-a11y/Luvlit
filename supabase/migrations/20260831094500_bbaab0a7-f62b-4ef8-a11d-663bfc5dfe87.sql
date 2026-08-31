@@ -1,0 +1,12 @@
+-- Phase 3 (audit fix): business-media and event-media were confirmed genuinely public
+-- (storage.buckets.public = true), verified empirically — an unauthenticated fetch of the raw
+-- /storage/v1/object/public/... URL returned the file with HTTP 200. Public-bucket objects are
+-- served without consulting storage RLS at all, so every "Live business media is readable" /
+-- signed-URL policy in this schema has been inert for anyone who has or guesses a path.
+--
+-- The app's own code never uses getPublicUrl() or the public URL shape anywhere (confirmed by
+-- grep) — every consumer (media-uploader.tsx's useMediaUrl, public.functions.ts's signed-URL
+-- resolution) already exclusively uses createSignedUrl/createSignedUrls. Flipping these private
+-- has zero effect on any real render path; it only removes the always-open raw-URL bypass.
+-- requirement-media was already correctly private.
+update storage.buckets set public = false where id in ('business-media', 'event-media');
