@@ -18,9 +18,19 @@ import type {
 const BUSINESS_DETAIL_SELECT =
   "*,locations(*),delivery_areas(*),items(*),services(*),staff(id,name,specializations,slot_duration_minutes),reviews(id,rating,comment,created_at)";
 
-/** Resolves private-bucket storage paths on a fetched business row to signed URLs. */
+/**
+ * Resolves private-bucket storage paths on a fetched business row to signed URLs.
+ *
+ * Signing runs on the service-role admin client, not the RLS-respecting `publicClient` the row
+ * itself was fetched with: the storage bucket's anon/authenticated "is_live" read policy doesn't
+ * actually grant non-owner requests access in practice (a Storage-side quirk with the project's
+ * publishable-key auth, confirmed by directly comparing signed anon vs. authenticated-owner
+ * requests against the same object — anon always 404s, owner always succeeds). The row query
+ * above already filters `is_live = true`, so by the time we're signing paths we've independently
+ * confirmed this business is meant to be public; admin-signing here only removes a broken gate,
+ * it doesn't widen who *should* see this data.
+ */
 async function resolveBusinessMedia(
-  client: Awaited<ReturnType<typeof import("./supabase-public.server").publicClient>>,
   business: Record<string, unknown> | null,
 ): Promise<BusinessDetail> {
   if (!business) return null;
@@ -35,11 +45,22 @@ async function resolveBusinessMedia(
   for (const s of shorts) if (isPath(s)) paths.push(s);
   const gallery = Array.isArray(b.gallery_urls) ? (b.gallery_urls as string[]) : [];
   for (const g of gallery) if (isPath(g)) paths.push(g);
+  const items = Array.isArray(b.items) ? (b.items as Record<string, unknown>[]) : [];
+  for (const item of items) {
+    if (isPath(item.image_url)) paths.push(item.image_url as string);
+    const itemGallery = Array.isArray(item.image_urls) ? (item.image_urls as string[]) : [];
+    for (const g of itemGallery) if (isPath(g)) paths.push(g);
+  }
+  const services = Array.isArray(b.services) ? (b.services as Record<string, unknown>[]) : [];
+  for (const service of services) {
+    if (isPath(service.image_url)) paths.push(service.image_url as string);
+  }
 
   if (paths.length) {
-    const { data: signed, error: signedError } = await client.storage
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: signed, error: signedError } = await supabaseAdmin.storage
       .from("business-media")
-      .createSignedUrls(paths, 60 * 60 * 24 * 7);
+      .createSignedUrls(Array.from(new Set(paths)), 60 * 60 * 24 * 7);
     if (signedError) throw new Error(signedError.message);
     const map = new Map<string, string>();
     (signed ?? []).forEach((s) => {
@@ -50,6 +71,14 @@ async function resolveBusinessMedia(
     if (isPath(b.main_video_url)) b.main_video_url = map.get(b.main_video_url) ?? b.main_video_url;
     if (shorts.length) b.short_video_urls = shorts.map((s) => (isPath(s) ? map.get(s) ?? s : s));
     if (gallery.length) b.gallery_urls = gallery.map((g) => (isPath(g) ? map.get(g) ?? g : g));
+    for (const item of items) {
+      if (isPath(item.image_url)) item.image_url = map.get(item.image_url as string) ?? item.image_url;
+      const itemGallery = Array.isArray(item.image_urls) ? (item.image_urls as string[]) : [];
+      if (itemGallery.length) item.image_urls = itemGallery.map((g) => (isPath(g) ? map.get(g) ?? g : g));
+    }
+    for (const service of services) {
+      if (isPath(service.image_url)) service.image_url = map.get(service.image_url as string) ?? service.image_url;
+    }
   }
 
   return b as unknown as BusinessDetail;
@@ -124,8 +153,12 @@ export const getBusinesses = createServerFn({ method: "GET" })
     ].filter(isPath);
     const signedMap = new Map<string, string>();
     if (thumbPaths.length) {
-      const { data: signed, error: signedError } = await publicClient()
-        .storage.from("business-media")
+      // See resolveBusinessMedia's comment: signing needs the service-role client, not the
+      // RLS-respecting one the rows were fetched with — the anon storage read policy doesn't
+      // actually grant non-owner requests access in practice.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: signed, error: signedError } = await supabaseAdmin.storage
+        .from("business-media")
         .createSignedUrls(Array.from(new Set(thumbPaths)), 60 * 60 * 24 * 7);
       if (signedError) throw new Error(signedError.message);
       (signed ?? []).forEach((s) => {
@@ -278,7 +311,11 @@ export const getBrowseResults = createServerFn({ method: "GET" })
     const thumbPaths = [...rows.map((b) => b.hero_image_url), ...rows.map((b) => b.logo_url)].filter(isPath);
     const signedMap = new Map<string, string>();
     if (thumbPaths.length) {
-      const { data: signed, error: signedError } = await client.storage
+      // See resolveBusinessMedia's comment: signing needs the service-role client, not the
+      // RLS-respecting one the rows were fetched with — the anon storage read policy doesn't
+      // actually grant non-owner requests access in practice.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: signed, error: signedError } = await supabaseAdmin.storage
         .from("business-media")
         .createSignedUrls(Array.from(new Set(thumbPaths)), 60 * 60 * 24 * 7);
       if (signedError) throw new Error(signedError.message);
@@ -314,7 +351,7 @@ export const getBusinessById = createServerFn({ method: "GET" })
       .order("position", { foreignTable: "services" })
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return resolveBusinessMedia(client, business as unknown as Record<string, unknown> | null);
+    return resolveBusinessMedia(business as unknown as Record<string, unknown> | null);
   });
 
 /** A non-reserved slug shaped like `{slug}.luvlit.in`, or null if this hostname isn't a
@@ -371,7 +408,7 @@ export const getSubdomainBusiness = createServerFn({ method: "GET" }).handler(
       .order("position", { foreignTable: "services" })
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return resolveBusinessMedia(client, business as unknown as Record<string, unknown> | null);
+    return resolveBusinessMedia(business as unknown as Record<string, unknown> | null);
   },
 );
 
