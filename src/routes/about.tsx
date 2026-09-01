@@ -1,29 +1,40 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell, Section } from "@/components/page-shell";
 import { PLANS } from "@/lib/constants";
+import { loadSubdomainPage } from "@/lib/website-page-loader";
+import { buildBusinessHead } from "@/lib/business-seo";
+import { BusinessSitePage } from "@/components/website/site-page";
 
 export const Route = createFileRoute("/about")({
-  head: () => ({
-    meta: [
-      { title: "About LuvLit — why we built a marketplace for small businesses" },
-      {
-        name: "description",
-        content:
-          "LuvLit is a pan-India marketplace where small businesses, brands and makers get a page that feels like their own website — not a classifieds listing.",
-      },
-      { property: "og:title", content: "About LuvLit" },
-      {
-        property: "og:description",
-        content: "A pan-India marketplace for small businesses, brands and influencers.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  // A business subdomain (e.g. lumiere.luvlit.in/about) renders that business's own About page
+  // instead of LuvLit's marketing About page — same host-detection pattern as index.tsx's `/`.
+  loader: async () => loadSubdomainPage("about"),
+  head: ({ loaderData }) => {
+    if (loaderData) return buildBusinessHead(loaderData.business, `https://${loaderData.business.slug}.luvlit.in/about`);
+    return {
+      meta: [
+        { title: "About LuvLit — why we built a marketplace for small businesses" },
+        {
+          name: "description",
+          content:
+            "LuvLit is a pan-India marketplace where small businesses, brands and makers get a page that feels like their own website — not a classifieds listing.",
+        },
+        { property: "og:title", content: "About LuvLit" },
+        {
+          property: "og:description",
+          content: "A pan-India marketplace for small businesses, brands and influencers.",
+        },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+    };
+  },
   component: About,
 });
 
 function About() {
+  const result = Route.useLoaderData();
+  if (result) return <BusinessSitePage business={result.profile} page="about" />;
   return (
     <PageShell
       eyebrow="Company"

@@ -141,12 +141,8 @@ function LeadsPage() {
   async function openConversation(conversationId: string | null) {
     setActiveConversationId(conversationId);
     if (!conversationId || !businessId) return;
-    await supabase
-      .from("messages")
-      .update({ read_at: new Date().toISOString() })
-      .eq("conversation_id", conversationId)
-      .is("read_at", null)
-      .neq("sender_id", businessId);
+    const { error } = await supabase.rpc("mark_conversation_read", { _conversation_id: conversationId });
+    if (error) return;
     qc.invalidateQueries({ queryKey: ["dashboard-unread"] });
   }
 

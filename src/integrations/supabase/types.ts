@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   graphql_public: {
     Tables: {
@@ -96,12 +96,15 @@ export type Database = {
       businesses: {
         Row: {
           brand_accent_color: string | null
+          brand_secondary_color: string | null
           business_types: string[]
+          button_style: string
           categories: string[]
           contact_email: string | null
           created_at: string
           deleted_at: string | null
           description: string | null
+          draft_sections: Json | null
           gallery_urls: string[]
           hero_image_url: string | null
           id: string
@@ -111,20 +114,30 @@ export type Database = {
           logo_url: string | null
           main_video_url: string | null
           name: string
+          operating_hours: Json | null
+          owner_email_verified: boolean
           owner_id: string
+          review_avg: number | null
+          review_count: number
+          sections: Json
           short_video_urls: string[]
           slug: string
+          status: string
+          template: string
           view_count: number
           whatsapp: string | null
         }
         Insert: {
           brand_accent_color?: string | null
+          brand_secondary_color?: string | null
           business_types?: string[]
+          button_style?: string
           categories?: string[]
           contact_email?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          draft_sections?: Json | null
           gallery_urls?: string[]
           hero_image_url?: string | null
           id?: string
@@ -134,20 +147,30 @@ export type Database = {
           logo_url?: string | null
           main_video_url?: string | null
           name: string
+          operating_hours?: Json | null
+          owner_email_verified?: boolean
           owner_id: string
+          review_avg?: number | null
+          review_count?: number
+          sections?: Json
           short_video_urls?: string[]
           slug: string
+          status?: string
+          template?: string
           view_count?: number
           whatsapp?: string | null
         }
         Update: {
           brand_accent_color?: string | null
+          brand_secondary_color?: string | null
           business_types?: string[]
+          button_style?: string
           categories?: string[]
           contact_email?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          draft_sections?: Json | null
           gallery_urls?: string[]
           hero_image_url?: string | null
           id?: string
@@ -157,9 +180,16 @@ export type Database = {
           logo_url?: string | null
           main_video_url?: string | null
           name?: string
+          operating_hours?: Json | null
+          owner_email_verified?: boolean
           owner_id?: string
+          review_avg?: number | null
+          review_count?: number
+          sections?: Json
           short_video_urls?: string[]
           slug?: string
+          status?: string
+          template?: string
           view_count?: number
           whatsapp?: string | null
         }
@@ -542,32 +572,38 @@ export type Database = {
       items: {
         Row: {
           business_id: string
+          category: string | null
           description: string | null
           id: string
           image_url: string | null
           image_urls: string[]
           is_active: boolean
           name: string
+          position: number
           price: number | null
         }
         Insert: {
           business_id: string
+          category?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
           image_urls?: string[]
           is_active?: boolean
           name: string
+          position?: number
           price?: number | null
         }
         Update: {
           business_id?: string
+          category?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
           image_urls?: string[]
           is_active?: boolean
           name?: string
+          position?: number
           price?: number | null
         }
         Relationships: [
@@ -660,6 +696,8 @@ export type Database = {
           conversation_id: string
           created_at: string
           id: string
+          message_type: string
+          quote_details: Json | null
           read_at: string | null
           sender_id: string
           sender_type: string
@@ -669,6 +707,8 @@ export type Database = {
           conversation_id: string
           created_at?: string
           id?: string
+          message_type?: string
+          quote_details?: Json | null
           read_at?: string | null
           sender_id: string
           sender_type: string
@@ -678,6 +718,8 @@ export type Database = {
           conversation_id?: string
           created_at?: string
           id?: string
+          message_type?: string
+          quote_details?: Json | null
           read_at?: string | null
           sender_id?: string
           sender_type?: string
@@ -691,6 +733,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          read_at: string | null
+          recipient_id: string
+          recipient_type: string
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          recipient_id: string
+          recipient_type: string
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          recipient_id?: string
+          recipient_type?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
       }
       organizer_profiles: {
         Row: {
@@ -765,6 +843,7 @@ export type Database = {
           city: string | null
           created_at: string
           description: string
+          extra_answers: Json | null
           id: string
           image_urls: string[]
           posted_by_business_id: string | null
@@ -777,6 +856,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           description: string
+          extra_answers?: Json | null
           id?: string
           image_urls?: string[]
           posted_by_business_id?: string | null
@@ -789,6 +869,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           description?: string
+          extra_answers?: Json | null
           id?: string
           image_urls?: string[]
           posted_by_business_id?: string | null
@@ -799,6 +880,98 @@ export type Database = {
           {
             foreignKeyName: "requirements_posted_by_business_id_fkey"
             columns: ["posted_by_business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          booking_id: string
+          business_id: string
+          comment: string | null
+          created_at: string
+          customer_user_id: string
+          id: string
+          rating: number
+        }
+        Insert: {
+          booking_id: string
+          business_id: string
+          comment?: string | null
+          created_at?: string
+          customer_user_id: string
+          id?: string
+          rating: number
+        }
+        Update: {
+          booking_id?: string
+          business_id?: string
+          comment?: string | null
+          created_at?: string
+          customer_user_id?: string
+          id?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          business_id: string
+          category: string | null
+          description: string | null
+          duration_minutes: number
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          position: number
+          price: number | null
+        }
+        Insert: {
+          business_id: string
+          category?: string | null
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          position?: number
+          price?: number | null
+        }
+        Update: {
+          business_id?: string
+          category?: string | null
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          position?: number
+          price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_business_id_fkey"
+            columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
             referencedColumns: ["id"]
@@ -845,6 +1018,8 @@ export type Database = {
       }
       staff: {
         Row: {
+          blocked_dates: string[]
+          buffer_minutes: number
           business_id: string
           id: string
           name: string
@@ -853,6 +1028,8 @@ export type Database = {
           working_hours: Json
         }
         Insert: {
+          blocked_dates?: string[]
+          buffer_minutes?: number
           business_id: string
           id?: string
           name: string
@@ -861,6 +1038,8 @@ export type Database = {
           working_hours?: Json
         }
         Update: {
+          blocked_dates?: string[]
+          buffer_minutes?: number
           business_id?: string
           id?: string
           name?: string
@@ -942,6 +1121,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_merge_category: {
+        Args: { _pending_id: string; _target_name: string }
+        Returns: undefined
+      }
       book_slot: {
         Args: {
           _customer_email?: string
@@ -952,10 +1135,18 @@ export type Database = {
         }
         Returns: string
       }
+      can_review_booking: {
+        Args: { _booking_id: string; _business_id: string }
+        Returns: boolean
+      }
+      cancel_booking: { Args: { _booking_id: string }; Returns: undefined }
       cleanup_expired_events: { Args: never; Returns: undefined }
       get_conversation_partner_names: {
         Args: { _conversation_ids: string[] }
-        Returns: { conversation_id: string; partner_name: string | null }[]
+        Returns: {
+          conversation_id: string
+          partner_name: string
+        }[]
       }
       has_role: {
         Args: {
@@ -970,16 +1161,62 @@ export type Database = {
         Returns: undefined
       }
       is_organizer: { Args: { _user_id: string }; Returns: boolean }
+      mark_conversation_read: {
+        Args: { _conversation_id: string }
+        Returns: undefined
+      }
       owns_business: { Args: { _business_id: string }; Returns: boolean }
       owns_influencer_profile: {
         Args: { _influencer_id: string }
         Returns: boolean
       }
+      owns_requirement: { Args: { _requirement_id: string }; Returns: boolean }
       requirement_has_matched_business: {
         Args: { _requirement_id: string }
         Returns: boolean
       }
+      reschedule_booking: {
+        Args: { _booking_id: string; _new_slot_id: string }
+        Returns: undefined
+      }
+      reserve_featured_placement: {
+        Args: {
+          _business_id: string
+          _category: string
+          _city: string
+          _plan_tier: string
+          _scope: string
+        }
+        Returns: {
+          business_id: string
+          category: string | null
+          city: string | null
+          created_at: string
+          end_date: string
+          id: string
+          plan_tier: string
+          scope: string
+          start_date: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "featured_placements"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       soft_delete_account: { Args: never; Returns: undefined }
+      submit_requirement_with_matches: {
+        Args: {
+          _budget?: number
+          _category: string
+          _city?: string
+          _description: string
+          _image_urls?: string[]
+          _matched_business_ids?: string[]
+        }
+        Returns: string
+      }
     }
     Enums: {
       account_role: "business" | "customer"

@@ -1,22 +1,32 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { BusinessCard } from "@/components/business-card";
+import { BrowseResultCard } from "@/components/browse-result-card";
+import { BrowseFilterBar, type BrowseFilterValue } from "@/components/browse-filter-bar";
+import { PaginationBar } from "@/components/pagination-bar";
 import { Reveal } from "@/components/reveal";
-import { getCategories, getBusinesses } from "@/lib/public.functions";
-import type { CategoryRow, PublicBusiness } from "@/lib/public.types";
+import { CategoryCard } from "@/components/category-card";
+import { getCategories, getBrowseResults } from "@/lib/public.functions";
+import type { CategoryRow } from "@/lib/public.types";
 
-type Search = { city?: string; q?: string };
+const PAGE_SIZE = 24;
+
+type Search = BrowseFilterValue & { page?: number };
 
 export const Route = createFileRoute("/browse/")({
   validateSearch: (search: Record<string, unknown>): Search => ({
+    category: typeof search.category === "string" ? search.category : undefined,
     city: typeof search.city === "string" ? search.city : undefined,
     q: typeof search.q === "string" ? search.q : undefined,
+    openNow: search.openNow === true || search.openNow === "true" ? true : undefined,
+    page: typeof search.page === "number" ? search.page : Number(search.page) || undefined,
   }),
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => ({
     categories: await getCategories(),
-    businesses: await getBusinesses({ data: { city: deps.city, q: deps.q } }),
+    results: await getBrowseResults({
+      data: { category: deps.category, city: deps.city, q: deps.q, openNow: deps.openNow, page: deps.page ?? 1, pageSize: PAGE_SIZE },
+    }),
   }),
   head: () => ({
     meta: [
@@ -37,8 +47,17 @@ export const Route = createFileRoute("/browse/")({
 });
 
 function BrowseIndex() {
-  const { categories, businesses } = Route.useLoaderData() as { categories: CategoryRow[]; businesses: PublicBusiness[] };
+  const { categories, results } = Route.useLoaderData() as {
+    categories: CategoryRow[];
+    results: Awaited<ReturnType<typeof getBrowseResults>>;
+  };
   const search = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const page = search.page ?? 1;
+
+  function updateFilters(patch: Partial<Search>) {
+    navigate({ search: { ...search, ...patch, page: "page" in patch ? patch.page : undefined } });
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -46,34 +65,35 @@ function BrowseIndex() {
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-20">
         <p className="eyebrow">Discover</p>
         <h1 className="mt-4 text-4xl md:text-5xl">Browse LuvLit</h1>
-        {(search.city || search.q) && (
-          <p className="mt-4 text-muted-foreground">
-            {search.q ? `“${search.q}”` : "All businesses"}
-            {search.city ? ` in ${search.city}` : " across India"}
-          </p>
-        )}
 
-        <div className="mt-12 flex flex-wrap gap-2">
-          {categories.map((c) => (
-            <Link
-              key={c.id}
-              to="/browse/$category"
-              params={{ category: c.name }}
-              className="rounded-full border border-border px-4 py-2 text-sm transition-all hover:border-accent hover:bg-accent-soft active:scale-95"
-            >
-              {c.name}
-            </Link>
-          ))}
+        <Reveal className="mt-10">
+          <p className="text-sm font-medium text-muted-foreground">Browse by category</p>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+            {categories.map((category, i) => (
+              <CategoryCard key={category.id} category={category} city={search.city} delay={i * 40} />
+            ))}
+          </div>
+        </Reveal>
+
+        <div className="mt-10">
+          <BrowseFilterBar categories={categories} value={search} onChange={updateFilters} />
         </div>
 
-        <Reveal className="mt-14 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
-          {businesses.map((b) => (
-            <BusinessCard key={b.id} business={b} />
+        <Reveal className="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+          {results.businesses.map((b) => (
+            <BrowseResultCard key={b.id} business={b} />
           ))}
         </Reveal>
-        {businesses.length === 0 && (
-          <p className="mt-14 text-muted-foreground">No businesses listed here yet.</p>
+        {results.businesses.length === 0 && (
+          <p className="mt-14 text-muted-foreground">No businesses match these filters yet.</p>
         )}
+
+        <PaginationBar
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={results.total}
+          onPageChange={(next) => updateFilters({ page: next })}
+        />
       </main>
       <SiteFooter />
     </div>

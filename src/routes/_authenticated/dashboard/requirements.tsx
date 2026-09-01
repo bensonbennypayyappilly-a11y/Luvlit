@@ -114,7 +114,19 @@ function Requirements() {
         </p>
 
         <div className="mt-12 space-y-5">
-          {(data ?? []).map((r) => (
+          {error && (
+            <div className="surface-card flex flex-wrap items-center justify-between gap-4 p-7">
+              <p className="text-sm text-destructive">Couldn't load this information. Try again.</p>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="min-h-11 rounded-md border border-destructive px-5 text-sm font-medium text-destructive hover:bg-destructive/10"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+          {!error && (data ?? []).map((r) => (
             <div key={r.id} className="surface-card p-7">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -135,23 +147,38 @@ function Requirements() {
 
               {openId === r.id && (
                 <div className="mt-6 space-y-4">
-                  {(conversations ?? []).length === 0 && (
-                    <p className="text-sm text-muted-foreground">No quotes yet — check back soon.</p>
+                  {conversationsError ? (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <p className="text-sm text-destructive">Couldn't load this information. Try again.</p>
+                      <button
+                        type="button"
+                        onClick={() => refetchConversations()}
+                        className="min-h-11 rounded-md border border-destructive px-4 text-sm font-medium text-destructive hover:bg-destructive/10"
+                      >
+                        Try again
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {(conversations ?? []).length === 0 && (
+                        <p className="text-sm text-muted-foreground">No quotes yet — check back soon.</p>
+                      )}
+                      {(conversations ?? []).map((c) => (
+                        <ChatPanel
+                          key={c.id}
+                          conversationId={c.id}
+                          senderType="customer"
+                          senderId={userId!}
+                          title={c.partnerName ?? "Conversation"}
+                        />
+                      ))}
+                    </>
                   )}
-                  {(conversations ?? []).map((c) => (
-                    <ChatPanel
-                      key={c.id}
-                      conversationId={c.id}
-                      senderType="customer"
-                      senderId={userId!}
-                      title={c.partnerName ?? "Conversation"}
-                    />
-                  ))}
                 </div>
               )}
             </div>
           ))}
-          {!data?.length && (
+          {!error && !data?.length && (
             <p className="text-muted-foreground">You haven't posted a requirement yet.</p>
           )}
         </div>

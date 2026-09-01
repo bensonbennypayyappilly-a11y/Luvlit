@@ -34,6 +34,18 @@ export type BusinessItem = {
   description: string | null;
   price: number | null;
   image_url: string | null;
+  category: string | null;
+  is_active: boolean;
+};
+
+export type BusinessService = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number | null;
+  duration_minutes: number;
+  category: string | null;
+  image_url: string | null;
   is_active: boolean;
 };
 
@@ -53,11 +65,21 @@ export type BusinessDetail = {
   main_video_url: string | null;
   short_video_urls: string[];
   brand_accent_color: string | null;
+  brand_secondary_color: string | null;
+  button_style: string | null;
   is_eco_friendly: boolean;
   view_count: number;
+  operating_hours: OperatingHours;
+  sections: import("./website-sections").Section[];
+  template: string | null;
+  review_count: number;
+  review_avg: number | null;
+  reviews: { id: string; rating: number; comment: string | null; created_at: string }[];
+  owner_email_verified: boolean;
   locations: BusinessLocation[];
   delivery_areas: { id: string; city: string | null; is_pan_india: boolean }[];
   items: BusinessItem[];
+  services: BusinessService[];
   staff: { id: string; name: string; specializations: string[]; slot_duration_minutes: number }[];
 } | null;
 
@@ -75,6 +97,7 @@ export type PublicInfluencer = {
 
 export type StaffAvailability = {
   staff: { id: string; name: string; specializations: string[] }[];
+  services: { id: string; name: string; duration_minutes: number; price: number | null }[];
   slots: {
     id: string;
     staff_id: string;

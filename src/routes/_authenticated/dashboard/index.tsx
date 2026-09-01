@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { useAccount } from "@/hooks/use-session";
+import { getStaffAvailability } from "@/lib/public.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/")({
   head: () => ({
@@ -20,8 +22,93 @@ export const Route = createFileRoute("/_authenticated/dashboard/")({
   component: Dashboard,
 });
 
+/** Reschedule picks from the same business's other open slots — booking_id/business_id/the
+ * slot being replaced are all it needs; capacity/ownership/atomicity are enforced server-side
+ * by reschedule_booking(), same as book_slot()/cancel_booking() already do for their own steps. */
+function RescheduleDialog({
+  bookingId,
+  businessId,
+  currentSlotId,
+  onDone,
+  onClose,
+}: {
+  bookingId: string;
+  businessId: string;
+  currentSlotId: string;
+  onDone: () => void;
+  onClose: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { data: availability, isLoading } = useQuery({
+    queryKey: ["reschedule-availability", businessId],
+    queryFn: () => getStaffAvailability({ data: { businessId } }),
+  });
+
+  const openSlots = (availability?.slots ?? []).filter(
+    (s) => s.id !== currentSlotId && s.status === "open" && s.booked_count < s.capacity,
+  );
+  const staffById = new Map((availability?.staff ?? []).map((s) => [s.id, s.name]));
+
+  async function pick(slotId: string) {
+    setBusy(true);
+    setError(null);
+    const { error: rpcError } = await supabase.rpc("reschedule_booking", {
+      _booking_id: bookingId,
+      _new_slot_id: slotId,
+    });
+    setBusy(false);
+    if (rpcError) {
+      setError(rpcError.message);
+      return;
+    }
+    onDone();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={onClose}>
+      <div
+        className="surface-card max-h-[80vh] w-full max-w-md overflow-y-auto p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <p className="text-lg font-medium">Choose a new time</p>
+          <button type="button" onClick={onClose} className="min-h-11 min-w-11 text-muted-foreground hover:text-foreground">
+            ✕
+          </button>
+        </div>
+        {isLoading && <p className="mt-4 text-sm text-muted-foreground">Loading available times…</p>}
+        {!isLoading && openSlots.length === 0 && (
+          <p className="mt-4 text-sm text-muted-foreground">No other open slots right now — try again later.</p>
+        )}
+        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+        <div className="mt-4 space-y-2">
+          {openSlots.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              disabled={busy}
+              onClick={() => pick(s.id)}
+              className="flex min-h-11 w-full items-center justify-between rounded-md border border-border px-4 text-sm hover:border-accent disabled:opacity-50"
+            >
+              <span>
+                {s.date} · {s.start_time.slice(0, 5)}
+                {staffById.get(s.staff_id) ? ` · with ${staffById.get(s.staff_id)}` : ""}
+              </span>
+              <span aria-hidden>→</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Dashboard() {
   const { userId, displayName, role } = useAccount();
+  const qc = useQueryClient();
+  const [reschedulingId, setReschedulingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const { data, error: overviewError, refetch: refetchOverview } = useQuery({
     queryKey: ["customer-dashboard-overview", userId],
@@ -34,7 +121,7 @@ function Dashboard() {
       ] = await Promise.all([
         supabase
           .from("bookings")
-          .select("id,status,businesses(name),slots(date,start_time,staff(name))")
+          .select("id,status,business_id,businesses(name),slots(id,date,start_time,staff(name))")
           .eq("customer_user_id", userId!)
           .order("created_at", { ascending: false })
           .limit(3),
@@ -128,6 +215,7 @@ function Dashboard() {
           <div className="hairline flex items-end justify-between pt-10">
             <h2 className="text-2xl">Upcoming appointments</h2>
           </div>
+          {actionError && <p className="mt-3 text-sm text-destructive">{actionError}</p>}
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
             {!overviewError &&
               (data?.bookings ?? []).map((b) => (
@@ -138,6 +226,41 @@ function Dashboard() {
                     {b.slots?.staff?.name ? ` · with ${b.slots.staff.name}` : ""}
                   </p>
                   <p className="mt-3 eyebrow">{b.status}</p>
+                  {b.status === "confirmed" && b.slots?.id && b.business_id && (
+                    <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
+                      <button
+                        type="button"
+                        onClick={() => setReschedulingId(b.id)}
+                        className="inline-flex min-h-11 items-center px-1 text-xs text-muted-foreground hover:text-accent"
+                      >
+                        Reschedule
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setActionError(null);
+                          const { error } = await supabase.rpc("cancel_booking", { _booking_id: b.id });
+                          if (error) return setActionError(error.message);
+                          qc.invalidateQueries({ queryKey: ["customer-dashboard-overview"] });
+                        }}
+                        className="inline-flex min-h-11 items-center px-1 text-xs text-muted-foreground hover:text-destructive"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                  {reschedulingId === b.id && b.slots?.id && b.business_id && (
+                    <RescheduleDialog
+                      bookingId={b.id}
+                      businessId={b.business_id}
+                      currentSlotId={b.slots.id}
+                      onClose={() => setReschedulingId(null)}
+                      onDone={() => {
+                        setReschedulingId(null);
+                        qc.invalidateQueries({ queryKey: ["customer-dashboard-overview"] });
+                      }}
+                    />
+                  )}
                 </div>
               ))}
             {overviewError && (

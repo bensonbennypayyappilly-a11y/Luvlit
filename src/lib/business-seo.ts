@@ -1,11 +1,5 @@
 import type { BusinessDetail } from "./public.types";
-import type {
-  CustomTextContent,
-  FaqContent,
-  PromoBannerContent,
-  Section,
-  ServicesContent,
-} from "./website-sections";
+import type { CustomTextContent, FaqContent, PromoBannerContent, Section } from "./website-sections";
 
 const SCHEMA_DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -73,7 +67,8 @@ function buildBusinessDescription(business: NonNullable<BusinessDetail>): string
 
   const servicesSection = findVisibleSection(sections, "services");
   const serviceNames = servicesSection
-    ? ((servicesSection.content as ServicesContent).services ?? [])
+    ? (business.services ?? [])
+        .filter((s) => s.is_active)
         .map((s) => s.name?.trim())
         .filter((n): n is string => !!n)
     : [];
@@ -214,7 +209,7 @@ export function toProfileBusiness(business: NonNullable<BusinessDetail>) {
     is_eco_friendly: business.is_eco_friendly,
     operating_hours: business.operating_hours ?? null,
     sections: business.sections ?? [],
-    template: business.template ?? "studio",
+    template: business.template ?? "editorial",
     review_count: business.review_count ?? 0,
     review_avg: business.review_avg,
     reviews: business.reviews ?? [],
@@ -222,6 +217,7 @@ export function toProfileBusiness(business: NonNullable<BusinessDetail>) {
     locations: business.locations ?? [],
     delivery_areas: business.delivery_areas ?? [],
     items: business.items ?? [],
+    services: business.services ?? [],
     staff: business.staff ?? [],
   };
 }

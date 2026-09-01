@@ -51,10 +51,27 @@ function AdminIndex() {
         .data ?? [],
   });
 
-  const { data: subscriptions } = useQuery({
+  const { data: subscriptionStats } = useQuery({
     queryKey: ["admin-subscriptions"],
-    queryFn: async () =>
-      (await supabase.from("subscriptions").select("plan,status")).data ?? [],
+    queryFn: async () => {
+      // This screen only ever needs active/total counts per plan, not the underlying rows —
+      // head-only exact counts stay accurate as the table grows instead of an unbounded
+      // row fetch (or a row limit, which would silently under-count revenue at scale).
+      const planKeys = Object.keys(PLANS) as (keyof typeof PLANS)[];
+      return Promise.all(
+        planKeys.map(async (plan) => {
+          const [totalRes, activeRes] = await Promise.all([
+            supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("plan", plan),
+            supabase
+              .from("subscriptions")
+              .select("id", { count: "exact", head: true })
+              .eq("plan", plan)
+              .eq("status", "active"),
+          ]);
+          return { plan, total: totalRes.count ?? 0, active: activeRes.count ?? 0 };
+        }),
+      );
+    },
   });
 
   async function approveCategory(id: string) {
@@ -83,23 +100,21 @@ function AdminIndex() {
 
   async function mergeCategory(id: string, targetName: string) {
     setCategoryError(null);
-    const { error } = await supabase
-      .from("categories")
-      .update({ is_approved: true, name: targetName })
-      .eq("id", id);
+    const { error } = await supabase.rpc("admin_merge_category", { _pending_id: id, _target_name: targetName });
     if (error) {
       setCategoryError(error.message);
       return;
     }
     setMerging(null);
     queryClient.invalidateQueries({ queryKey: ["admin-pending-categories"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-approved-categories"] });
   }
 
   const planCounts: Record<string, { active: number; total: number }> = {};
-  for (const s of subscriptions ?? []) {
-    planCounts[s.plan] ??= { active: 0, total: 0 };
-    planCounts[s.plan].total += 1;
-    if (s.status === "active") planCounts[s.plan].active += 1;
+  let totalSubscriptions = 0;
+  for (const s of subscriptionStats ?? []) {
+    totalSubscriptions += s.total;
+    if (s.total > 0) planCounts[s.plan] = { active: s.active, total: s.total };
   }
   const monthlyRevenue = Object.entries(planCounts).reduce(
     (sum, [plan, c]) => sum + c.active * (PLANS[plan as keyof typeof PLANS]?.price ?? 0),
@@ -134,7 +149,7 @@ function AdminIndex() {
               <p className="mt-1 text-sm text-muted-foreground">{c.total} total</p>
             </div>
           ))}
-          {!subscriptions?.length && <p className="text-muted-foreground">No subscriptions yet.</p>}
+          {!totalSubscriptions && <p className="text-muted-foreground">No subscriptions yet.</p>}
         </div>
       </section>
 

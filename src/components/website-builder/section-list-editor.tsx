@@ -11,7 +11,6 @@ import {
   type QuoteContent,
   type Section,
   type SectionType,
-  type ServicesContent,
 } from "@/lib/website-sections";
 
 type ItemOption = { id: string; name: string };
@@ -69,7 +68,7 @@ export function SectionListEditor({
         const meta = SECTION_LIBRARY[section.type];
         const deletable = !NON_DELETABLE.includes(section.type);
         const isExpanded = expanded === section.id;
-        const hasEditor = ["hero", "about", "services", "quote", "faq", "promo-banner", "custom-text", "featured-products"].includes(
+        const hasEditor = ["hero", "about", "quote", "faq", "promo-banner", "custom-text", "featured-products"].includes(
           section.type,
         );
 
@@ -242,42 +241,6 @@ function SectionContentEditor({
             className={input}
           />
         </>
-      );
-    }
-
-    case "services": {
-      const list = (editingSection.content as ServicesContent).services ?? [];
-      return (
-        <div className="space-y-2">
-          {list.map((s, i) => (
-            <div key={i} className="flex gap-2">
-              <input
-                value={s.name}
-                onChange={(e) => {
-                  const next = [...list];
-                  next[i] = { ...next[i], name: e.target.value };
-                  set({ services: next });
-                }}
-                placeholder="Service name"
-                className={input}
-              />
-              <button
-                type="button"
-                onClick={() => set({ services: list.filter((_, idx) => idx !== i) })}
-                className="text-muted-foreground hover:text-destructive"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => set({ services: [...list, { name: "" }] })}
-            className="text-xs text-accent hover:underline"
-          >
-            + Add a service
-          </button>
-        </div>
       );
     }
 

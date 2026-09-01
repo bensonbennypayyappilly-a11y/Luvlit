@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { MediaUploader, useMediaUrl } from "@/components/media-uploader";
 import { TableRowsSkeleton } from "@/components/ui/skeleton-shapes";
+import { validateCatalogueName, validatePrice } from "@/lib/website-validation";
+import { FieldError } from "@/components/field-error";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/products")({
   head: () => ({
@@ -26,7 +28,9 @@ type Item = {
   price: number | null;
   image_url: string | null;
   image_urls: string[] | null;
+  category: string | null;
   is_active: boolean;
+  position: number;
 };
 
 function Thumb({ path }: { path: string }) {
@@ -39,11 +43,36 @@ function normalizeImageUrls(urls: (string | null)[]): string[] {
   return urls.filter((u): u is string => !!u).slice(0, 2);
 }
 
+function CategoryPicker({ value, categories, onChange }: { value: string | null; categories: string[]; onChange: (v: string | null) => void }) {
+  if (!categories.length) return null;
+  return (
+    <div className="flex flex-wrap gap-2">
+      <button
+        type="button"
+        onClick={() => onChange(null)}
+        className={`rounded-full border px-3 py-1.5 text-xs ${!value ? "border-accent bg-accent-soft text-accent" : "border-border text-muted-foreground"}`}
+      >
+        No category
+      </button>
+      {categories.map((c) => (
+        <button
+          key={c}
+          type="button"
+          onClick={() => onChange(c)}
+          className={`rounded-full border px-3 py-1.5 text-xs ${value === c ? "border-accent bg-accent-soft text-accent" : "border-border text-muted-foreground"}`}
+        >
+          {c}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function ProductsPage() {
   const { data: business } = useDashboardBusiness();
   const businessId = business?.id ?? null;
   const qc = useQueryClient();
-  const [draft, setDraft] = useState<Partial<Item>>({ name: "", price: null, description: "" });
+  const [draft, setDraft] = useState<Partial<Item>>({ name: "", price: null, description: "", category: null });
   const [draftImages, setDraftImages] = useState<(string | null)[]>([null, null]);
   const [busy, setBusy] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -51,40 +80,62 @@ function ProductsPage() {
   const [editImages, setEditImages] = useState<(string | null)[]>([null, null]);
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
-  const [toggleError, setToggleError] = useState<string | null>(null);
-  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [rowError, setRowError] = useState<string | null>(null);
+
+  const { data: businessCategories } = useQuery({
+    queryKey: ["dashboard-business-categories", businessId],
+    enabled: !!businessId,
+    queryFn: async () =>
+      ((await supabase.from("businesses").select("categories").eq("id", businessId!).maybeSingle()).data?.categories ??
+        []) as string[],
+  });
 
   const { data: items, isLoading } = useQuery({
     queryKey: ["dashboard-items", businessId],
     enabled: !!businessId,
     queryFn: async () =>
-      ((await supabase.from("items").select("*").eq("business_id", businessId!).order("name")).data ?? []) as Item[],
+      ((await supabase.from("items").select("*").eq("business_id", businessId!).order("position").order("name")).data ??
+        []) as Item[],
   });
 
   async function refresh() {
     await qc.invalidateQueries({ queryKey: ["dashboard-items", businessId] });
   }
 
+  // Validated live off the draft so the error appears as the owner types, and clears the moment
+  // they fix it — the Add button stays disabled until both fields are acceptable.
+  const draftErrors = {
+    name: draft.name === undefined ? null : validateCatalogueName(draft.name ?? "", "product"),
+    price: validatePrice(draft.price),
+  };
+  const editErrors = {
+    name: validateCatalogueName(editValues.name ?? "", "product"),
+    price: validatePrice(editValues.price),
+  };
+
   async function addItem() {
-    if (!businessId || !draft.name?.trim()) return;
+    if (!businessId || !draft.name?.trim() || draftErrors.name || draftErrors.price) return;
     setBusy(true);
     setAddError(null);
     const image_urls = normalizeImageUrls(draftImages);
+    const nextPosition = (items ?? []).reduce((max, i) => Math.max(max, i.position ?? 0), 0) + 1;
     const { error } = await supabase.from("items").insert({
       business_id: businessId,
       name: draft.name.trim(),
       description: draft.description || null,
       price: draft.price ? Number(draft.price) : null,
+      category: draft.category || null,
       image_url: image_urls[0] ?? null,
       image_urls: image_urls as never,
       is_active: true,
+      position: nextPosition,
     });
     setBusy(false);
     if (error) {
       setAddError(error.message);
       return;
     }
-    setDraft({ name: "", price: null, description: "" });
+    setDraft({ name: "", price: null, description: "", category: null });
     setDraftImages([null, null]);
     refresh();
   }
@@ -98,6 +149,7 @@ function ProductsPage() {
   }
 
   async function saveEdit(id: string) {
+    if (editErrors.name || editErrors.price) return;
     setBusy(true);
     setEditError(null);
     const image_urls = normalizeImageUrls(editImages);
@@ -107,6 +159,7 @@ function ProductsPage() {
         name: editValues.name,
         description: editValues.description || null,
         price: editValues.price ? Number(editValues.price) : null,
+        category: editValues.category || null,
         image_url: image_urls[0] ?? null,
         image_urls: image_urls as never,
       })
@@ -121,23 +174,50 @@ function ProductsPage() {
   }
 
   async function toggleActive(item: Item) {
-    setToggleError(null);
+    setRowError(null);
     const { error } = await supabase.from("items").update({ is_active: !item.is_active }).eq("id", item.id);
-    if (error) {
-      setToggleError(error.message);
-      return;
-    }
+    if (error) return setRowError(error.message);
     refresh();
   }
 
   async function remove(id: string) {
     if (!confirm("Remove this product?")) return;
-    setRemoveError(null);
+    setRowError(null);
     const { error } = await supabase.from("items").delete().eq("id", id);
-    if (error) {
-      setRemoveError(error.message);
-      return;
-    }
+    if (error) return setRowError(error.message);
+    refresh();
+  }
+
+  async function duplicate(item: Item) {
+    setRowError(null);
+    const nextPosition = (items ?? []).reduce((max, i) => Math.max(max, i.position ?? 0), 0) + 1;
+    const { error } = await supabase.from("items").insert({
+      business_id: item.business_id,
+      name: `${item.name} (copy)`,
+      description: item.description,
+      price: item.price,
+      category: item.category,
+      image_url: item.image_url,
+      image_urls: item.image_urls as never,
+      is_active: item.is_active,
+      position: nextPosition,
+    });
+    if (error) return setRowError(error.message);
+    refresh();
+  }
+
+  async function move(index: number, dir: -1 | 1) {
+    const list = items ?? [];
+    const target = index + dir;
+    if (target < 0 || target >= list.length) return;
+    setRowError(null);
+    const a = list[index];
+    const b = list[target];
+    const [{ error: e1 }, { error: e2 }] = await Promise.all([
+      supabase.from("items").update({ position: b.position }).eq("id", a.id),
+      supabase.from("items").update({ position: a.position }).eq("id", b.id),
+    ]);
+    if (e1 || e2) return setRowError((e1 ?? e2)!.message);
     refresh();
   }
 
@@ -149,20 +229,38 @@ function ProductsPage() {
       <div className="surface-card mt-6 p-5">
         <p className="text-sm font-medium">Add a product</p>
         <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-          <input
-            value={draft.name ?? ""}
-            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-            placeholder="Name"
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm"
-          />
-          <input
-            value={draft.price ?? ""}
-            onChange={(e) => setDraft({ ...draft, price: e.target.value as unknown as number })}
-            placeholder="Price (₹)"
-            type="number"
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm"
-          />
+          <div>
+            <input
+              value={draft.name ?? ""}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              placeholder="Name"
+              aria-invalid={!!draftErrors.name}
+              className={`w-full rounded-md border bg-background px-3 py-2 text-sm ${
+                draftErrors.name && draft.name ? "border-destructive" : "border-border"
+              }`}
+            />
+            {draft.name ? <FieldError message={draftErrors.name} /> : null}
+          </div>
+          <div>
+            <input
+              value={draft.price ?? ""}
+              onChange={(e) => setDraft({ ...draft, price: e.target.value as unknown as number })}
+              placeholder="Price (₹)"
+              type="number"
+              min={0}
+              aria-invalid={!!draftErrors.price}
+              className={`w-full rounded-md border bg-background px-3 py-2 text-sm ${
+                draftErrors.price ? "border-destructive" : "border-border"
+              }`}
+            />
+            <FieldError message={draftErrors.price} />
+          </div>
         </div>
+        {(businessCategories ?? []).length > 0 && (
+          <div className="mt-3">
+            <CategoryPicker value={draft.category ?? null} categories={businessCategories ?? []} onChange={(v) => setDraft({ ...draft, category: v })} />
+          </div>
+        )}
         {businessId && (
           <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
             <MediaUploader
@@ -190,21 +288,22 @@ function ProductsPage() {
         />
         <button
           onClick={addItem}
-          disabled={busy || !draft.name?.trim()}
+          disabled={busy || !draft.name?.trim() || !!draftErrors.name || !!draftErrors.price}
           className="mt-3 rounded-md bg-primary px-5 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
-          Add product
+          {busy ? "Adding…" : "Add product"}
         </button>
         {addError && <p className="mt-2 text-sm text-destructive">{addError}</p>}
-        {toggleError && <p className="mt-2 text-sm text-destructive">{toggleError}</p>}
-        {removeError && <p className="mt-2 text-sm text-destructive">{removeError}</p>}
+        {rowError && <p className="mt-2 text-sm text-destructive">{rowError}</p>}
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <thead className="bg-secondary text-left text-xs text-muted-foreground">
             <tr>
+              <th className="px-2 py-3"></th>
               <th className="px-4 py-3">Name</th>
+              <th className="px-4 py-3">Category</th>
               <th className="px-4 py-3">Price</th>
               <th className="px-4 py-3">Image</th>
               <th className="px-4 py-3">Status</th>
@@ -212,29 +311,51 @@ function ProductsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {isLoading && <TableRowsSkeleton cols={5} />}
+            {isLoading && <TableRowsSkeleton cols={7} />}
             {!isLoading && (items ?? []).length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-4 text-muted-foreground">No products yet.</td>
+                <td colSpan={7} className="px-4 py-10 text-center">
+                  <p className="text-sm font-medium">No products yet</p>
+                  <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+                    Add your first product above — it appears on your website's Products page as soon as you publish.
+                  </p>
+                </td>
               </tr>
             )}
-            {(items ?? []).map((item) =>
+            {(items ?? []).map((item, i) =>
               editingId === item.id ? (
                 <tr key={item.id} className="bg-accent-soft/40">
+                  <td />
                   <td className="px-4 py-2">
                     <input
                       value={editValues.name ?? ""}
                       onChange={(e) => setEditValues({ ...editValues, name: e.target.value })}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1"
+                      aria-invalid={!!editErrors.name}
+                      className={`w-full rounded-md border bg-background px-2 py-1 ${
+                        editErrors.name ? "border-destructive" : "border-border"
+                      }`}
+                    />
+                    <FieldError message={editErrors.name} />
+                  </td>
+                  <td className="px-4 py-2">
+                    <CategoryPicker
+                      value={editValues.category ?? null}
+                      categories={businessCategories ?? []}
+                      onChange={(v) => setEditValues({ ...editValues, category: v })}
                     />
                   </td>
                   <td className="px-4 py-2">
                     <input
                       type="number"
+                      min={0}
                       value={editValues.price ?? ""}
                       onChange={(e) => setEditValues({ ...editValues, price: e.target.value as unknown as number })}
-                      className="w-24 rounded-md border border-border bg-background px-2 py-1"
+                      aria-invalid={!!editErrors.price}
+                      className={`w-24 rounded-md border bg-background px-2 py-1 ${
+                        editErrors.price ? "border-destructive" : "border-border"
+                      }`}
                     />
+                    <FieldError message={editErrors.price} />
                   </td>
                   <td className="px-4 py-2">
                     {businessId && (
@@ -258,7 +379,13 @@ function ProductsPage() {
                   </td>
                   <td className="px-4 py-2 text-muted-foreground">{item.is_active ? "Active" : "Inactive"}</td>
                   <td className="px-4 py-2 text-right align-top">
-                    <button onClick={() => saveEdit(item.id)} className="mr-2 text-accent">Save</button>
+                    <button
+                      onClick={() => saveEdit(item.id)}
+                      disabled={busy || !!editErrors.name || !!editErrors.price}
+                      className="mr-2 text-accent disabled:opacity-50"
+                    >
+                      {busy ? "Saving…" : "Save"}
+                    </button>
                     <button
                       onClick={() => {
                         setEditingId(null);
@@ -273,14 +400,37 @@ function ProductsPage() {
                 </tr>
               ) : (
                 <tr key={item.id}>
+                  <td className="px-1 py-3">
+                    <div className="flex flex-col">
+                      <button
+                        type="button"
+                        disabled={i === 0}
+                        onClick={() => move(i, -1)}
+                        aria-label="Move up"
+                        className="flex h-6 w-6 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        disabled={i === (items?.length ?? 0) - 1}
+                        onClick={() => move(i, 1)}
+                        aria-label="Move down"
+                        className="flex h-6 w-6 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  </td>
                   <td className="px-4 py-3">{item.name}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{item.category ?? "—"}</td>
                   <td className="px-4 py-3">{item.price != null ? `₹${item.price}` : "—"}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
                       {(item.image_urls?.length ? item.image_urls : item.image_url ? [item.image_url] : [])
                         .slice(0, 2)
-                        .map((path, i) => (
-                          <Thumb key={i} path={path} />
+                        .map((path, j) => (
+                          <Thumb key={j} path={path} />
                         ))}
                       {!(item.image_urls?.length || item.image_url) && (
                         <span className="text-muted-foreground">—</span>
@@ -299,6 +449,7 @@ function ProductsPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button onClick={() => startEdit(item)} className="mr-3 text-accent">Edit</button>
+                    <button onClick={() => duplicate(item)} className="mr-3 text-muted-foreground hover:text-foreground">Duplicate</button>
                     <button onClick={() => remove(item.id)} className="text-destructive">Remove</button>
                   </td>
                 </tr>

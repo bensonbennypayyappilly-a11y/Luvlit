@@ -65,42 +65,22 @@ function PostRequirement() {
       .is("deleted_at", null)
       .maybeSingle();
 
-    const posterType = ownBusiness ? "business" : "customer";
-    const posterId = ownBusiness ? ownBusiness.id : userData.user!.id;
-
-    const { data: requirement, error: insertError } = await supabase
-      .from("requirements")
-      .insert({
-        posted_by_type: posterType,
-        posted_by_user_id: userData.user!.id,
-        posted_by_business_id: ownBusiness?.id ?? null,
-        category: form.category,
-        description: form.description,
-        city: form.city || null,
-        budget: form.budget ? Number(form.budget) : null,
-        image_urls: images.filter((i): i is string => !!i),
-      })
-      .select("id")
-      .single();
-
-    if (insertError || !requirement) {
-      setPhase("form");
-      return setError(insertError?.message ?? "Could not post requirement.");
-    }
-
     // Find matching live businesses: same category AND (location in that city OR delivery area for that city OR pan-India delivery).
-    // Same filter/candidate logic as before — only the select() gained `name,categories` to display matched cards.
-    let matches: MatchedBusiness[] = [];
+    // Read-only, no side effects — safe to run before the actual write. Only the write
+    // sequence below (requirement + leads + conversations) needs to be atomic.
     let query = supabase
       .from("businesses")
       .select("id,name,categories,locations(city),delivery_areas(city,is_pan_india)")
-      .eq("is_live", true)
+      .eq("status", "live")
       .is("deleted_at", null)
       .contains("categories", [form.category]);
     if (ownBusiness) query = query.neq("id", ownBusiness.id);
-    const { data: candidates } = await query;
+    // Cap the candidate pool: this feeds a bulk leads+conversations write below, so an
+    // unbounded match set is a data-volume risk as well as a read-performance one. 100 live
+    // businesses in a single category is already an extreme case.
+    const { data: candidates } = await query.limit(100);
 
-    matches = (candidates ?? []).filter((b: any) => {
+    const matches: MatchedBusiness[] = (candidates ?? []).filter((b: any) => {
       if (!form.city) return true;
       const inCity = (b.locations ?? []).some((l: any) => l.city === form.city);
       const delivers = (b.delivery_areas ?? []).some(
@@ -109,32 +89,23 @@ function PostRequirement() {
       return inCity || delivers;
     });
 
-    if (matches.length) {
-      const { error: leadsError } = await supabase.from("leads").insert(
-        matches.map((m) => ({
-          requirement_id: requirement.id,
-          matched_business_id: m.id,
-          status: "new",
-        })),
-      );
-      if (leadsError) {
-        setPhase("form");
-        return setError(leadsError.message);
-      }
-      const { error: conversationsError } = await supabase.from("conversations").insert(
-        matches.map((m) => ({
-          party_a_id: posterId,
-          party_a_type: posterType,
-          party_b_id: m.id,
-          party_b_type: "business",
-          requirement_id: requirement.id,
-        })),
-      );
-      if (conversationsError) {
-        setPhase("form");
-        return setError(conversationsError.message);
-      }
+    // One transactional RPC for the requirement + its leads + its conversations, so a failure
+    // partway through can never strand a lead with no conversation, or a requirement with none
+    // of its leads — it either all lands, or none of it does.
+    const { error: submitError } = await supabase.rpc("submit_requirement_with_matches", {
+      _category: form.category,
+      _description: form.description,
+      _city: form.city || undefined,
+      _budget: form.budget ? Number(form.budget) : undefined,
+      _image_urls: images.filter((i): i is string => !!i),
+      _matched_business_ids: matches.map((m) => m.id),
+    });
+    if (submitError) {
+      setPhase("form");
+      return setError(submitError.message);
+    }
 
+    if (matches.length) {
       // Only hold for the scanning moment when there's something exciting to reveal —
       // a zero-match result skips straight to the calmer empty state, never padded.
       const remaining = minDurationMs - (Date.now() - startedAt);

@@ -6,6 +6,8 @@ import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { WEEKDAYS } from "@/lib/constants";
 import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
 import { localDateString } from "@/lib/utils";
+import { validateFutureDate } from "@/lib/website-validation";
+import { FieldError } from "@/components/field-error";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/staff")({
   head: () => ({
@@ -41,6 +43,8 @@ type Staff = {
   specializations: string[];
   slot_duration_minutes: number;
   working_hours: unknown;
+  blocked_dates: string[];
+  buffer_minutes: number;
 };
 
 const DEFAULT_HOURS: WorkingHours = {
@@ -114,13 +118,21 @@ function StaffPage() {
     specializations: string[];
     slot_duration_minutes: number;
     hours: WorkingHours;
+    blockedDates: string[];
+    bufferMinutes: number;
   } | null>(null);
+  const [newBlockedDate, setNewBlockedDate] = useState("");
   const [regenMsg, setRegenMsg] = useState<Record<string, string>>({});
   const [regenBusy, setRegenBusy] = useState<Record<string, boolean>>({});
   const [addError, setAddError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [regenError, setRegenError] = useState<Record<string, string>>({});
+
+  // Blocking a date that's already passed does nothing useful (slots are only generated for
+  // today onward), so it's rejected rather than silently accepted.
+  const todayIso = localDateString(new Date());
+  const blockedDateError = newBlockedDate ? validateFutureDate(newBlockedDate, todayIso) : null;
 
   async function refresh() {
     await qc.invalidateQueries({ queryKey: ["dashboard-staff-full", businessId] });
@@ -149,11 +161,14 @@ function StaffPage() {
   function startEdit(s: Staff) {
     setEditError(null);
     setEditingId(s.id);
+    setNewBlockedDate("");
     setEditDraft({
       name: s.name,
       specializations: s.specializations ?? [],
       slot_duration_minutes: s.slot_duration_minutes ?? 30,
       hours: normalizeWorkingHours(s.working_hours),
+      blockedDates: [...(s.blocked_dates ?? [])].sort(),
+      bufferMinutes: s.buffer_minutes ?? 0,
     });
   }
 
@@ -168,6 +183,8 @@ function StaffPage() {
         specializations: editDraft.specializations,
         slot_duration_minutes: editDraft.slot_duration_minutes,
         working_hours: editDraft.hours,
+        blocked_dates: editDraft.blockedDates,
+        buffer_minutes: editDraft.bufferMinutes,
       })
       .eq("id", id);
     setBusy(false);
@@ -223,6 +240,8 @@ function StaffPage() {
       const hours = normalizeWorkingHours(s.working_hours);
       const capacity = hours._capacity ?? 1;
       const duration = s.slot_duration_minutes || 30;
+      const buffer = Math.max(0, s.buffer_minutes || 0);
+      const blockedDates = new Set(s.blocked_dates ?? []);
       const dayIndexToKey = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
       // The same rolling 30-day window (today .. today+29) this function has always generated
@@ -257,10 +276,10 @@ function StaffPage() {
       const toInsert: { staff_id: string; date: string; start_time: string; capacity: number }[] = [];
       for (const { iso, dayKey } of windowDays) {
         const dayHours = hours[dayKey] as DayHours;
-        if (!dayHours) continue;
+        if (!dayHours || blockedDates.has(iso)) continue;
         const [sh, sm] = dayHours.start.split(":").map(Number);
         const [eh, em] = dayHours.end.split(":").map(Number);
-        for (let t = sh * 60 + sm; t + duration <= eh * 60 + em; t += duration) {
+        for (let t = sh * 60 + sm; t + duration <= eh * 60 + em; t += duration + buffer) {
           const startTime = `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}:00`;
           const key = `${iso}_${startTime}`;
           validKeys.add(key);
@@ -277,21 +296,22 @@ function StaffPage() {
       // booked_count, so a drifted counter can never let a booked slot slip through and get
       // deleted.
       const staleRows = (existing ?? []).filter((r) => !validKeys.has(`${r.date}_${String(r.start_time).slice(0, 8)}`));
-      let bookedStaleIds = new Set<string>();
-      if (staleRows.length) {
+      const staleIds = staleRows.map((r) => r.id);
+      const bookedStaleIds = new Set<string>();
+      // Batched (same chunk size as the insert/delete below): a drastic narrowing can put
+      // hundreds of ids in this filter, and a single unbatched `.in()` risks the query URL
+      // getting too large.
+      for (let i = 0; i < staleIds.length; i += 200) {
         const { data: activeBookings, error: bookingsError } = await supabase
           .from("bookings")
           .select("slot_id")
-          .in(
-            "slot_id",
-            staleRows.map((r) => r.id),
-          )
+          .in("slot_id", staleIds.slice(i, i + 200))
           .neq("status", "cancelled");
         if (bookingsError) {
           setRegenError((m) => ({ ...m, [s.id]: bookingsError.message }));
           return;
         }
-        bookedStaleIds = new Set((activeBookings ?? []).map((b) => b.slot_id));
+        (activeBookings ?? []).forEach((b) => bookedStaleIds.add(b.slot_id));
       }
       const toDelete = staleRows.filter((r) => !bookedStaleIds.has(r.id));
       const keptBookedCount = staleRows.length - toDelete.length;
@@ -383,6 +403,8 @@ function StaffPage() {
                         {(s.specializations ?? []).length ? s.specializations.join(", ") : "No specializations set"}
                         {" · "}
                         {s.slot_duration_minutes} min slots · capacity {displayHours._capacity ?? 1}
+                        {s.buffer_minutes > 0 && ` · ${s.buffer_minutes} min buffer`}
+                        {(s.blocked_dates ?? []).length > 0 && ` · ${s.blocked_dates.length} date(s) blocked`}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-1 text-xs text-muted-foreground">
                         {WEEKDAYS.map(({ key, label }) => {
@@ -485,6 +507,67 @@ function StaffPage() {
                           className="ml-2 w-20 rounded-md border border-border bg-background px-3 py-2 text-sm"
                         />
                       </label>
+                      <label className="text-xs text-muted-foreground">
+                        Buffer between appointments
+                        <input
+                          type="number"
+                          min={0}
+                          step={5}
+                          value={editDraft.bufferMinutes}
+                          onChange={(e) => setEditDraft({ ...editDraft, bufferMinutes: Math.max(0, Number(e.target.value) || 0) })}
+                          className="ml-2 w-20 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                        />
+                        <span className="ml-1">min</span>
+                      </label>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Blocked dates (holidays, time off)</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <input
+                          type="date"
+                          value={newBlockedDate}
+                          min={todayIso}
+                          onChange={(e) => setNewBlockedDate(e.target.value)}
+                          aria-invalid={!!blockedDateError}
+                          className={`rounded-md border bg-background px-3 py-2 text-sm ${
+                            blockedDateError ? "border-destructive" : "border-border"
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (blockedDateError || editDraft.blockedDates.includes(newBlockedDate)) return;
+                            setEditDraft({ ...editDraft, blockedDates: [...editDraft.blockedDates, newBlockedDate].sort() });
+                            setNewBlockedDate("");
+                          }}
+                          disabled={!newBlockedDate || !!blockedDateError}
+                          className="rounded-md border border-border px-3 py-2 text-xs disabled:opacity-50"
+                        >
+                          Block date
+                        </button>
+                      </div>
+                      {newBlockedDate ? <FieldError message={blockedDateError} /> : null}
+                      {editDraft.blockedDates.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {editDraft.blockedDates.map((d) => (
+                            <span key={d} className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs">
+                              {d}
+                              <button
+                                type="button"
+                                onClick={() => setEditDraft({ ...editDraft, blockedDates: editDraft.blockedDates.filter((x) => x !== d) })}
+                                aria-label={`Unblock ${d}`}
+                                className="text-muted-foreground hover:text-destructive"
+                              >
+                                ✕
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        Click "Regenerate next 30 days" after saving to apply blocked dates and buffer to slots.
+                      </p>
                     </div>
 
                     <div>

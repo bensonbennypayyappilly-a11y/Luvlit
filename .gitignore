@@ -32,3 +32,6 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Supabase CLI scratch state
+supabase/.temp/

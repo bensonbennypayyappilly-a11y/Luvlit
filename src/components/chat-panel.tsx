@@ -21,6 +21,7 @@ type Props = {
 /** Realtime chat, reused for customer↔business, business↔business and business↔influencer. */
 export function ChatPanel({ conversationId, senderType, senderId, title, accent }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loadError, setLoadError] = useState(false);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -28,13 +29,19 @@ export function ChatPanel({ conversationId, senderType, senderId, title, accent 
 
   useEffect(() => {
     let active = true;
+    setLoadError(false);
     supabase
       .from("messages")
       .select("*")
       .eq("conversation_id", conversationId)
       .order("created_at")
-      .then(({ data }) => {
-        if (active) setMessages((data ?? []) as ChatMessage[]);
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) {
+          setLoadError(true);
+          return;
+        }
+        setMessages((data ?? []) as ChatMessage[]);
       });
 
     const channel = supabase
@@ -95,7 +102,10 @@ export function ChatPanel({ conversationId, senderType, senderId, title, accent 
         </div>
       )}
       <div className="flex-1 space-y-3 overflow-y-auto px-5 py-5">
-        {messages.length === 0 && (
+        {loadError && (
+          <p className="text-sm text-destructive">Couldn't load this information. Try again.</p>
+        )}
+        {!loadError && messages.length === 0 && (
           <p className="text-sm text-muted-foreground">No messages yet — say hello.</p>
         )}
         {messages.map((m) => {

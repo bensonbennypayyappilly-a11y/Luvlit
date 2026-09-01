@@ -9,6 +9,7 @@ import { SearchPill } from "@/components/search-pill";
 import { LiveResultsPanel } from "@/components/live-results-panel";
 import { EventsSection } from "@/components/events-section";
 import { IndiaDiscoveryMap } from "@/components/india-discovery-map";
+import { CategoryCard } from "@/components/category-card";
 import {
   getCategories,
   getBusinesses,
@@ -238,28 +239,10 @@ function HomePage({
             </div>
           </Reveal>
 
-          <div className="mt-8 grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {categories.slice(0, 5).map((category, i) => (
               <Reveal key={category.id} delay={i * 60}>
-                <Link
-                  to="/browse/$category"
-                  params={{ category: category.name }}
-                  search={city ? { city } : undefined}
-                  className="group relative block border-t border-border pt-4 transition-colors hover:border-accent"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-base font-medium transition-colors group-hover:text-accent">
-                      {category.name}
-                    </h3>
-                    <span
-                      aria-hidden="true"
-                      className="text-muted-foreground transition-all duration-300 group-hover:translate-x-1 group-hover:text-accent"
-                    >
-                      →
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-sm text-muted-foreground">Explore across {place}</p>
-                </Link>
+                <CategoryCard category={category} city={city} delay={i * 60} />
               </Reveal>
             ))}
           </div>

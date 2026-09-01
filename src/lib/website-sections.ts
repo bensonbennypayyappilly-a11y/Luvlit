@@ -44,7 +44,10 @@ export type PromoBannerContent = { heading: string; body?: string; ctaLabel?: st
 export type CustomTextContent = { heading?: string; body: string };
 export type HeroContent = { tagline?: string };
 export type AboutContent = { heading?: string };
-export type ServicesContent = { services: { name: string; description?: string }[] };
+/** @deprecated Services now have a real table (see `services` in public.types.ts) — a business's
+ * services section always renders from that, exactly like `products` renders from `items`. Kept
+ * only so any pre-existing section row with old freeform content still parses without crashing. */
+export type ServicesContent = { services?: { name: string; description?: string }[] };
 export type QuoteContent = { heading?: string; body?: string };
 export type FeaturedProductsContent = { itemIds: string[] };
 
@@ -63,7 +66,7 @@ export const CORE_SECTION_TYPES: SectionType[] = [
 export const SECTION_LIBRARY: Record<SectionType, { label: string; description: string; core: boolean }> = {
   hero: { label: "Hero", description: "Your name, photo and a short tagline at the top of the page.", core: true },
   about: { label: "About", description: "Your business description.", core: true },
-  services: { label: "Services", description: "A list of what you offer.", core: true },
+  services: { label: "Services", description: "What you offer — managed in Services.", core: true },
   products: { label: "Products", description: "Your catalogue — managed in Products.", core: true },
   gallery: { label: "Gallery", description: "Photos of your work — managed in Gallery.", core: true },
   contact: { label: "Contact", description: "WhatsApp, email and Instagram.", core: true },
@@ -108,7 +111,7 @@ export function buildDefaultSections(business: {
   if ((business.business_types ?? []).includes("product") || (business.items?.length ?? 0) > 0) {
     sections.push({ id: id(), type: "products", visible: true, content: {} });
   } else {
-    sections.push({ id: id(), type: "services", visible: true, content: { services: [] } });
+    sections.push({ id: id(), type: "services", visible: true, content: {} });
   }
   sections.push({ id: id(), type: "gallery", visible: true, content: {} });
   if ((business.business_types ?? []).includes("appointment")) {
@@ -124,7 +127,6 @@ export function buildDefaultSections(business: {
 
 export function newSection(type: SectionType): Section {
   const defaults: Partial<Record<SectionType, Record<string, Json>>> = {
-    services: { services: [] },
     faq: { items: [] },
     "promo-banner": { heading: "" },
     "custom-text": { body: "" },

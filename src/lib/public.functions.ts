@@ -16,7 +16,7 @@ import type {
 } from "./public.types";
 
 const BUSINESS_DETAIL_SELECT =
-  "*,locations(*),delivery_areas(*),items(*),staff(id,name,specializations,slot_duration_minutes)";
+  "*,locations(*),delivery_areas(*),items(*),services(*),staff(id,name,specializations,slot_duration_minutes),reviews(id,rating,comment,created_at)";
 
 /** Resolves private-bucket storage paths on a fetched business row to signed URLs. */
 async function resolveBusinessMedia(
@@ -147,6 +147,159 @@ export const getBusinesses = createServerFn({ method: "GET" })
       .sort((a, b) => Number(b.featured) - Number(a.featured));
   });
 
+export type BrowseFilters = {
+  category?: string;
+  city?: string;
+  q?: string;
+  openNow?: boolean;
+  page?: number;
+  pageSize?: number;
+};
+
+export type BrowseResultBusiness = Omit<PublicBusiness, "featured"> & {
+  featured: boolean;
+  operating_hours: OperatingHours;
+  review_count: number;
+  review_avg: number | null;
+  owner_email_verified: boolean;
+};
+
+export type BrowseResultsResponse = { businesses: BrowseResultBusiness[]; total: number };
+
+const BROWSE_SELECT =
+  "id,name,description,hero_image_url,logo_url,categories,business_types,is_eco_friendly,brand_accent_color,operating_hours,review_count,review_avg,owner_email_verified,locations(city,state,is_primary),delivery_areas(city,is_pan_india),featured_placements(scope,city,end_date)";
+
+/**
+ * Real server-side filtering + pagination for /browse and /browse/$category — kept separate
+ * from getBusinesses (used only by the frozen homepage) rather than extending it, since this
+ * needs pagination and getBusinesses must never change what the homepage receives.
+ */
+export const getBrowseResults = createServerFn({ method: "GET" })
+  .validator((input: BrowseFilters) => input ?? {})
+  .handler(async ({ data: filters }): Promise<BrowseResultsResponse> => {
+    const { publicClient } = await import("./supabase-public.server");
+    const client = publicClient();
+    const page = Math.max(1, filters.page ?? 1);
+    const pageSize = filters.pageSize && filters.pageSize > 0 ? filters.pageSize : 24;
+    const city = filters.city?.trim();
+    const q = filters.q?.trim();
+
+    // City: PostgREST can't OR across two related (locations/delivery_areas) tables in one
+    // embedded filter, so this is a deliberate two-query id lookup, unioned in JS.
+    let cityIds: string[] | null = null;
+    if (city) {
+      const [{ data: locMatches }, { data: deliveryMatches }] = await Promise.all([
+        client.from("locations").select("business_id").eq("city", city),
+        client.from("delivery_areas").select("business_id").or(`city.eq.${city},is_pan_india.eq.true`),
+      ]);
+      const ids = new Set<string>();
+      (locMatches ?? []).forEach((r) => r.business_id && ids.add(r.business_id));
+      (deliveryMatches ?? []).forEach((r) => r.business_id && ids.add(r.business_id));
+      cityIds = Array.from(ids);
+      if (cityIds.length === 0) return { businesses: [], total: 0 };
+    }
+
+    // Text query: name/description ilike, plus a rules-based keyword -> category expansion
+    // (matchCategoriesForQuery) so e.g. "haircut" also matches businesses categorised as
+    // Salons & Spa even if that word never appears in their name/description. Category-overlap
+    // is a separate query (unioned by id) rather than one hand-built .or() string, since
+    // category names contain spaces/punctuation that's fragile to interpolate into a raw
+    // PostgREST array-literal filter.
+    let qIds: string[] | null = null;
+    if (q) {
+      const relatedCategories = matchCategoriesForQuery(q);
+      const textQuery = client
+        .from("businesses")
+        .select("id")
+        .or(`name.ilike.%${q}%,description.ilike.%${q}%`);
+      const categoryQuery = relatedCategories.length
+        ? client.from("businesses").select("id").overlaps("categories", relatedCategories)
+        : null;
+      const [{ data: textMatches }, categoryResult] = await Promise.all([
+        textQuery,
+        categoryQuery ?? Promise.resolve({ data: [] as { id: string }[] }),
+      ]);
+      const ids = new Set<string>();
+      (textMatches ?? []).forEach((r) => ids.add(r.id));
+      (categoryResult.data ?? []).forEach((r) => ids.add(r.id));
+      qIds = Array.from(ids);
+      if (qIds.length === 0) return { businesses: [], total: 0 };
+    }
+
+    // "Open now" can't be expressed as a simple SQL WHERE (day-of-week + overnight-shift
+    // handling), so it's a narrowing id-lookup: fetch operating_hours for everything else that
+    // already matches, filter with the same isOpenNow() used client-side, then constrain the
+    // final paginated query to that id set.
+    let openNowIds: string[] | null = null;
+    if (filters.openNow) {
+      let hoursQuery = client
+        .from("businesses")
+        .select("id,operating_hours")
+        .eq("status", "live")
+        .not("operating_hours", "is", null);
+      if (cityIds) hoursQuery = hoursQuery.in("id", cityIds);
+      if (qIds) hoursQuery = hoursQuery.in("id", qIds);
+      if (filters.category) hoursQuery = hoursQuery.contains("categories", [filters.category]);
+      const { data: hoursRows } = await hoursQuery;
+      openNowIds = (hoursRows ?? [])
+        .filter((r) => isOpenNow(r.operating_hours as OperatingHours))
+        .map((r) => r.id);
+      if (openNowIds.length === 0) return { businesses: [], total: 0 };
+    }
+
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    let query = client
+      .from("businesses")
+      .select(BROWSE_SELECT, { count: "exact" })
+      .eq("status", "live");
+    if (cityIds) query = query.in("id", cityIds);
+    if (qIds) query = query.in("id", qIds);
+    if (openNowIds) query = query.in("id", openNowIds);
+    if (filters.category) query = query.contains("categories", [filters.category]);
+    query = query
+      .order("review_avg", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    const { data, error, count } = await query;
+    if (error) throw new Error(error.message);
+
+    const today = istDateString();
+    const rows = (data ?? []) as unknown as (Omit<PublicBusiness, "featured"> & {
+      operating_hours: OperatingHours;
+      review_count: number;
+      review_avg: number | null;
+      owner_email_verified: boolean;
+    })[];
+
+    const isPath = (v: unknown): v is string =>
+      typeof v === "string" && v.length > 0 && !/^https?:\/\//i.test(v);
+    const thumbPaths = [...rows.map((b) => b.hero_image_url), ...rows.map((b) => b.logo_url)].filter(isPath);
+    const signedMap = new Map<string, string>();
+    if (thumbPaths.length) {
+      const { data: signed, error: signedError } = await client.storage
+        .from("business-media")
+        .createSignedUrls(Array.from(new Set(thumbPaths)), 60 * 60 * 24 * 7);
+      if (signedError) throw new Error(signedError.message);
+      (signed ?? []).forEach((s) => {
+        if (s.path && s.signedUrl) signedMap.set(s.path, s.signedUrl);
+      });
+    }
+    const resolve = (v: string | null | undefined) => (isPath(v) ? (signedMap.get(v) ?? null) : (v ?? null));
+
+    const businesses: BrowseResultBusiness[] = rows.map((b) => ({
+      ...b,
+      hero_image_url: resolve(b.hero_image_url),
+      logo_url: resolve(b.logo_url),
+      featured: (b.featured_placements ?? []).some(
+        (f) => f.end_date >= today && (f.scope === "all_india" || (!!city && f.city === city)),
+      ),
+    }));
+
+    return { businesses, total: count ?? businesses.length };
+  });
+
 export const getBusinessById = createServerFn({ method: "GET" })
   .validator((input: { id: string }) => input)
   .handler(async ({ data }): Promise<BusinessDetail> => {
@@ -157,6 +310,8 @@ export const getBusinessById = createServerFn({ method: "GET" })
       .select(BUSINESS_DETAIL_SELECT)
       .eq("id", data.id)
       .eq("is_live", true)
+      .order("position", { foreignTable: "items" })
+      .order("position", { foreignTable: "services" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     return resolveBusinessMedia(client, business as unknown as Record<string, unknown> | null);
@@ -186,6 +341,8 @@ export const getSubdomainBusiness = createServerFn({ method: "GET" }).handler(
       .select(BUSINESS_DETAIL_SELECT)
       .eq("slug", slug)
       .eq("is_live", true)
+      .order("position", { foreignTable: "items" })
+      .order("position", { foreignTable: "services" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     return resolveBusinessMedia(client, business as unknown as Record<string, unknown> | null);
@@ -222,12 +379,17 @@ export const getStaffAvailability = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<StaffAvailability> => {
     const { publicClient } = await import("./supabase-public.server");
     const client = publicClient();
-    const { data: staff } = await client
-      .from("staff")
-      .select("id,name,specializations")
-      .eq("business_id", data.businessId);
+    const [{ data: staff }, { data: services }] = await Promise.all([
+      client.from("staff").select("id,name,specializations").eq("business_id", data.businessId),
+      client
+        .from("services")
+        .select("id,name,duration_minutes,price")
+        .eq("business_id", data.businessId)
+        .eq("is_active", true)
+        .order("position"),
+    ]);
     const ids = (staff ?? []).map((s) => s.id);
-    if (!ids.length) return { staff: [], slots: [] };
+    if (!ids.length) return { staff: [], services: services ?? [], slots: [] };
     const { data: slots } = await client
       .from("slots")
       .select("id,staff_id,date,start_time,status,capacity,booked_count")
@@ -239,6 +401,7 @@ export const getStaffAvailability = createServerFn({ method: "GET" })
       .limit(600);
     return {
       staff: (staff ?? []) as StaffAvailability["staff"],
+      services: (services ?? []) as StaffAvailability["services"],
       slots: ((slots ?? []) as StaffAvailability["slots"]).filter(
         (s) => s.booked_count < s.capacity,
       ),

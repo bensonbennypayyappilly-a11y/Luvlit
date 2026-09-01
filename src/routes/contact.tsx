@@ -1,25 +1,36 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell, Section } from "@/components/page-shell";
+import { loadSubdomainPage } from "@/lib/website-page-loader";
+import { buildBusinessHead } from "@/lib/business-seo";
+import { BusinessSitePage } from "@/components/website/site-page";
 
 export const Route = createFileRoute("/contact")({
-  head: () => ({
-    meta: [
-      { title: "Contact LuvLit — support for customers and businesses" },
-      {
-        name: "description",
-        content:
-          "Get in touch with the LuvLit team about listings, billing, influencer applications or anything else.",
-      },
-      { property: "og:title", content: "Contact LuvLit" },
-      { property: "og:description", content: "Reach the LuvLit team." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  // A business subdomain (e.g. lumiere.luvlit.in/contact) renders that business's own Contact
+  // page instead of LuvLit's marketing Contact page — same host-detection pattern as index.tsx.
+  loader: async () => loadSubdomainPage("contact"),
+  head: ({ loaderData }) => {
+    if (loaderData) return buildBusinessHead(loaderData.business, `https://${loaderData.business.slug}.luvlit.in/contact`);
+    return {
+      meta: [
+        { title: "Contact LuvLit — support for customers and businesses" },
+        {
+          name: "description",
+          content:
+            "Get in touch with the LuvLit team about listings, billing, influencer applications or anything else.",
+        },
+        { property: "og:title", content: "Contact LuvLit" },
+        { property: "og:description", content: "Reach the LuvLit team." },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+    };
+  },
   component: Contact,
 });
 
 function Contact() {
+  const result = Route.useLoaderData();
+  if (result) return <BusinessSitePage business={result.profile} page="contact" />;
   return (
     <PageShell
       eyebrow="Company"

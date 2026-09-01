@@ -12,11 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AppointmentsRouteImport } from './routes/appointments'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CitiesRouteImport } from './routes/cities'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ProductsRouteImport } from './routes/products'
+import { Route as ServicesRouteImport } from './routes/services'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
@@ -51,12 +55,14 @@ import { Route as AuthenticatedOrganizerOnboardingRouteImport } from './routes/_
 import { Route as AuthenticatedBusinessDashboardIndexRouteImport } from './routes/_authenticated/business/dashboard/index'
 import { Route as AuthenticatedBusinessDashboardAppointmentsRouteImport } from './routes/_authenticated/business/dashboard/appointments'
 import { Route as AuthenticatedBusinessDashboardBillingRouteImport } from './routes/_authenticated/business/dashboard/billing'
+import { Route as AuthenticatedBusinessDashboardCollaborationsRouteImport } from './routes/_authenticated/business/dashboard/collaborations'
 import { Route as AuthenticatedBusinessDashboardFeaturedRouteImport } from './routes/_authenticated/business/dashboard/featured'
 import { Route as AuthenticatedBusinessDashboardLeadsRouteImport } from './routes/_authenticated/business/dashboard/leads'
 import { Route as AuthenticatedBusinessDashboardNotificationsRouteImport } from './routes/_authenticated/business/dashboard/notifications'
 import { Route as AuthenticatedBusinessDashboardProductsRouteImport } from './routes/_authenticated/business/dashboard/products'
 import { Route as AuthenticatedBusinessDashboardProfileRouteImport } from './routes/_authenticated/business/dashboard/profile'
 import { Route as AuthenticatedBusinessDashboardRequirementsRouteImport } from './routes/_authenticated/business/dashboard/requirements'
+import { Route as AuthenticatedBusinessDashboardServicesRouteImport } from './routes/_authenticated/business/dashboard/services'
 import { Route as AuthenticatedBusinessDashboardStaffRouteImport } from './routes/_authenticated/business/dashboard/staff'
 import { Route as AuthenticatedBusinessDashboardWebsiteRouteImport } from './routes/_authenticated/business/dashboard/website'
 
@@ -74,6 +80,11 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppointmentsRoute = AppointmentsRouteImport.update({
+  id: '/appointments',
+  path: '/appointments',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -89,6 +100,11 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -97,6 +113,16 @@ const PricingRoute = PricingRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsRoute = ProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesRoute = ServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -288,6 +314,12 @@ const AuthenticatedBusinessDashboardBillingRoute =
     path: '/billing',
     getParentRoute: () => AuthenticatedBusinessDashboardRouteRoute,
   } as any)
+const AuthenticatedBusinessDashboardCollaborationsRoute =
+  AuthenticatedBusinessDashboardCollaborationsRouteImport.update({
+    id: '/collaborations',
+    path: '/collaborations',
+    getParentRoute: () => AuthenticatedBusinessDashboardRouteRoute,
+  } as any)
 const AuthenticatedBusinessDashboardFeaturedRoute =
   AuthenticatedBusinessDashboardFeaturedRouteImport.update({
     id: '/featured',
@@ -324,6 +356,12 @@ const AuthenticatedBusinessDashboardRequirementsRoute =
     path: '/requirements',
     getParentRoute: () => AuthenticatedBusinessDashboardRouteRoute,
   } as any)
+const AuthenticatedBusinessDashboardServicesRoute =
+  AuthenticatedBusinessDashboardServicesRouteImport.update({
+    id: '/services',
+    path: '/services',
+    getParentRoute: () => AuthenticatedBusinessDashboardRouteRoute,
+  } as any)
 const AuthenticatedBusinessDashboardStaffRoute =
   AuthenticatedBusinessDashboardStaffRouteImport.update({
     id: '/staff',
@@ -340,11 +378,15 @@ const AuthenticatedBusinessDashboardWebsiteRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/appointments': typeof AppointmentsRoute
   '/auth': typeof AuthRoute
   '/cities': typeof CitiesRoute
   '/contact': typeof ContactRoute
+  '/gallery': typeof GalleryRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/products': typeof ProductsRoute
+  '/services': typeof ServicesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -378,12 +420,14 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/business/dashboard/appointments': typeof AuthenticatedBusinessDashboardAppointmentsRoute
   '/business/dashboard/billing': typeof AuthenticatedBusinessDashboardBillingRoute
+  '/business/dashboard/collaborations': typeof AuthenticatedBusinessDashboardCollaborationsRoute
   '/business/dashboard/featured': typeof AuthenticatedBusinessDashboardFeaturedRoute
   '/business/dashboard/leads': typeof AuthenticatedBusinessDashboardLeadsRoute
   '/business/dashboard/notifications': typeof AuthenticatedBusinessDashboardNotificationsRoute
   '/business/dashboard/products': typeof AuthenticatedBusinessDashboardProductsRoute
   '/business/dashboard/profile': typeof AuthenticatedBusinessDashboardProfileRoute
   '/business/dashboard/requirements': typeof AuthenticatedBusinessDashboardRequirementsRoute
+  '/business/dashboard/services': typeof AuthenticatedBusinessDashboardServicesRoute
   '/business/dashboard/staff': typeof AuthenticatedBusinessDashboardStaffRoute
   '/business/dashboard/website': typeof AuthenticatedBusinessDashboardWebsiteRoute
   '/business/dashboard/': typeof AuthenticatedBusinessDashboardIndexRoute
@@ -391,11 +435,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/appointments': typeof AppointmentsRoute
   '/auth': typeof AuthRoute
   '/cities': typeof CitiesRoute
   '/contact': typeof ContactRoute
+  '/gallery': typeof GalleryRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/products': typeof ProductsRoute
+  '/services': typeof ServicesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -426,12 +474,14 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/business/dashboard/appointments': typeof AuthenticatedBusinessDashboardAppointmentsRoute
   '/business/dashboard/billing': typeof AuthenticatedBusinessDashboardBillingRoute
+  '/business/dashboard/collaborations': typeof AuthenticatedBusinessDashboardCollaborationsRoute
   '/business/dashboard/featured': typeof AuthenticatedBusinessDashboardFeaturedRoute
   '/business/dashboard/leads': typeof AuthenticatedBusinessDashboardLeadsRoute
   '/business/dashboard/notifications': typeof AuthenticatedBusinessDashboardNotificationsRoute
   '/business/dashboard/products': typeof AuthenticatedBusinessDashboardProductsRoute
   '/business/dashboard/profile': typeof AuthenticatedBusinessDashboardProfileRoute
   '/business/dashboard/requirements': typeof AuthenticatedBusinessDashboardRequirementsRoute
+  '/business/dashboard/services': typeof AuthenticatedBusinessDashboardServicesRoute
   '/business/dashboard/staff': typeof AuthenticatedBusinessDashboardStaffRoute
   '/business/dashboard/website': typeof AuthenticatedBusinessDashboardWebsiteRoute
   '/business/dashboard': typeof AuthenticatedBusinessDashboardIndexRoute
@@ -441,11 +491,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/appointments': typeof AppointmentsRoute
   '/auth': typeof AuthRoute
   '/cities': typeof CitiesRoute
   '/contact': typeof ContactRoute
+  '/gallery': typeof GalleryRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/products': typeof ProductsRoute
+  '/services': typeof ServicesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -479,12 +533,14 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/business/dashboard/appointments': typeof AuthenticatedBusinessDashboardAppointmentsRoute
   '/_authenticated/business/dashboard/billing': typeof AuthenticatedBusinessDashboardBillingRoute
+  '/_authenticated/business/dashboard/collaborations': typeof AuthenticatedBusinessDashboardCollaborationsRoute
   '/_authenticated/business/dashboard/featured': typeof AuthenticatedBusinessDashboardFeaturedRoute
   '/_authenticated/business/dashboard/leads': typeof AuthenticatedBusinessDashboardLeadsRoute
   '/_authenticated/business/dashboard/notifications': typeof AuthenticatedBusinessDashboardNotificationsRoute
   '/_authenticated/business/dashboard/products': typeof AuthenticatedBusinessDashboardProductsRoute
   '/_authenticated/business/dashboard/profile': typeof AuthenticatedBusinessDashboardProfileRoute
   '/_authenticated/business/dashboard/requirements': typeof AuthenticatedBusinessDashboardRequirementsRoute
+  '/_authenticated/business/dashboard/services': typeof AuthenticatedBusinessDashboardServicesRoute
   '/_authenticated/business/dashboard/staff': typeof AuthenticatedBusinessDashboardStaffRoute
   '/_authenticated/business/dashboard/website': typeof AuthenticatedBusinessDashboardWebsiteRoute
   '/_authenticated/business/dashboard/': typeof AuthenticatedBusinessDashboardIndexRoute
@@ -494,11 +550,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/appointments'
     | '/auth'
     | '/cities'
     | '/contact'
+    | '/gallery'
     | '/pricing'
     | '/privacy'
+    | '/products'
+    | '/services'
     | '/sitemap.xml'
     | '/terms'
     | '/verify-email'
@@ -532,12 +592,14 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/business/dashboard/appointments'
     | '/business/dashboard/billing'
+    | '/business/dashboard/collaborations'
     | '/business/dashboard/featured'
     | '/business/dashboard/leads'
     | '/business/dashboard/notifications'
     | '/business/dashboard/products'
     | '/business/dashboard/profile'
     | '/business/dashboard/requirements'
+    | '/business/dashboard/services'
     | '/business/dashboard/staff'
     | '/business/dashboard/website'
     | '/business/dashboard/'
@@ -545,11 +607,15 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/appointments'
     | '/auth'
     | '/cities'
     | '/contact'
+    | '/gallery'
     | '/pricing'
     | '/privacy'
+    | '/products'
+    | '/services'
     | '/sitemap.xml'
     | '/terms'
     | '/verify-email'
@@ -580,12 +646,14 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/business/dashboard/appointments'
     | '/business/dashboard/billing'
+    | '/business/dashboard/collaborations'
     | '/business/dashboard/featured'
     | '/business/dashboard/leads'
     | '/business/dashboard/notifications'
     | '/business/dashboard/products'
     | '/business/dashboard/profile'
     | '/business/dashboard/requirements'
+    | '/business/dashboard/services'
     | '/business/dashboard/staff'
     | '/business/dashboard/website'
     | '/business/dashboard'
@@ -594,11 +662,15 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/about'
+    | '/appointments'
     | '/auth'
     | '/cities'
     | '/contact'
+    | '/gallery'
     | '/pricing'
     | '/privacy'
+    | '/products'
+    | '/services'
     | '/sitemap.xml'
     | '/terms'
     | '/verify-email'
@@ -632,12 +704,14 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/'
     | '/_authenticated/business/dashboard/appointments'
     | '/_authenticated/business/dashboard/billing'
+    | '/_authenticated/business/dashboard/collaborations'
     | '/_authenticated/business/dashboard/featured'
     | '/_authenticated/business/dashboard/leads'
     | '/_authenticated/business/dashboard/notifications'
     | '/_authenticated/business/dashboard/products'
     | '/_authenticated/business/dashboard/profile'
     | '/_authenticated/business/dashboard/requirements'
+    | '/_authenticated/business/dashboard/services'
     | '/_authenticated/business/dashboard/staff'
     | '/_authenticated/business/dashboard/website'
     | '/_authenticated/business/dashboard/'
@@ -647,11 +721,15 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
+  AppointmentsRoute: typeof AppointmentsRoute
   AuthRoute: typeof AuthRoute
   CitiesRoute: typeof CitiesRoute
   ContactRoute: typeof ContactRoute
+  GalleryRoute: typeof GalleryRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
+  ProductsRoute: typeof ProductsRoute
+  ServicesRoute: typeof ServicesRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
@@ -690,6 +768,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/appointments': {
+      id: '/appointments'
+      path: '/appointments'
+      fullPath: '/appointments'
+      preLoaderRoute: typeof AppointmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -711,6 +796,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
@@ -723,6 +815,20 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products': {
+      id: '/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof ProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services': {
+      id: '/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -963,6 +1069,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessDashboardBillingRouteImport
       parentRoute: typeof AuthenticatedBusinessDashboardRouteRoute
     }
+    '/_authenticated/business/dashboard/collaborations': {
+      id: '/_authenticated/business/dashboard/collaborations'
+      path: '/collaborations'
+      fullPath: '/business/dashboard/collaborations'
+      preLoaderRoute: typeof AuthenticatedBusinessDashboardCollaborationsRouteImport
+      parentRoute: typeof AuthenticatedBusinessDashboardRouteRoute
+    }
     '/_authenticated/business/dashboard/featured': {
       id: '/_authenticated/business/dashboard/featured'
       path: '/featured'
@@ -1003,6 +1116,13 @@ declare module '@tanstack/react-router' {
       path: '/requirements'
       fullPath: '/business/dashboard/requirements'
       preLoaderRoute: typeof AuthenticatedBusinessDashboardRequirementsRouteImport
+      parentRoute: typeof AuthenticatedBusinessDashboardRouteRoute
+    }
+    '/_authenticated/business/dashboard/services': {
+      id: '/_authenticated/business/dashboard/services'
+      path: '/services'
+      fullPath: '/business/dashboard/services'
+      preLoaderRoute: typeof AuthenticatedBusinessDashboardServicesRouteImport
       parentRoute: typeof AuthenticatedBusinessDashboardRouteRoute
     }
     '/_authenticated/business/dashboard/staff': {
@@ -1074,12 +1194,14 @@ const AuthenticatedDashboardRouteRouteWithChildren =
 interface AuthenticatedBusinessDashboardRouteRouteChildren {
   AuthenticatedBusinessDashboardAppointmentsRoute: typeof AuthenticatedBusinessDashboardAppointmentsRoute
   AuthenticatedBusinessDashboardBillingRoute: typeof AuthenticatedBusinessDashboardBillingRoute
+  AuthenticatedBusinessDashboardCollaborationsRoute: typeof AuthenticatedBusinessDashboardCollaborationsRoute
   AuthenticatedBusinessDashboardFeaturedRoute: typeof AuthenticatedBusinessDashboardFeaturedRoute
   AuthenticatedBusinessDashboardLeadsRoute: typeof AuthenticatedBusinessDashboardLeadsRoute
   AuthenticatedBusinessDashboardNotificationsRoute: typeof AuthenticatedBusinessDashboardNotificationsRoute
   AuthenticatedBusinessDashboardProductsRoute: typeof AuthenticatedBusinessDashboardProductsRoute
   AuthenticatedBusinessDashboardProfileRoute: typeof AuthenticatedBusinessDashboardProfileRoute
   AuthenticatedBusinessDashboardRequirementsRoute: typeof AuthenticatedBusinessDashboardRequirementsRoute
+  AuthenticatedBusinessDashboardServicesRoute: typeof AuthenticatedBusinessDashboardServicesRoute
   AuthenticatedBusinessDashboardStaffRoute: typeof AuthenticatedBusinessDashboardStaffRoute
   AuthenticatedBusinessDashboardWebsiteRoute: typeof AuthenticatedBusinessDashboardWebsiteRoute
   AuthenticatedBusinessDashboardIndexRoute: typeof AuthenticatedBusinessDashboardIndexRoute
@@ -1091,6 +1213,8 @@ const AuthenticatedBusinessDashboardRouteRouteChildren: AuthenticatedBusinessDas
       AuthenticatedBusinessDashboardAppointmentsRoute,
     AuthenticatedBusinessDashboardBillingRoute:
       AuthenticatedBusinessDashboardBillingRoute,
+    AuthenticatedBusinessDashboardCollaborationsRoute:
+      AuthenticatedBusinessDashboardCollaborationsRoute,
     AuthenticatedBusinessDashboardFeaturedRoute:
       AuthenticatedBusinessDashboardFeaturedRoute,
     AuthenticatedBusinessDashboardLeadsRoute:
@@ -1103,6 +1227,8 @@ const AuthenticatedBusinessDashboardRouteRouteChildren: AuthenticatedBusinessDas
       AuthenticatedBusinessDashboardProfileRoute,
     AuthenticatedBusinessDashboardRequirementsRoute:
       AuthenticatedBusinessDashboardRequirementsRoute,
+    AuthenticatedBusinessDashboardServicesRoute:
+      AuthenticatedBusinessDashboardServicesRoute,
     AuthenticatedBusinessDashboardStaffRoute:
       AuthenticatedBusinessDashboardStaffRoute,
     AuthenticatedBusinessDashboardWebsiteRoute:
@@ -1147,11 +1273,15 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
+  AppointmentsRoute: AppointmentsRoute,
   AuthRoute: AuthRoute,
   CitiesRoute: CitiesRoute,
   ContactRoute: ContactRoute,
+  GalleryRoute: GalleryRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
+  ProductsRoute: ProductsRoute,
+  ServicesRoute: ServicesRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   VerifyEmailRoute: VerifyEmailRoute,

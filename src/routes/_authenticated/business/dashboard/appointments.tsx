@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
@@ -29,7 +29,10 @@ type BookingRow = {
 function AppointmentsPage() {
   const { data: business } = useDashboardBusiness();
   const businessId = business?.id ?? null;
+  const qc = useQueryClient();
   const [staffFilter, setStaffFilter] = useState<string>("all");
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [rowError, setRowError] = useState<string | null>(null);
 
   const { data: staff } = useQuery({
     queryKey: ["dashboard-staff", businessId],
@@ -88,6 +91,29 @@ function AppointmentsPage() {
     return Array.from(map.entries());
   }, [filtered]);
 
+  async function refresh() {
+    await qc.invalidateQueries({ queryKey: ["dashboard-bookings", businessId] });
+  }
+
+  async function cancel(bookingId: string) {
+    if (!confirm("Cancel this appointment? This reopens the slot for other customers.")) return;
+    setRowError(null);
+    setBusyId(bookingId);
+    const { error } = await supabase.rpc("cancel_booking", { _booking_id: bookingId });
+    setBusyId(null);
+    if (error) return setRowError(error.message);
+    refresh();
+  }
+
+  async function setStatus(bookingId: string, status: "completed" | "no_show") {
+    setRowError(null);
+    setBusyId(bookingId);
+    const { error } = await supabase.from("bookings").update({ status }).eq("id", bookingId);
+    setBusyId(null);
+    if (error) return setRowError(error.message);
+    refresh();
+  }
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -113,6 +139,7 @@ function AppointmentsPage() {
       {!isLoading && byDate.length === 0 && (
         <p className="mt-6 text-sm text-muted-foreground">No appointments yet.</p>
       )}
+      {rowError && <p className="mt-3 text-sm text-destructive">{rowError}</p>}
 
       <div className="mt-6 space-y-6">
         {byDate.map(([date, rows]) => (
@@ -143,9 +170,49 @@ function AppointmentsPage() {
                       )}
                     </p>
                   </div>
-                  <span className="rounded-full border border-border px-3 py-1 text-xs capitalize text-muted-foreground">
-                    {b.status}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`rounded-full border px-3 py-1 text-xs capitalize ${
+                        b.status === "cancelled"
+                          ? "border-border text-muted-foreground"
+                          : b.status === "completed"
+                            ? "border-accent bg-accent-soft text-accent"
+                            : b.status === "no_show"
+                              ? "border-destructive/40 text-destructive"
+                              : "border-border text-muted-foreground"
+                      }`}
+                    >
+                      {b.status.replace("_", " ")}
+                    </span>
+                    {b.status === "confirmed" && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setStatus(b.id, "completed")}
+                          disabled={busyId === b.id}
+                          className="text-xs text-accent hover:underline disabled:opacity-50"
+                        >
+                          Mark done
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setStatus(b.id, "no_show")}
+                          disabled={busyId === b.id}
+                          className="text-xs text-muted-foreground hover:underline disabled:opacity-50"
+                        >
+                          No-show
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => cancel(b.id)}
+                          disabled={busyId === b.id}
+                          className="text-xs text-destructive hover:underline disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
