@@ -62,13 +62,20 @@ function BrowseIndex() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-20">
+      {/* max-w-7xl, not 6xl: the category grid is 7 cards wide on desktop, and at 1152px each
+          card was cramped to ~147px. This gives the grid real width to work with. */}
+      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-20">
         <p className="eyebrow">Discover</p>
         <h1 className="mt-4 text-4xl md:text-5xl">Browse LuvLit</h1>
 
         <Reveal className="mt-10">
           <p className="text-sm font-medium text-muted-foreground">Browse by category</p>
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+          {/* All 13 categories, as 7 + 6 on desktop. `wide` is a project breakpoint at 900px
+              (see styles.css): the 7-up layout needs to engage below Tailwind's lg (1024px),
+              because a window narrower than 1024 — common with Windows display scaling, or
+              simply an un-maximised browser — was otherwise falling back to 4 columns on what
+              is really a desktop. Deliberately no 5- or 6-column band: 3 -> 4 -> 7. */}
+          <div className="mt-4 grid grid-cols-3 gap-2.5 sm:grid-cols-4 sm:gap-3 wide:grid-cols-7 wide:gap-3.5">
             {categories.map((category, i) => (
               <CategoryCard key={category.id} category={category} city={search.city} delay={i * 40} />
             ))}

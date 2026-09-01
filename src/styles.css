@@ -13,6 +13,12 @@
  */
 
 @theme inline {
+  /* Extra breakpoint at 900px, between Tailwind's md (768) and lg (1024). Registering it here
+     rather than using an arbitrary `min-[900px]:` variant is deliberate: Tailwind v4 emits
+     arbitrary media variants BEFORE the named ones, so `min-[900px]:grid-cols-7` lost to
+     `sm:grid-cols-4` at every width above 900px (both queries match; last one wins). A named
+     breakpoint is sorted by its value, so it correctly overrides the smaller ones. */
+  --breakpoint-wide: 56.25rem;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
