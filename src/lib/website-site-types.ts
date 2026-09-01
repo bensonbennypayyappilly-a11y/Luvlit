@@ -23,6 +23,8 @@ export type SiteBusiness = {
   brand_accent_color: string | null;
   brand_secondary_color: string | null;
   button_style: string | null;
+  background_color: string | null;
+  custom_domain: string | null;
   is_eco_friendly: boolean;
   operating_hours: { start: string; end: string; days: number[] } | null;
   sections: Section[];

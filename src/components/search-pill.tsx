@@ -76,17 +76,17 @@ export function SearchPill({
       }}
       className="relative w-full"
     >
-      <div className="search-pill focus-within:ring-accent/25 flex w-full flex-col gap-2 p-2 transition-shadow focus-within:ring-2 sm:rounded-3xl md:h-16 md:flex-row md:items-center md:gap-0 md:rounded-full md:p-2">
-        <div className="flex min-w-0 items-center gap-2 md:h-full md:w-40 md:border-r md:border-border lg:w-44">
+      <div className="search-pill focus-within:ring-accent/25 flex w-full flex-col gap-2 p-2 transition-shadow focus-within:ring-2 sm:rounded-3xl md:h-16 md:flex-row md:items-center md:gap-0 md:rounded-full md:p-2 xl:h-[4.75rem] xl:p-2.5">
+        <div className="flex min-w-0 items-center gap-2 md:h-full md:w-40 md:border-r md:border-border lg:w-44 xl:w-48">
           <MapPin
-            className="ml-4 h-3.5 w-3.5 shrink-0 text-muted-foreground md:ml-4"
+            className="ml-4 h-3.5 w-3.5 shrink-0 text-muted-foreground md:ml-4 xl:ml-5 xl:h-4 xl:w-4"
             aria-hidden="true"
           />
           <select
             value={city}
             onChange={(e) => setCity(e.target.value)}
             aria-label="Select your city"
-            className="min-w-0 flex-1 rounded-full bg-transparent py-2.5 pl-1 pr-3 text-sm text-foreground focus:outline-none"
+            className="min-w-0 flex-1 rounded-full bg-transparent py-2.5 pl-1 pr-3 text-sm text-foreground focus:outline-none xl:py-3 xl:pl-2 xl:text-[15px]"
           >
             <option value="">All of India</option>
             {cities.map((c) => (
@@ -99,7 +99,7 @@ export function SearchPill({
 
         <div className="relative flex min-w-0 flex-1 items-center">
           <Search
-            className="pointer-events-none ml-4 h-3.5 w-3.5 shrink-0 text-muted-foreground md:ml-5"
+            className="pointer-events-none ml-4 h-3.5 w-3.5 shrink-0 text-muted-foreground md:ml-5 xl:ml-6 xl:h-4 xl:w-4"
             aria-hidden="true"
           />
           <input
@@ -109,10 +109,10 @@ export function SearchPill({
               onQueryChange?.(e.target.value);
             }}
             aria-label="Search"
-            className="w-full rounded-full bg-transparent px-3 py-2.5 text-[15px] text-foreground focus:outline-none"
+            className="w-full rounded-full bg-transparent px-3 py-2.5 text-[15px] text-foreground focus:outline-none xl:px-4 xl:py-3 xl:text-base"
           />
           {!q && (
-            <div className="pointer-events-none absolute inset-y-0 left-11 right-3 flex items-center overflow-hidden md:left-12">
+            <div className="pointer-events-none absolute inset-y-0 left-11 right-3 flex items-center overflow-hidden md:left-12 xl:left-14">
               <AnimatePresence mode="wait">
                 <motion.span
                   key={placeholderIndex}
@@ -120,7 +120,7 @@ export function SearchPill({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.3 }}
-                  className="block truncate text-[15px] text-muted-foreground"
+                  className="block truncate text-[15px] text-muted-foreground xl:text-base"
                 >
                   Search "{REQUIREMENT_EXAMPLES[placeholderIndex]}"…
                 </motion.span>
@@ -135,9 +135,9 @@ export function SearchPill({
             onClick={() => setFiltersOpen((v) => !v)}
             aria-expanded={filtersOpen}
             aria-label="Filters"
-            className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
+            className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-accent hover:text-foreground xl:h-12 xl:w-12"
           >
-            <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+            <SlidersHorizontal className="h-3.5 w-3.5 xl:h-4 xl:w-4" aria-hidden="true" />
             {(category || openNow) && (
               <span
                 className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-accent"
@@ -147,7 +147,7 @@ export function SearchPill({
           </button>
           <button
             type="submit"
-            className="group whitespace-nowrap rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-95"
+            className="group whitespace-nowrap rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-95 xl:px-8 xl:py-3.5 xl:text-[15px]"
           >
             Search
             <span className="ml-1 inline-block transition-transform group-hover:translate-x-0.5">

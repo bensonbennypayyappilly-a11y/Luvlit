@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { ChatPanel } from "@/components/chat-panel";
 import { isStoragePath, useMediaUrl } from "@/components/media-uploader";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/leads")({
   head: () => ({
@@ -148,6 +149,7 @@ function LeadsPage() {
 
   return (
     <div>
+      <DashboardBackLink />
       <p className="eyebrow">Leads & Chats</p>
       <h1 className="mt-2 text-2xl font-medium">Inbox</h1>
 

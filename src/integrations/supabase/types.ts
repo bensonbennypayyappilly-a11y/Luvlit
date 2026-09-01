@@ -95,6 +95,7 @@ export type Database = {
       }
       businesses: {
         Row: {
+          background_color: string | null
           brand_accent_color: string | null
           brand_secondary_color: string | null
           business_types: string[]
@@ -102,6 +103,7 @@ export type Database = {
           categories: string[]
           contact_email: string | null
           created_at: string
+          custom_domain: string | null
           deleted_at: string | null
           description: string | null
           draft_sections: Json | null
@@ -128,6 +130,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          background_color?: string | null
           brand_accent_color?: string | null
           brand_secondary_color?: string | null
           business_types?: string[]
@@ -135,6 +138,7 @@ export type Database = {
           categories?: string[]
           contact_email?: string | null
           created_at?: string
+          custom_domain?: string | null
           deleted_at?: string | null
           description?: string | null
           draft_sections?: Json | null
@@ -161,6 +165,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          background_color?: string | null
           brand_accent_color?: string | null
           brand_secondary_color?: string | null
           business_types?: string[]
@@ -168,6 +173,7 @@ export type Database = {
           categories?: string[]
           contact_email?: string | null
           created_at?: string
+          custom_domain?: string | null
           deleted_at?: string | null
           description?: string | null
           draft_sections?: Json | null

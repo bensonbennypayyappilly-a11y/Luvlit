@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { MediaUploader } from "@/components/media-uploader";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { type ProfileBusiness } from "@/components/business-profile-preview";
 import { BusinessSitePage } from "@/components/website/site-page";
 import { BuilderSection, SaveStatus } from "@/components/website-builder/section";
@@ -13,7 +14,8 @@ import { SectionListEditor } from "@/components/website-builder/section-list-edi
 import { ACCENT_COLORS, ECO_CATEGORIES } from "@/lib/constants";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FieldError } from "@/components/field-error";
-import { buildDefaultSections, type Section } from "@/lib/website-sections";
+import { buildDefaultSections, newSection, type Section } from "@/lib/website-sections";
+import { Switch } from "@/components/ui/switch";
 import { TEMPLATE_LIST, type TemplateId } from "@/lib/website-templates";
 import { deriveSitePages, resolveSections, type PageId } from "@/lib/website-pages";
 import {
@@ -51,9 +53,11 @@ type Draft = {
   gallery_urls: string[];
   short_video_urls: string[];
   brand_accent_color: string | null;
+  background_color: string | null;
   whatsapp: string | null;
   contact_email: string | null;
   instagram_url: string | null;
+  custom_domain: string | null;
   template: TemplateId;
 };
 
@@ -167,9 +171,11 @@ function WebsiteBuilder() {
         gallery_urls: b.gallery_urls ?? [],
         short_video_urls: b.short_video_urls ?? [],
         brand_accent_color: b.brand_accent_color,
+        background_color: b.background_color,
         whatsapp: b.whatsapp,
         contact_email: b.contact_email,
         instagram_url: b.instagram_url,
+        custom_domain: b.custom_domain,
         template: (b.template as TemplateId) ?? "editorial",
       });
       const existing = (b.draft_sections as Section[] | null)?.length
@@ -219,12 +225,35 @@ function WebsiteBuilder() {
     saveImmediate(fields);
   }
 
+  /** Fixed 3-slot short-video editor: setting a slot writes/replaces it, clearing one removes it. */
+  function setShortVideo(index: number, path: string | null) {
+    const next = [...draft!.short_video_urls];
+    if (path) next[index] = path;
+    else next.splice(index, 1);
+    onImmediateChange({ short_video_urls: next.slice(0, 3) });
+  }
+
   function onSectionsChange(next: Section[]) {
     setDraftSections(next);
     if (sectionsSaveTimer.current) clearTimeout(sectionsSaveTimer.current);
     sectionsSaveTimer.current = setTimeout(() => {
       saveImmediate({ draft_sections: next });
     }, 400);
+  }
+
+  /** Quick on/off for whether a section shows on the public site, surfaced next to its "Add /
+   * Edit" link so a business doesn't need to open Page Layout separately for the common case.
+   * Adds the section (visible) the first time it's toggled on if it doesn't exist yet. */
+  function isSectionVisible(type: Section["type"]) {
+    return draftSections!.some((s) => s.type === type && s.visible);
+  }
+  function toggleSectionVisible(type: Section["type"]) {
+    const existing = draftSections!.find((s) => s.type === type);
+    onSectionsChange(
+      existing
+        ? draftSections!.map((s) => (s.type === type ? { ...s, visible: !s.visible } : s))
+        : [...draftSections!, newSection(type)],
+    );
   }
 
   const toggle = (list: string[], value: string) =>
@@ -241,6 +270,7 @@ function WebsiteBuilder() {
     whatsapp: validatePhone(draft.whatsapp),
     contact_email: validateEmail(draft.contact_email),
     instagram_url: validateUrl(draft.instagram_url),
+    custom_domain: validateUrl(draft.custom_domain),
   };
   const blocked = hasErrors(fieldErrors);
 
@@ -251,6 +281,7 @@ function WebsiteBuilder() {
     categories: draft.categories,
     business_types: draft.business_types,
     instagram_url: draft.instagram_url,
+    custom_domain: draft.custom_domain,
     whatsapp: draft.whatsapp,
     contact_email: draft.contact_email,
     hero_image_url: draft.hero_image_url,
@@ -259,6 +290,7 @@ function WebsiteBuilder() {
     main_video_url: draft.main_video_url,
     short_video_urls: draft.short_video_urls,
     brand_accent_color: draft.brand_accent_color,
+    background_color: draft.background_color,
     brand_secondary_color: data?.business?.brand_secondary_color ?? null,
     button_style: data?.business?.button_style ?? null,
     is_eco_friendly: showEco ? draft.is_eco_friendly : false,
@@ -285,15 +317,14 @@ function WebsiteBuilder() {
     if (!draft || !draftSections) return;
     setPublishState("saving");
     setPublishError(null);
-    const patch: { sections: Section[]; draft_sections: Section[]; template: TemplateId; status?: "live" } = {
+    // Self-service publish: a business owner can always take their own site live, no admin
+    // approval step involved.
+    const patch: { sections: Section[]; draft_sections: Section[]; template: TemplateId; status: "live" } = {
       sections: draftSections,
       draft_sections: draftSections,
       template: draft.template,
+      status: "live",
     };
-    // Publishing website content never changes whether the business is publicly listed —
-    // that's a separate admin-approval step. Only flip live once already approved; otherwise
-    // this just saves the layout so it's ready the moment approval lands.
-    if (status === "approved") patch.status = "live";
     const { error } = await supabase.from("businesses").update(patch).eq("id", businessId!);
     if (error) {
       setPublishState("error");
@@ -307,9 +338,7 @@ function WebsiteBuilder() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-4">
-        <Link to="/business/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
-          ← My Website
-        </Link>
+        <DashboardBackLink className="" />
         <div className="flex items-center gap-3">
           <SaveStatus state={saveState} />
           <button
@@ -319,7 +348,7 @@ function WebsiteBuilder() {
             title={blocked ? "Fix the highlighted fields first" : undefined}
             className="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
           >
-            {publishState === "saving" ? "Saving…" : status === "live" || status === "approved" ? "Publish Website" : "Save Website"}
+            {publishState === "saving" ? "Saving…" : "Save and Publish"}
           </button>
         </div>
       </div>
@@ -330,19 +359,7 @@ function WebsiteBuilder() {
       )}
       {publishError && <p className="px-4 pt-3 text-sm text-destructive">{publishError}</p>}
       {publishState === "saved" && !publishError && (
-        <p className="px-4 pt-3 text-xs text-muted-foreground">
-          {status === "approved"
-            ? "Your website is now live."
-            : status === "live"
-              ? "Your changes are live."
-              : "Saved — your website will go live once your business listing is approved."}
-        </p>
-      )}
-      {publishState !== "saved" && status !== "live" && status !== "approved" && (
-        <p className="px-4 pt-3 text-xs text-muted-foreground">
-          Your business listing is {status === "pending" ? "awaiting approval" : "still in draft"} — you can keep
-          building your website now, and it goes live as soon as it's approved.
-        </p>
+        <p className="px-4 pt-3 text-xs text-muted-foreground">Your website is live.</p>
       )}
 
       <div className="flex flex-1 flex-col lg:flex-row">
@@ -381,6 +398,18 @@ function WebsiteBuilder() {
               value={draft.main_video_url}
               onChange={(path) => onImmediateChange({ main_video_url: path })}
             />
+          </BuilderSection>
+
+          <BuilderSection title="Short Videos" subtitle="Up to 3 short clips (max 60s each) shown on your website.">
+            {[0, 1, 2].map((i) => (
+              <MediaUploader
+                key={i}
+                businessId={businessId}
+                kind="short"
+                value={draft.short_video_urls[i] ?? null}
+                onChange={(path) => setShortVideo(i, path)}
+              />
+            ))}
           </BuilderSection>
 
           <BuilderSection title="Main Image" subtitle="This is the hero image at the top of your page.">
@@ -471,28 +500,48 @@ function WebsiteBuilder() {
             title="Products & Services"
             subtitle={`${data?.items?.length ?? 0} product(s) · ${data?.services?.length ?? 0} service(s)`}
           >
-            <Link
-              to="/business/dashboard/products"
-              className="inline-block rounded-md border border-accent px-4 py-2.5 text-sm"
-            >
-              Go to Products →
-            </Link>
-            <Link
-              to="/business/dashboard/services"
-              className="inline-block rounded-md border border-accent px-4 py-2.5 text-sm"
-            >
-              Go to Services →
-            </Link>
+            <div className="flex items-center justify-between gap-3">
+              <Link
+                to="/business/dashboard/products"
+                className="inline-block rounded-md border border-accent px-4 py-2.5 text-sm"
+              >
+                Add / Edit Products →
+              </Link>
+              <label className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                On website
+                <Switch checked={isSectionVisible("products")} onCheckedChange={() => toggleSectionVisible("products")} />
+              </label>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <Link
+                to="/business/dashboard/services"
+                className="inline-block rounded-md border border-accent px-4 py-2.5 text-sm"
+              >
+                Add / Edit Services →
+              </Link>
+              <label className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                On website
+                <Switch checked={isSectionVisible("services")} onCheckedChange={() => toggleSectionVisible("services")} />
+              </label>
+            </div>
           </BuilderSection>
 
-          <BuilderSection title="Book Appointments" subtitle="Manage staff & availability there.">
-            <Link
-              to="/business/dashboard/staff"
-              className="inline-block rounded-md border border-accent px-4 py-2.5 text-sm"
-            >
-              Go to Staff & Availability →
-            </Link>
-          </BuilderSection>
+          {draft.business_types.includes("appointment") && (
+            <BuilderSection title="Book Appointments" subtitle="Manage staff & availability there.">
+              <div className="flex items-center justify-between gap-3">
+                <Link
+                  to="/business/dashboard/staff"
+                  className="inline-block rounded-md border border-accent px-4 py-2.5 text-sm"
+                >
+                  Add / Edit Appointments →
+                </Link>
+                <label className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+                  On website
+                  <Switch checked={isSectionVisible("booking")} onCheckedChange={() => toggleSectionVisible("booking")} />
+                </label>
+              </div>
+            </BuilderSection>
+          )}
 
           <BuilderSection title="Website Settings" subtitle="Colour, contact info, locations & delivery.">
             <div>
@@ -512,6 +561,30 @@ function WebsiteBuilder() {
                     {c.name}
                   </button>
                 ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Page background colour</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                The default background behind every page. Leave unset to use the template's own background.
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="color"
+                  value={draft.background_color ?? "#ffffff"}
+                  onChange={(e) => onImmediateChange({ background_color: e.target.value })}
+                  aria-label="Page background colour"
+                  className="h-9 w-12 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
+                />
+                {draft.background_color && (
+                  <button
+                    type="button"
+                    onClick={() => onImmediateChange({ background_color: null })}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Reset to default
+                  </button>
+                )}
               </div>
             </div>
             <input
@@ -547,6 +620,17 @@ function WebsiteBuilder() {
               }`}
             />
             <FieldError message={fieldErrors.instagram_url} />
+            <input
+              value={draft.custom_domain ?? ""}
+              onChange={(e) => onTextChange("custom_domain", e.target.value, validateUrl(e.target.value))}
+              placeholder="Official website link (optional)"
+              inputMode="url"
+              aria-invalid={!!fieldErrors.custom_domain}
+              className={`w-full rounded-md border bg-background px-3 py-2 text-sm ${
+                fieldErrors.custom_domain ? "border-destructive" : "border-border"
+              }`}
+            />
+            <FieldError message={fieldErrors.custom_domain} />
             <LocationsEditor businessId={businessId} />
           </BuilderSection>
         </aside>
@@ -604,8 +688,8 @@ function WebsiteBuilder() {
             ))}
           </div>
           <p className="border-b border-border bg-card px-4 py-2.5 text-xs text-muted-foreground">
-            Live preview of your unsaved changes — press {status === "live" || status === "approved" ? "Publish" : "Save"}{" "}
-            to apply them to your real site.
+            Live preview of your unsaved changes — press "Save and Publish" to apply them to your
+            real site.
           </p>
 
           <div className="flex-1 overflow-y-auto p-4 lg:p-8">

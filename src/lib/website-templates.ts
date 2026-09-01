@@ -9,7 +9,7 @@
 export type TemplateId = "editorial" | "modern-business" | "catalogue" | "experience" | "story";
 
 export type NavStyle = "bar-solid" | "bar-dark" | "minimal-underline";
-export type HeroStyle = "split" | "full-bleed" | "centered-minimal" | "image-right";
+export type HeroStyle = "split" | "full-bleed" | "centered-minimal" | "image-right" | "bold-overlay";
 export type GalleryDefault = "grid-3" | "grid-2" | "masonry" | "featured";
 export type CardStyle = "bordered" | "shadow" | "flat-divide" | "editorial-frame";
 
@@ -29,6 +29,10 @@ export type TemplateStyle = {
   cardStyle: CardStyle;
   gallery: GalleryDefault;
   headingFont: "serif" | "sans-bold" | "sans-tight" | "sans-light";
+  /** Actual loaded typeface for headings/body — see the `.site-heading-font` utility and
+   * SiteChrome's root style in site-chrome.tsx for how these get applied. */
+  headingFontFamily: string;
+  bodyFontFamily: string;
   headingClass: string;
   bodyClass: string;
   /** Whether section eyebrows (small uppercase labels above headings) are shown — some
@@ -53,6 +57,8 @@ export const TEMPLATES: Record<TemplateId, TemplateStyle> = {
     cardStyle: "editorial-frame",
     gallery: "featured",
     headingFont: "serif",
+    headingFontFamily: "'Cormorant Garamond', serif",
+    bodyFontFamily: "'Inter', sans-serif",
     headingClass: "font-medium tracking-tight",
     bodyClass: "leading-relaxed",
     showEyebrows: true,
@@ -71,6 +77,8 @@ export const TEMPLATES: Record<TemplateId, TemplateStyle> = {
     cardStyle: "bordered",
     gallery: "grid-3",
     headingFont: "sans-bold",
+    headingFontFamily: "'Manrope', sans-serif",
+    bodyFontFamily: "'Manrope', sans-serif",
     headingClass: "font-bold tracking-tight",
     bodyClass: "leading-normal",
     showEyebrows: false,
@@ -78,17 +86,19 @@ export const TEMPLATES: Record<TemplateId, TemplateStyle> = {
   catalogue: {
     id: "catalogue",
     label: "Catalogue",
-    description: "Product-first, shop-by-category — built like a real storefront, not a landing page.",
+    description: "Product-first ecommerce storefront — bold overlay hero, shop-by-category browsing and search right on the homepage.",
     suitedFor: "Boutiques, bakeries, home décor, handmade, gifts",
     previewAccent: "#5B6E4E",
     previewSurface: "#FAF8F2",
     navStyle: "bar-solid",
-    hero: "image-right",
+    hero: "bold-overlay",
     spacing: "compact",
     corners: "soft",
     cardStyle: "shadow",
     gallery: "grid-3",
     headingFont: "sans-tight",
+    headingFontFamily: "'DM Sans', sans-serif",
+    bodyFontFamily: "'DM Sans', sans-serif",
     headingClass: "font-semibold tracking-tight",
     bodyClass: "leading-normal",
     showEyebrows: true,
@@ -107,6 +117,8 @@ export const TEMPLATES: Record<TemplateId, TemplateStyle> = {
     cardStyle: "shadow",
     gallery: "masonry",
     headingFont: "serif",
+    headingFontFamily: "'Plus Jakarta Sans', sans-serif",
+    bodyFontFamily: "'Plus Jakarta Sans', sans-serif",
     headingClass: "font-normal",
     bodyClass: "leading-relaxed",
     showEyebrows: true,
@@ -125,6 +137,8 @@ export const TEMPLATES: Record<TemplateId, TemplateStyle> = {
     cardStyle: "flat-divide",
     gallery: "grid-2",
     headingFont: "sans-light",
+    headingFontFamily: "'Libre Baskerville', serif",
+    bodyFontFamily: "'Inter', sans-serif",
     headingClass: "font-light tracking-tight",
     bodyClass: "leading-relaxed",
     showEyebrows: false,

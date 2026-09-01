@@ -206,6 +206,8 @@ export function toProfileBusiness(business: NonNullable<BusinessDetail>) {
     brand_accent_color: business.brand_accent_color,
     brand_secondary_color: business.brand_secondary_color,
     button_style: business.button_style,
+    background_color: business.background_color,
+    custom_domain: business.custom_domain,
     is_eco_friendly: business.is_eco_friendly,
     operating_hours: business.operating_hours ?? null,
     sections: business.sections ?? [],

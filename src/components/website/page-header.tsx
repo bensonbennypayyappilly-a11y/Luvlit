@@ -15,7 +15,7 @@ export function PageHeader({ eyebrow, title, style, accent }: { eyebrow: string;
             {eyebrow}
           </p>
         )}
-        <h1 className={`mt-3 text-4xl md:text-5xl ${style.headingFont === "serif" ? "font-serif" : ""} ${style.headingClass}`}>{title}</h1>
+        <h1 className={`site-heading-font mt-3 text-4xl md:text-5xl ${style.headingClass}`}>{title}</h1>
       </div>
     </section>
   );

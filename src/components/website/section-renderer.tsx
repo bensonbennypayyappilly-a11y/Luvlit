@@ -1,5 +1,6 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { Heart, Search } from "lucide-react";
 import { EcoBadge } from "@/components/eco-badge";
 import { FavoriteButton } from "@/components/favorite-button";
 import { BookingWidget } from "@/components/booking-widget";
@@ -9,6 +10,7 @@ import { useMediaUrl } from "@/components/media-uploader";
 import { SectionEyebrow, VideoPlayer, isPlayableVideo, useResolvedList } from "@/components/website/media";
 import type { TemplateStyle } from "@/lib/website-templates";
 import type { SiteBusiness } from "@/lib/website-site-types";
+import type { PageId } from "@/lib/website-pages";
 import type {
   AboutContent,
   CustomTextContent,
@@ -33,7 +35,7 @@ function pad(style: TemplateStyle) {
 }
 
 function heading(style: TemplateStyle, className = "") {
-  return `${style.headingFont === "serif" ? "font-serif" : ""} ${style.headingClass} ${className}`;
+  return `site-heading-font ${style.headingClass} ${className}`;
 }
 
 function cardClass(style: TemplateStyle) {
@@ -62,22 +64,59 @@ export function SectionRenderer({
   sections,
   style,
   accent,
+  page,
 }: {
   business: SiteBusiness;
   sections: Section[];
   style: TemplateStyle;
   accent: string;
+  page: PageId;
 }) {
   return (
     <>
       {sections.map((section) => (
-        <SectionBlock key={section.id} section={section} business={business} style={style} accent={accent} />
+        <SectionBlock key={section.id} section={section} business={business} style={style} accent={accent} page={page} />
       ))}
     </>
   );
 }
 
-function SectionBlock({ section, business, style, accent }: { section: Section; business: SiteBusiness; style: TemplateStyle; accent: string }) {
+function SectionBlock({
+  section,
+  business,
+  style,
+  accent,
+  page,
+}: {
+  section: Section;
+  business: SiteBusiness;
+  style: TemplateStyle;
+  accent: string;
+  page: PageId;
+}) {
+  const backgroundColor = typeof section.content?.backgroundColor === "string" ? section.content.backgroundColor : undefined;
+  const color = typeof section.content?.textColor === "string" ? section.content.textColor : undefined;
+  const rendered = renderSectionBlock({ section, business, style, accent, page });
+  if (!rendered || (!backgroundColor && !color)) return rendered;
+  // Headings and plain body text inherit `color` from here; text using its own explicit colour
+  // utility (text-muted-foreground and similar) intentionally keeps its own shade — see the
+  // matching note in section-list-editor.tsx's editor for this.
+  return <div style={{ backgroundColor, color }}>{rendered}</div>;
+}
+
+function renderSectionBlock({
+  section,
+  business,
+  style,
+  accent,
+  page,
+}: {
+  section: Section;
+  business: SiteBusiness;
+  style: TemplateStyle;
+  accent: string;
+  page: PageId;
+}) {
   switch (section.type) {
     case "hero":
       return <HeroBlock business={business} style={style} accent={accent} content={section.content as HeroContent} />;
@@ -86,7 +125,7 @@ function SectionBlock({ section, business, style, accent }: { section: Section; 
     case "services":
       return <ServicesBlock business={business} style={style} accent={accent} />;
     case "products":
-      return <ProductsBlock business={business} style={style} accent={accent} />;
+      return <ProductsBlock business={business} style={style} accent={accent} page={page} />;
     case "gallery":
       return <GalleryBlock business={business} style={style} accent={accent} />;
     case "contact":
@@ -207,6 +246,55 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
             <img src={heroUrl} alt={business.name} className={`aspect-[16/9] w-full object-cover ${corners(style)}`} />
           </div>
         )}
+      </section>
+    );
+  }
+
+  if (style.hero === "bold-overlay") {
+    const words = business.name.trim().split(/\s+/);
+    const wash = `linear-gradient(115deg, ${accent}CC 0%, ${accent}55 40%, transparent 70%)`;
+    return heroUrl ? (
+      <section className="relative flex min-h-[68vh] items-center overflow-hidden md:min-h-[85vh]">
+        <img src={heroUrl} alt={business.name} className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-black/35" />
+        <div className="absolute inset-0" style={{ background: wash }} />
+        <div className="relative mx-auto w-full max-w-6xl px-6 py-24">
+          <h1 className="site-heading-font text-6xl font-black uppercase leading-[0.85] tracking-tight text-white sm:text-7xl md:text-8xl">
+            {words.map((w, i) => (
+              <span key={i} className="block">
+                {w}
+              </span>
+            ))}
+          </h1>
+          {tagline && <p className={`mt-6 max-w-sm text-base text-white/90 ${style.bodyClass}`}>{tagline}</p>}
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <a href="/products" className={ctaClass(style)} style={{ backgroundColor: "#fff", color: "#171717" }}>
+              Shop now →
+            </a>
+            {business.is_eco_friendly && <EcoBadge />}
+            <FavoriteButton businessId={business.id} />
+          </div>
+        </div>
+      </section>
+    ) : (
+      <section className="px-6 pb-20 pt-24 md:pt-32" style={{ background: `linear-gradient(180deg, ${accent}14, transparent)` }}>
+        <div className="mx-auto max-w-4xl">
+          <h1 className="site-heading-font text-6xl font-black uppercase leading-[0.85] tracking-tight sm:text-7xl md:text-8xl" style={{ color: accent }}>
+            {words.map((w, i) => (
+              <span key={i} className="block">
+                {w}
+              </span>
+            ))}
+          </h1>
+          {tagline && <p className={`mt-6 max-w-sm text-muted-foreground ${style.bodyClass}`}>{tagline}</p>}
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <a href="/products" className={ctaClass(style)} style={{ backgroundColor: accent, color: "#fff" }}>
+              Shop now →
+            </a>
+            {business.is_eco_friendly && <EcoBadge />}
+            <FavoriteButton businessId={business.id} />
+          </div>
+        </div>
       </section>
     );
   }
@@ -349,8 +437,163 @@ function ServicesBlock({ business, style, accent }: { business: SiteBusiness; st
 
 // ---------- Products ----------
 
-function ProductsBlock({ business, style, accent }: { business: SiteBusiness; style: TemplateStyle; accent: string }) {
-  const items = business.items.filter((i) => i.is_active);
+/** Client-side only — filters within this business's own products, never a site-wide search. */
+function ProductSearchInput({
+  value,
+  onChange,
+  accent,
+  placeholder = "Search products…",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  accent: string;
+  placeholder?: string;
+}) {
+  return (
+    <div className="relative w-full max-w-sm">
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        aria-label="Search products"
+        className="w-full rounded-full border border-border bg-card py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:ring-2"
+        style={{ boxShadow: value ? `0 0 0 2px ${accent}40` : undefined }}
+      />
+    </div>
+  );
+}
+
+/** Purely a visual affordance to match a real storefront's product cards — toggles locally per
+ * session, not persisted anywhere (there's no wishlist data model). Never claims to save. */
+function WishlistHeart({ accent }: { accent: string }) {
+  const [saved, setSaved] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        setSaved((v) => !v);
+      }}
+      aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
+      aria-pressed={saved}
+      className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm transition-transform hover:scale-105"
+    >
+      <Heart className="h-4 w-4" style={saved ? { fill: accent, color: accent } : { color: "#171717" }} aria-hidden="true" />
+    </button>
+  );
+}
+
+function CatalogueProductCard({ item, accent }: { item: SiteBusiness["items"][number]; accent: string }) {
+  return (
+    <div className="group">
+      <div className="relative overflow-hidden rounded-md bg-secondary/60">
+        {item.image_url ? (
+          <img
+            src={item.image_url}
+            alt={item.name}
+            className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <div className="aspect-square w-full" style={{ backgroundColor: `${accent}14` }} />
+        )}
+        <WishlistHeart accent={accent} />
+      </div>
+      <p className="site-heading-font mt-3 text-sm font-medium">{item.name}</p>
+      {item.price != null && <p className="mt-0.5 text-sm text-muted-foreground">₹{item.price}</p>}
+    </div>
+  );
+}
+
+/** Catalogue's Home storefront block — category pills (from the business's own product
+ * categories) plus search, replacing Gallery/About in Catalogue's home composition
+ * (see homeSectionTypesFor in website-pages.ts). Only ever used on Home for this template. */
+function CatalogueHomeProducts({ business, accent, items }: { business: SiteBusiness; accent: string; items: SiteBusiness["items"] }) {
+  const categories = Array.from(new Set(items.map((i) => i.category).filter((c): c is string => !!c)));
+  const [active, setActive] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const filtered = items
+    .filter((i) => !active || i.category === active)
+    .filter((i) => !q || i.name.toLowerCase().includes(q) || (i.description ?? "").toLowerCase().includes(q));
+
+  return (
+    <EmptyGuard empty={items.length === 0} type="products">
+      <Reveal>
+        <section className="mx-auto max-w-6xl px-6 py-16 md:py-20">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">Shop</p>
+              <h2 className="site-heading-font mt-2 text-3xl font-semibold tracking-tight">New Arrivals</h2>
+            </div>
+            <Link to="/products" className="text-sm font-medium hover:underline" style={{ color: accent }}>
+              Show more →
+            </Link>
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+            {categories.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActive(null)}
+                  className="rounded-full border px-4 py-1.5 text-sm transition-colors"
+                  style={
+                    !active
+                      ? { backgroundColor: accent, borderColor: accent, color: "#fff" }
+                      : { borderColor: "var(--color-border)" }
+                  }
+                >
+                  All
+                </button>
+                {categories.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setActive(c)}
+                    className="rounded-full border px-4 py-1.5 text-sm capitalize transition-colors"
+                    style={
+                      active === c
+                        ? { backgroundColor: accent, borderColor: accent, color: "#fff" }
+                        : { borderColor: "var(--color-border)" }
+                    }
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
+            <ProductSearchInput value={query} onChange={setQuery} accent={accent} />
+          </div>
+
+          <div className="mt-10 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-4">
+            {filtered.map((item) => (
+              <CatalogueProductCard key={item.id} item={item} accent={accent} />
+            ))}
+          </div>
+          {filtered.length === 0 && <p className="mt-10 text-sm text-muted-foreground">No products match your search.</p>}
+        </section>
+      </Reveal>
+    </EmptyGuard>
+  );
+}
+
+/** The dedicated Products page, used by every template. Adds a search box (this business's
+ * products only) for all templates; Catalogue additionally gets the storefront card style. */
+function ProductsPageBlock({
+  style,
+  accent,
+  items,
+}: {
+  style: TemplateStyle;
+  accent: string;
+  items: SiteBusiness["items"];
+}) {
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const filtered = q ? items.filter((i) => i.name.toLowerCase().includes(q) || (i.description ?? "").toLowerCase().includes(q)) : items;
+  const catalogue = style.id === "catalogue";
+
   return (
     <EmptyGuard empty={items.length === 0} type="products">
       <Reveal>
@@ -359,21 +602,45 @@ function ProductsBlock({ business, style, accent }: { business: SiteBusiness; st
             Catalogue
           </SectionEyebrow>
           <h2 className={`mt-3 text-3xl ${heading(style)}`}>Products</h2>
-          <div className="mt-10 grid grid-cols-2 gap-5 sm:grid-cols-3">
-            {items.map((item) => (
-              <div key={item.id} className={cardClass(style)}>
-                {item.image_url && <img src={item.image_url} alt={item.name} className={`aspect-square w-full object-cover ${style.cardStyle === "editorial-frame" ? "" : corners(style)} ${style.cardStyle !== "editorial-frame" ? "rounded-b-none" : ""}`} />}
-                <div className="p-4">
-                  <p className={`text-sm font-medium ${heading(style)}`}>{item.name}</p>
-                  {item.price != null && <p className="mt-1 text-sm text-muted-foreground">₹{item.price}</p>}
+          {items.length > 1 && (
+            <div className="mt-6">
+              <ProductSearchInput value={query} onChange={setQuery} accent={accent} />
+            </div>
+          )}
+          <div className={`mt-10 grid grid-cols-2 gap-5 sm:grid-cols-3 ${catalogue ? "sm:gap-x-5 sm:gap-y-8" : ""}`}>
+            {filtered.map((item) =>
+              catalogue ? (
+                <CatalogueProductCard key={item.id} item={item} accent={accent} />
+              ) : (
+                <div key={item.id} className={cardClass(style)}>
+                  {item.image_url && (
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      className={`aspect-square w-full object-cover ${style.cardStyle === "editorial-frame" ? "" : corners(style)} ${style.cardStyle !== "editorial-frame" ? "rounded-b-none" : ""}`}
+                    />
+                  )}
+                  <div className="p-4">
+                    <p className={`text-sm font-medium ${heading(style)}`}>{item.name}</p>
+                    {item.price != null && <p className="mt-1 text-sm text-muted-foreground">₹{item.price}</p>}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
+          {filtered.length === 0 && query && <p className="mt-8 text-sm text-muted-foreground">No products match "{query}".</p>}
         </section>
       </Reveal>
     </EmptyGuard>
   );
+}
+
+function ProductsBlock({ business, style, accent, page }: { business: SiteBusiness; style: TemplateStyle; accent: string; page: PageId }) {
+  const items = business.items.filter((i) => i.is_active);
+  if (style.id === "catalogue" && page === "home") {
+    return <CatalogueHomeProducts business={business} accent={accent} items={items} />;
+  }
+  return <ProductsPageBlock style={style} accent={accent} items={items} />;
 }
 
 function FeaturedProductsBlock({

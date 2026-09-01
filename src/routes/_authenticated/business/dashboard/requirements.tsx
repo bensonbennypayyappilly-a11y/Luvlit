@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { isStoragePath, useMediaUrl } from "@/components/media-uploader";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/requirements")({
@@ -85,6 +86,7 @@ function RequirementsPage() {
 
   return (
     <div>
+      <DashboardBackLink />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="eyebrow">Requirements</p>

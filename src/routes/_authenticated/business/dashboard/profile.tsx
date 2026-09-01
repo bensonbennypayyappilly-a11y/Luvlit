@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { MediaUploader } from "@/components/media-uploader";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/profile")({
   head: () => ({
@@ -55,12 +56,16 @@ function ProfilePage() {
 
   return (
     <div>
+      <DashboardBackLink />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="eyebrow">Profile & Media</p>
           <h1 className="mt-2 text-2xl font-medium">Your business page</h1>
         </div>
-        <Link to="/business/onboarding" className="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground">
+        <Link
+          to="/business/dashboard/website"
+          className="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
+        >
           Edit profile & media
         </Link>
       </div>

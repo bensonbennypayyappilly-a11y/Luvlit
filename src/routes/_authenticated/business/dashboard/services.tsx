@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { MediaUploader, useMediaUrl } from "@/components/media-uploader";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { TableRowsSkeleton } from "@/components/ui/skeleton-shapes";
 import { validateCatalogueName, validateDuration, validatePrice } from "@/lib/website-validation";
 import { FieldError } from "@/components/field-error";
@@ -220,6 +221,7 @@ function ServicesPage() {
 
   return (
     <div>
+      <DashboardBackLink />
       <p className="eyebrow">Services</p>
       <h1 className="mt-2 text-2xl font-medium">What you offer</h1>
       <p className="mt-2 text-sm text-muted-foreground">

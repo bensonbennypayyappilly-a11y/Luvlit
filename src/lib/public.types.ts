@@ -67,6 +67,8 @@ export type BusinessDetail = {
   brand_accent_color: string | null;
   brand_secondary_color: string | null;
   button_style: string | null;
+  background_color: string | null;
+  custom_domain: string | null;
   is_eco_friendly: boolean;
   view_count: number;
   operating_hours: OperatingHours;

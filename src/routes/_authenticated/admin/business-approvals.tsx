@@ -97,8 +97,8 @@ function BusinessApprovals() {
       <p className="eyebrow">Admin</p>
       <h1 className="mt-4 text-4xl">Business approvals</h1>
       <p className="mt-3 max-w-xl text-muted-foreground">
-        New businesses need approval before they can publish. Approving clears them to publish
-        their own page — it doesn't make them live by itself.
+        Businesses can publish their own page without approval. Use this page to suspend a live
+        business or reject one that shouldn't be listed.
       </p>
       {actionError && <p className="mt-4 text-sm text-destructive">{actionError}</p>}
 

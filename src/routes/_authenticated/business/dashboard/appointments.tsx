@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/appointments")({
@@ -116,6 +117,7 @@ function AppointmentsPage() {
 
   return (
     <div>
+      <DashboardBackLink />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="eyebrow">Appointments</p>

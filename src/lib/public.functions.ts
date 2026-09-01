@@ -317,6 +317,34 @@ export const getBusinessById = createServerFn({ method: "GET" })
     return resolveBusinessMedia(client, business as unknown as Record<string, unknown> | null);
   });
 
+/** A non-reserved slug shaped like `{slug}.luvlit.in`, or null if this hostname isn't a
+ * business subdomain at all (the main domain, localhost, *.vercel.app preview deployments,
+ * etc). Pure hostname parsing, no DB lookup — shared by `getSubdomainBusiness` and
+ * `isBusinessSubdomainRequest` so "is this a business subdomain" is defined in exactly one place. */
+function businessSlugFromHostname(hostname: string): string | null {
+  const parts = hostname.split(".");
+  if (parts.length !== 3 || parts[1] !== "luvlit" || parts[2] !== "in") return null;
+  const slug = parts[0];
+  if (!slug || isReservedSlug(slug)) return null;
+  return slug;
+}
+
+/**
+ * True if the current request's host is shaped like a business subdomain, regardless of
+ * whether that particular business currently resolves to a live row. Cheap (no DB call) — lets
+ * a caller tell "this isn't a business site at all" apart from "this is a business's own
+ * subdomain, but that business isn't live/found" before paying for a query, so the two cases
+ * can be handled differently (see `loadSubdomainPage`).
+ */
+export const isBusinessSubdomainRequest = createServerFn({ method: "GET" }).handler(
+  async (): Promise<boolean> => {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const request = getRequest();
+    const hostname = (request?.headers.get("host") ?? "").split(":")[0].toLowerCase();
+    return businessSlugFromHostname(hostname) !== null;
+  },
+);
+
 /**
  * Looks up a business by the request's Host header, for rendering a business's
  * public profile at the root path of its {slug}.luvlit.in subdomain. Returns null
@@ -329,10 +357,8 @@ export const getSubdomainBusiness = createServerFn({ method: "GET" }).handler(
     const { getRequest } = await import("@tanstack/react-start/server");
     const request = getRequest();
     const hostname = (request?.headers.get("host") ?? "").split(":")[0].toLowerCase();
-    const parts = hostname.split(".");
-    if (parts.length !== 3 || parts[1] !== "luvlit" || parts[2] !== "in") return null;
-    const slug = parts[0];
-    if (!slug || isReservedSlug(slug)) return null;
+    const slug = businessSlugFromHostname(hostname);
+    if (!slug) return null;
 
     const { publicClient } = await import("./supabase-public.server");
     const client = publicClient();

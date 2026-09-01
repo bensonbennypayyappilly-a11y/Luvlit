@@ -41,6 +41,8 @@ function makeBusiness(overrides: Partial<SiteBusiness> = {}): SiteBusiness {
     brand_accent_color: "#9C5B44",
     brand_secondary_color: null,
     button_style: null,
+    background_color: null,
+    custom_domain: null,
     is_eco_friendly: true,
     operating_hours: { start: "10:00", end: "19:00", days: [1, 2, 3, 4, 5] },
     sections: [],

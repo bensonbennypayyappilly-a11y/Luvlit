@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { EcoBadge } from "@/components/eco-badge";
 import { useMediaUrl } from "@/components/media-uploader";
+import { FloatingContactButton } from "@/components/website/floating-contact-button";
 import { deriveSitePages, resolveSections, type PageId } from "@/lib/website-pages";
 import type { TemplateStyle } from "@/lib/website-templates";
 import type { SiteBusiness } from "@/lib/website-site-types";
@@ -54,12 +55,17 @@ export function SiteChrome({
   accent,
   currentPage,
   children,
+  preview = false,
 }: {
   business: SiteBusiness;
   style: TemplateStyle;
   accent: string;
   currentPage: PageId;
   children: React.ReactNode;
+  /** True only inside the builder's live preview pane, whose mockup box doesn't establish a
+   * containing block for `position: fixed` — the floating button would otherwise escape it and
+   * overlay the builder's own UI instead of staying inside the preview. */
+  preview?: boolean;
 }) {
   const logoUrl = useMediaUrl(business.logo_url);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -68,11 +74,20 @@ export function SiteChrome({
   const minimal = style.navStyle === "minimal-underline";
   const primaryCta = pages.find((p) => p.id === "appointments") ?? pages.find((p) => p.id === "contact");
 
+  // Sets the template's body typeface for this whole page (everything inherits it unless it
+  // sets its own font) and exposes the heading typeface as a CSS var for `.site-heading-font`
+  // to read — see the matching comment on that utility in styles.css.
+  const rootStyle = {
+    fontFamily: style.bodyFontFamily,
+    "--site-heading-font": style.headingFontFamily,
+    ...(business.background_color ? { backgroundColor: business.background_color } : {}),
+  } as React.CSSProperties;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={rootStyle}>
       <header className={NAV_SHELL[style.navStyle]}>
         <div className={`mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 ${minimal ? "py-6" : "py-4"}`}>
-          <a href="/" className={`flex items-center gap-2.5 ${style.headingFont === "serif" ? "font-serif" : ""}`}>
+          <a href="/" className="site-heading-font flex items-center gap-2.5">
             {logoUrl && <img src={logoUrl} alt={business.name} className="h-8 w-8 rounded-sm object-contain" />}
             <span className={`text-lg ${style.headingClass} ${dark ? "text-white" : "text-foreground"}`}>{business.name}</span>
           </a>
@@ -88,6 +103,18 @@ export function SiteChrome({
           </nav>
 
           <div className="hidden items-center gap-3 lg:flex">
+            {business.custom_domain && (
+              <a
+                href={business.custom_domain}
+                target="_blank"
+                rel="noreferrer"
+                className={`text-sm font-medium transition-colors ${
+                  dark ? "text-white/80 hover:text-white" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Visit Official Site ↗
+              </a>
+            )}
             {primaryCta && primaryCta.id !== currentPage && (
               <a
                 href={primaryCta.path}
@@ -134,6 +161,19 @@ export function SiteChrome({
                 {p.label}
               </a>
             ))}
+            {business.custom_domain && (
+              <a
+                href={business.custom_domain}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setMenuOpen(false)}
+                className={`flex min-h-11 items-center rounded-md px-2 text-sm font-medium ${
+                  dark ? "text-white/70" : "text-muted-foreground"
+                }`}
+              >
+                Visit Official Site ↗
+              </a>
+            )}
           </nav>
         )}
       </header>
@@ -141,6 +181,7 @@ export function SiteChrome({
       {children}
 
       <SiteFooterChrome business={business} style={style} accent={accent} pages={pages} />
+      {!preview && <FloatingContactButton business={business} accent={accent} />}
     </div>
   );
 }
@@ -161,7 +202,7 @@ function SiteFooterChrome({
     <footer className="border-t border-border bg-secondary/30">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 sm:grid-cols-3">
         <div>
-          <p className={`text-lg ${style.headingClass}`}>{business.name}</p>
+          <p className={`site-heading-font text-lg ${style.headingClass}`}>{business.name}</p>
           {business.is_eco_friendly && (
             <div className="mt-2">
               <EcoBadge />

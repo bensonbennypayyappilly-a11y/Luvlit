@@ -1,10 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MediaUploader } from "@/components/media-uploader";
+import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { ACCENT_COLORS, BUSINESS_TYPES, CITIES, ECO_CATEGORIES } from "@/lib/constants";
 import { slugify } from "@/lib/slugify";
 import { isReservedSlug } from "@/lib/reserved-slugs";
@@ -27,6 +28,15 @@ export const Route = createFileRoute("/_authenticated/business/onboarding")({
 
 function Onboarding() {
   const navigate = useNavigate();
+  // An owner who already has a business must never be able to insert a second one here —
+  // redirect straight to the website builder instead of letting the wizard run again.
+  const { data: existingBusiness, isLoading: checkingExisting } = useDashboardBusiness();
+  useEffect(() => {
+    if (existingBusiness) {
+      navigate({ to: "/business/dashboard/website", replace: true });
+    }
+  }, [existingBusiness, navigate]);
+
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () =>
@@ -53,6 +63,7 @@ function Onboarding() {
     whatsapp: "",
     contact_email: "",
     instagram_url: "",
+    custom_domain: "",
     hero_image_url: null as string | null,
     main_video_url: null as string | null,
     shorts: [] as (string | null)[],
@@ -86,7 +97,6 @@ function Onboarding() {
         business_types: form.business_types,
         is_eco_friendly: showEco ? form.is_eco_friendly : false,
         brand_accent_color: form.accent,
-        is_live: false,
       })
       .select("id")
       .single();
@@ -150,11 +160,11 @@ function Onboarding() {
         whatsapp: form.whatsapp,
         contact_email: form.contact_email,
         instagram_url: form.instagram_url,
+        custom_domain: form.custom_domain || null,
         hero_image_url: form.hero_image_url,
         main_video_url: form.main_video_url,
         short_video_urls: form.shorts.filter((s): s is string => !!s).slice(0, 3),
         brand_accent_color: form.accent,
-        is_live: true,
       })
       .eq("id", id);
     if (businessError) {
@@ -201,6 +211,20 @@ function Onboarding() {
 
     setSaving(false);
     navigate({ to: form.business_types.includes("appointment") ? "/business/setup-staff" : "/dashboard" });
+  }
+
+  if (checkingExisting || existingBusiness) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <SiteHeader />
+        <main className="mx-auto flex w-full max-w-lg flex-1 items-center justify-center px-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            {existingBusiness ? "Redirecting to your website builder…" : "Loading…"}
+          </p>
+        </main>
+        <SiteFooter />
+      </div>
+    );
   }
 
   const steps = [
@@ -350,6 +374,7 @@ function Onboarding() {
               ["whatsapp", "WhatsApp number"],
               ["contact_email", "Email"],
               ["instagram_url", "Instagram link"],
+              ["custom_domain", "Official website link (optional)"],
             ] as const
           ).map(([key, label]) => (
             <input
@@ -432,6 +457,12 @@ function Onboarding() {
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-20">
+        <Link
+          to="/business/dashboard"
+          className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          ← Save & exit
+        </Link>
         <p className="eyebrow">
           Setup · step {step + 1} of {steps.length}
         </p>
@@ -452,7 +483,7 @@ function Onboarding() {
             disabled={saving}
             className="rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
           >
-            {saving ? "Saving…" : step === steps.length - 1 ? "Publish my page" : "Continue"}
+            {saving ? "Saving…" : step === steps.length - 1 ? "Finish setup" : "Continue"}
           </button>
         </div>
       </main>

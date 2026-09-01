@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { MediaUploader, useMediaUrl } from "@/components/media-uploader";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { TableRowsSkeleton } from "@/components/ui/skeleton-shapes";
 import { validateCatalogueName, validatePrice } from "@/lib/website-validation";
 import { FieldError } from "@/components/field-error";
@@ -223,6 +224,7 @@ function ProductsPage() {
 
   return (
     <div>
+      <DashboardBackLink />
       <p className="eyebrow">Products</p>
       <h1 className="mt-2 text-2xl font-medium">Catalogue</h1>
 

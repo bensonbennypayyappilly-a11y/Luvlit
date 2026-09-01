@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { NotificationsList } from "@/components/notifications-list";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/notifications")({
   head: () => ({
@@ -19,6 +20,7 @@ function NotificationsPage() {
 
   return (
     <div>
+      <DashboardBackLink />
       <p className="eyebrow">Notifications</p>
       <h1 className="mt-2 text-2xl font-medium">Activity</h1>
       <div className="surface-card mt-6 p-2">

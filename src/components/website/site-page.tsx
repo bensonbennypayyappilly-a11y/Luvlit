@@ -21,8 +21,9 @@ const PAGE_HEADERS: Record<Exclude<PageId, "home">, { eyebrow: string; title: st
  * the website builder's live preview pane both go through here, so what an owner previews is
  * literally the same components the public gets, and the two can't drift apart.
  *
- * `preview` only changes what an owner sees while editing (placeholders for empty sections) —
- * never what the published site renders.
+ * `preview` only changes what an owner sees while editing — placeholders for empty sections, and
+ * suppressing the floating contact button (its `position: fixed` would otherwise escape the
+ * builder's small preview mockup) — never what the published site itself renders.
  */
 export function BusinessSitePage({
   business,
@@ -37,14 +38,14 @@ export function BusinessSitePage({
   // appended in section-renderer.tsx (e.g. `${accent}33`) for overlay gradients — var() can't.
   const accent = business.brand_accent_color || "#4F46E5";
   const style = templateStyle(business.template);
-  const sections = sectionsForPage(resolveSections(business), page);
+  const sections = sectionsForPage(resolveSections(business), page, style.id);
   const header = page === "home" ? null : PAGE_HEADERS[page];
 
   const body = (
-    <SiteChrome business={business} style={style} accent={accent} currentPage={page}>
+    <SiteChrome business={business} style={style} accent={accent} currentPage={page} preview={preview}>
       {header && <PageHeader eyebrow={header.eyebrow} title={header.title} style={style} accent={accent} />}
       <main>
-        <SectionRenderer business={business} sections={sections} style={style} accent={accent} />
+        <SectionRenderer business={business} sections={sections} style={style} accent={accent} page={page} />
       </main>
     </SiteChrome>
   );

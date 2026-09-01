@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { CITIES } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/featured")({
@@ -105,6 +106,7 @@ function FeaturedPage() {
 
   return (
     <div>
+      <DashboardBackLink />
       <p className="eyebrow">Featured Placement</p>
       <h1 className="mt-2 text-2xl font-medium">Get featured</h1>
 

@@ -10,6 +10,7 @@ import { LiveResultsPanel } from "@/components/live-results-panel";
 import { EventsSection } from "@/components/events-section";
 import { IndiaDiscoveryMap } from "@/components/india-discovery-map";
 import { CategoryCard } from "@/components/category-card";
+import { Store, MapPin, LayoutGrid, IndianRupee } from "lucide-react";
 import {
   getCategories,
   getBusinesses,
@@ -134,10 +135,10 @@ function HomePage({
   const place = city || "India";
 
   const stats = [
-    { value: `${featured.length || 0}+`, label: "Businesses listed" },
-    { value: `${cities.length || 0}`, label: "Cities live" },
-    { value: `${categories.length || 0}`, label: "Categories" },
-    { value: "₹0", label: "To list until 30 Nov" },
+    { value: `${featured.length || 0}+`, label: "Businesses listed", icon: Store },
+    { value: `${cities.length || 0}`, label: "Cities live", icon: MapPin },
+    { value: `${categories.length || 0}`, label: "Categories", icon: LayoutGrid },
+    { value: "₹0", label: "To list until 30 Nov", icon: IndianRupee },
   ];
 
   return (
@@ -178,7 +179,7 @@ function HomePage({
                   providers near you.
                 </p>
 
-                <div className="rise-in mt-6 max-w-2xl" style={{ animationDelay: "340ms" }}>
+                <div className="rise-in mt-7 w-full" style={{ animationDelay: "340ms" }}>
                   <SearchPill
                     categories={categories}
                     city={city}
@@ -228,11 +229,18 @@ function HomePage({
 
         {/* Stats — compact supporting strip, not a headline section */}
         <section className="border-y border-border bg-secondary/30">
-          <div className="mx-auto grid max-w-7xl grid-cols-3 gap-4 px-6 py-5 sm:flex sm:flex-wrap sm:items-center sm:gap-x-10">
+          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-y-5 px-6 py-5 sm:flex sm:flex-wrap sm:items-center sm:gap-x-12 sm:gap-y-0">
             {stats.map((s) => (
-              <div key={s.label}>
-                <span className="font-display text-xl text-foreground md:text-2xl">{s.value}</span>
-                <span className="ml-1.5 text-xs text-muted-foreground">{s.label}</span>
+              <div key={s.label} className="flex items-center gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+                  <s.icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="flex flex-col leading-tight">
+                  <span className="font-display text-xl text-foreground md:text-2xl">
+                    {s.value}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{s.label}</span>
+                </span>
               </div>
             ))}
           </div>

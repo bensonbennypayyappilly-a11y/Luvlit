@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { WEEKDAYS } from "@/lib/constants";
 import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
 import { localDateString } from "@/lib/utils";
@@ -359,6 +360,7 @@ function StaffPage() {
 
   return (
     <div>
+      <DashboardBackLink />
       <p className="eyebrow">Staff</p>
       <h1 className="mt-2 text-2xl font-medium">Team & availability</h1>
       <p className="mt-2 text-sm text-muted-foreground">

@@ -68,9 +68,6 @@ export function SectionListEditor({
         const meta = SECTION_LIBRARY[section.type];
         const deletable = !NON_DELETABLE.includes(section.type);
         const isExpanded = expanded === section.id;
-        const hasEditor = ["hero", "about", "quote", "faq", "promo-banner", "custom-text", "featured-products"].includes(
-          section.type,
-        );
 
         return (
           <div key={section.id} className="rounded-md border border-border bg-card">
@@ -99,15 +96,13 @@ export function SectionListEditor({
                 <p className="truncate text-sm font-medium">{meta.label}</p>
                 {!section.visible && <p className="text-xs text-muted-foreground">Hidden</p>}
               </div>
-              {hasEditor && (
-                <button
-                  type="button"
-                  onClick={() => setExpanded(isExpanded ? null : section.id)}
-                  className="inline-flex min-h-11 shrink-0 items-center rounded-md border border-border px-3 text-xs hover:border-accent"
-                >
-                  {isExpanded ? "Done" : "Edit"}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setExpanded(isExpanded ? null : section.id)}
+                className="inline-flex min-h-11 shrink-0 items-center rounded-md border border-border px-3 text-xs hover:border-accent"
+              >
+                {isExpanded ? "Done" : "Edit"}
+              </button>
               <button
                 type="button"
                 onClick={() => update(section.id, { visible: !section.visible })}
@@ -199,6 +194,81 @@ function SectionContentEditor({
   }
 
   const editingSection = { ...section, content: local };
+  const backgroundColor = typeof local.backgroundColor === "string" ? local.backgroundColor : "";
+  const textColor = typeof local.textColor === "string" ? local.textColor : "";
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">Background</p>
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              type="color"
+              value={backgroundColor || "#ffffff"}
+              onChange={(e) => set({ ...local, backgroundColor: e.target.value })}
+              aria-label="Section background colour"
+              className="h-9 w-12 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
+            />
+            {backgroundColor && (
+              <button
+                type="button"
+                onClick={() => {
+                  const { backgroundColor: _drop, ...rest } = local;
+                  set(rest);
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </div>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">Text colour</p>
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              type="color"
+              value={textColor || "#000000"}
+              onChange={(e) => set({ ...local, textColor: e.target.value })}
+              aria-label="Section text colour"
+              className="h-9 w-12 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
+            />
+            {textColor && (
+              <button
+                type="button"
+                onClick={() => {
+                  const { textColor: _drop, ...rest } = local;
+                  set(rest);
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground/80">
+        Applies to this section's headings and body text. Muted/secondary text keeps its own subtler shade.
+      </p>
+      <SectionTypeEditor editingSection={editingSection} items={items} input={input} set={set} />
+    </>
+  );
+}
+
+function SectionTypeEditor({
+  editingSection,
+  items,
+  input,
+  set,
+}: {
+  editingSection: Section;
+  items: ItemOption[];
+  input: string;
+  set: (content: Record<string, unknown>) => void;
+}) {
+  const local = editingSection.content;
 
   switch (editingSection.type) {
     case "hero": {
@@ -206,7 +276,7 @@ function SectionContentEditor({
       return (
         <input
           value={c.tagline ?? ""}
-          onChange={(e) => set({ tagline: e.target.value })}
+          onChange={(e) => set({ ...local, tagline: e.target.value })}
           placeholder="Short tagline under your name (optional)"
           className={input}
         />
@@ -217,7 +287,7 @@ function SectionContentEditor({
       return (
         <input
           value={(editingSection.content.heading as string) ?? ""}
-          onChange={(e) => set({ heading: e.target.value })}
+          onChange={(e) => set({ ...local, heading: e.target.value })}
           placeholder="Heading (defaults to 'About [your business]')"
           className={input}
         />
@@ -255,7 +325,7 @@ function SectionContentEditor({
                 onChange={(e) => {
                   const next = [...list];
                   next[i] = { ...next[i], q: e.target.value };
-                  set({ items: next });
+                  set({ ...local, items: next });
                 }}
                 placeholder="Question"
                 className={input}
@@ -266,14 +336,14 @@ function SectionContentEditor({
                 onChange={(e) => {
                   const next = [...list];
                   next[i] = { ...next[i], a: e.target.value };
-                  set({ items: next });
+                  set({ ...local, items: next });
                 }}
                 placeholder="Answer"
                 className={input}
               />
               <button
                 type="button"
-                onClick={() => set({ items: list.filter((_, idx) => idx !== i) })}
+                onClick={() => set({ ...local, items: list.filter((_, idx) => idx !== i) })}
                 className="text-xs text-muted-foreground hover:text-destructive"
               >
                 Remove
@@ -282,7 +352,7 @@ function SectionContentEditor({
           ))}
           <button
             type="button"
-            onClick={() => set({ items: [...list, { q: "", a: "" }] })}
+            onClick={() => set({ ...local, items: [...list, { q: "", a: "" }] })}
             className="text-xs text-accent hover:underline"
           >
             + Add a question
@@ -330,7 +400,7 @@ function SectionContentEditor({
                   const next = new Set(ids);
                   if (active) next.delete(it.id);
                   else next.add(it.id);
-                  set({ itemIds: Array.from(next) });
+                  set({ ...local, itemIds: Array.from(next) });
                 }}
                 className={`inline-flex min-h-11 items-center rounded-full border px-3 text-xs ${active ? "border-accent bg-accent-soft" : "border-border"}`}
               >

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
@@ -87,13 +87,19 @@ function SetupStaff() {
       }
     }
     setBusy(false);
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/business/dashboard" });
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-20">
+        <Link
+          to="/business/dashboard"
+          className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          ← Skip for now
+        </Link>
         <p className="eyebrow">Appointments</p>
         <h1 className="mt-4 text-4xl">Add your team</h1>
         <p className="mt-4 text-muted-foreground">

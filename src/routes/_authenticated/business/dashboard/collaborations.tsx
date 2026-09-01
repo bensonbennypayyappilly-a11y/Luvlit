@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { acceptCollaborationRequest } from "@/lib/collaboration";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/collaborations")({
   head: () => ({
@@ -137,6 +138,7 @@ function CollaborationsPage() {
 
   return (
     <div>
+      <DashboardBackLink />
       <p className="eyebrow">Influencer outreach</p>
       <h1 className="mt-2 text-2xl font-medium">Collaborations</h1>
       <p className="mt-1 text-sm text-muted-foreground">

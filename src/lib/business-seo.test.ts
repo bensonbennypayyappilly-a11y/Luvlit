@@ -37,6 +37,8 @@ function makeBusiness(overrides: Partial<Business> = {}): Business {
     brand_accent_color: null,
     brand_secondary_color: null,
     button_style: null,
+    background_color: null,
+    custom_domain: null,
     is_eco_friendly: false,
     view_count: 0,
     operating_hours: null,

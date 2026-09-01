@@ -1,5 +1,6 @@
 import { buildDefaultSections, type Section } from "./website-sections";
 import type { SiteBusiness } from "./website-site-types";
+import type { TemplateId } from "./website-templates";
 
 export type PageId = "home" | "about" | "products" | "services" | "gallery" | "appointments" | "contact";
 
@@ -48,7 +49,10 @@ export function deriveSitePages({ sections, business_types, items, services }: P
 
 /** Which section types belong on the Home page — a curated preview, not the full site. Every
  * other page (About, Products, Services, Gallery, Contact) shows that topic's sections in full;
- * Home exists to give a fast overview and funnel into them. */
+ * Home exists to give a fast overview and funnel into them. Template-dependent: Catalogue's
+ * home is a storefront (product browsing up front, no inline About/Gallery — those still get
+ * their own pages via deriveSitePages, just not shown inline on Home); every other template
+ * keeps the original curated-preview composition. */
 export const HOME_SECTION_TYPES: Section["type"][] = [
   "hero",
   "about",
@@ -59,6 +63,20 @@ export const HOME_SECTION_TYPES: Section["type"][] = [
   "promo-banner",
   "quote",
 ];
+
+const CATALOGUE_HOME_SECTION_TYPES: Section["type"][] = [
+  "hero",
+  "products",
+  "featured-products",
+  "services",
+  "reviews",
+  "promo-banner",
+  "quote",
+];
+
+function homeSectionTypesFor(templateId: TemplateId): Section["type"][] {
+  return templateId === "catalogue" ? CATALOGUE_HOME_SECTION_TYPES : HOME_SECTION_TYPES;
+}
 
 export const ABOUT_SECTION_TYPES: Section["type"][] = ["about", "team", "faq"];
 export const PRODUCTS_SECTION_TYPES: Section["type"][] = ["products"];
@@ -77,8 +95,8 @@ const PAGE_SECTION_TYPES: Record<Exclude<PageId, "home">, Section["type"][]> = {
 };
 
 /** Visible sections belonging to one page, in the business's own order. */
-export function sectionsForPage(sections: Section[], pageId: PageId): Section[] {
-  const types = pageId === "home" ? HOME_SECTION_TYPES : PAGE_SECTION_TYPES[pageId];
+export function sectionsForPage(sections: Section[], pageId: PageId, templateId: TemplateId): Section[] {
+  const types = pageId === "home" ? homeSectionTypesFor(templateId) : PAGE_SECTION_TYPES[pageId];
   return sections.filter((s) => s.visible && types.includes(s.type));
 }
 

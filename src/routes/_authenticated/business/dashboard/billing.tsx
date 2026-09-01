@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { PLANS, FREE_UNTIL_DATE } from "@/lib/constants";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -40,6 +41,7 @@ function BillingPage() {
 
   return (
     <div>
+      <DashboardBackLink />
       <p className="eyebrow">Billing</p>
       <h1 className="mt-2 text-2xl font-medium">Plan & billing</h1>
 
