@@ -35,6 +35,7 @@ function makeBusiness(overrides: Partial<SiteBusiness> = {}): SiteBusiness {
     contact_email: "hello@priyascakes.in",
     hero_image_url: "https://example.test/hero.jpg",
     about_image_url: null,
+    about_text: "Small-batch celebration cakes, baked to order in Jaipur.",
     logo_url: "https://example.test/logo.png",
     gallery_urls: ["https://example.test/g1.jpg", "https://example.test/g2.jpg", "https://example.test/g3.jpg"],
     main_video_url: "https://youtu.be/abc123",

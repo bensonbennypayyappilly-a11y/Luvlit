@@ -177,7 +177,7 @@ export function PreviewMode({ children }: { children: React.ReactNode }) {
 
 /** What the owner should do to fill each section, shown only in the builder preview. */
 const EMPTY_HINTS: Partial<Record<SectionType, { title: string; body: string }>> = {
-  about: { title: "About", body: "Add a description in “About Your Business” to fill this section." },
+  about: { title: "About", body: "Add your story in “About Your Business” to fill this section." },
   services: { title: "Services", body: "Add your first service in the Services page — price, duration and a photo." },
   products: { title: "Products", body: "Add your first product in the Products page." },
   "featured-products": { title: "Featured", body: "Pick which products to spotlight in this section's Edit panel." },
@@ -385,7 +385,11 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
 
 function AboutBlock({ business, style, accent, content }: { business: SiteBusiness; style: TemplateStyle; accent: string; content: AboutContent }) {
   const aboutImageUrl = useMediaUrl(business.about_image_url);
-  const empty = !business.description && !aboutImageUrl;
+  // Deliberately business.about_text, not business.description — description is the short hero
+  // tagline/SEO blurb (editable in the Hero panel); about_text is this section's own longer
+  // narrative, so editing one never overwrites what the other shows.
+  const aboutText = business.about_text;
+  const empty = !aboutText && !aboutImageUrl;
 
   // Same component renders Home's about section and the dedicated /about page (see the shared
   // renderer note at the top of this file), so the left-photo/right-text layout applies to both
@@ -406,7 +410,9 @@ function AboutBlock({ business, style, accent, content }: { business: SiteBusine
                   About us
                 </SectionEyebrow>
                 <h2 className={`mt-3 text-3xl ${heading(style)}`}>{content.heading || `About ${business.name}`}</h2>
-                {business.description && <p className={`mt-6 text-lg text-muted-foreground ${style.bodyClass}`}>{business.description}</p>}
+                {/* whitespace-pre-line: collapses runs of spaces/tabs like normal HTML text, but
+                    still breaks on every newline the owner typed — a plain <p> would swallow those. */}
+                {aboutText && <p className={`mt-6 whitespace-pre-line text-lg text-muted-foreground ${style.bodyClass}`}>{aboutText}</p>}
               </div>
             </div>
           </section>
@@ -426,7 +432,7 @@ function AboutBlock({ business, style, accent, content }: { business: SiteBusine
               </SectionEyebrow>
               <h2 className={`mt-3 text-3xl ${heading(style)}`}>{content.heading || `About ${business.name}`}</h2>
             </div>
-            {business.description && <p className={`mt-6 max-w-2xl text-lg text-muted-foreground md:mt-0 ${style.bodyClass}`}>{business.description}</p>}
+            {aboutText && <p className={`mt-6 max-w-2xl whitespace-pre-line text-lg text-muted-foreground md:mt-0 ${style.bodyClass}`}>{aboutText}</p>}
           </div>
         </section>
       </Reveal>

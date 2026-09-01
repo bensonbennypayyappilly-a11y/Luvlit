@@ -200,6 +200,7 @@ export function toProfileBusiness(business: NonNullable<BusinessDetail>) {
     contact_email: business.contact_email,
     hero_image_url: business.hero_image_url,
     about_image_url: business.about_image_url,
+    about_text: business.about_text,
     logo_url: business.logo_url,
     gallery_urls: business.gallery_urls ?? [],
     main_video_url: business.main_video_url,

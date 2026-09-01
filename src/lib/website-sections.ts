@@ -65,7 +65,7 @@ export const CORE_SECTION_TYPES: SectionType[] = [
 /** Library metadata for the editor's "add a section" picker — not used by the renderer. */
 export const SECTION_LIBRARY: Record<SectionType, { label: string; description: string; core: boolean }> = {
   hero: { label: "Hero", description: "Your name, a photo or video, and a short tagline at the top of the page.", core: true },
-  about: { label: "About", description: "Your photo and business description.", core: true },
+  about: { label: "About", description: "Your photo and your story.", core: true },
   services: { label: "Services", description: "What you offer — managed in Services.", core: true },
   products: { label: "Products", description: "Your catalogue — managed in Products.", core: true },
   gallery: { label: "Gallery", description: "Photos of your work — managed in Gallery.", core: true },

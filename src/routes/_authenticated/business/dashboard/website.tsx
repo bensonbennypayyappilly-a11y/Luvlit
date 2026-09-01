@@ -49,6 +49,7 @@ type Draft = {
   is_eco_friendly: boolean;
   hero_image_url: string | null;
   about_image_url: string | null;
+  about_text: string | null;
   logo_url: string | null;
   main_video_url: string | null;
   gallery_urls: string[];
@@ -168,6 +169,7 @@ function WebsiteBuilder() {
         is_eco_friendly: b.is_eco_friendly,
         hero_image_url: b.hero_image_url,
         about_image_url: b.about_image_url,
+        about_text: b.about_text,
         logo_url: b.logo_url,
         main_video_url: b.main_video_url,
         gallery_urls: b.gallery_urls ?? [],
@@ -288,6 +290,7 @@ function WebsiteBuilder() {
     contact_email: draft.contact_email,
     hero_image_url: draft.hero_image_url,
     about_image_url: draft.about_image_url,
+    about_text: draft.about_text,
     logo_url: draft.logo_url,
     gallery_urls: draft.gallery_urls,
     main_video_url: draft.main_video_url,
@@ -394,11 +397,18 @@ function WebsiteBuilder() {
             <SectionListEditor sections={draftSections} onChange={onSectionsChange} items={(data?.items ?? []).map((i) => ({ id: i.id, name: i.name }))} />
           </BuilderSection>
 
-          <BuilderSection title="Hero" subtitle="One photo or video for the top of your page — a video autoplays on loop.">
+          <BuilderSection title="Hero" subtitle="One photo or video, and a short tagline for the top of your page — a video autoplays on loop.">
             <HeroMediaUploader
               businessId={businessId}
               value={{ image: draft.hero_image_url, video: draft.main_video_url }}
               onChange={({ image, video }) => onImmediateChange({ hero_image_url: image, main_video_url: video })}
+            />
+            <textarea
+              rows={3}
+              value={draft.description ?? ""}
+              onChange={(e) => onTextChange("description", e.target.value)}
+              placeholder="A short tagline — a couple of sentences shown under your name."
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
             />
           </BuilderSection>
 
@@ -431,7 +441,7 @@ function WebsiteBuilder() {
             />
           </BuilderSection>
 
-          <BuilderSection title="About Your Business" subtitle="Name, description, photo, categories and business type.">
+          <BuilderSection title="About Your Business" subtitle="Name, your story, photo, categories and business type.">
             <input
               value={draft.name}
               onChange={(e) => onTextChange("name", e.target.value, validateBusinessName(e.target.value))}
@@ -446,10 +456,10 @@ function WebsiteBuilder() {
               <FieldError message={fieldErrors.name} />
             </span>
             <textarea
-              rows={3}
-              value={draft.description ?? ""}
-              onChange={(e) => onTextChange("description", e.target.value)}
-              placeholder="Describe what you do"
+              rows={6}
+              value={draft.about_text ?? ""}
+              onChange={(e) => onTextChange("about_text", e.target.value)}
+              placeholder="Tell your story — this shows in the About section, separate from your hero tagline."
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
             />
             <MediaUploader

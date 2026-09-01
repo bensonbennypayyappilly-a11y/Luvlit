@@ -96,6 +96,7 @@ export type Database = {
       businesses: {
         Row: {
           about_image_url: string | null
+          about_text: string | null
           background_color: string | null
           brand_accent_color: string | null
           brand_secondary_color: string | null
@@ -132,6 +133,7 @@ export type Database = {
         }
         Insert: {
           about_image_url?: string | null
+          about_text?: string | null
           background_color?: string | null
           brand_accent_color?: string | null
           brand_secondary_color?: string | null
@@ -168,6 +170,7 @@ export type Database = {
         }
         Update: {
           about_image_url?: string | null
+          about_text?: string | null
           background_color?: string | null
           brand_accent_color?: string | null
           brand_secondary_color?: string | null

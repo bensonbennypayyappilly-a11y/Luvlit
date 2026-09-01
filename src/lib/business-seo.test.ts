@@ -31,6 +31,7 @@ function makeBusiness(overrides: Partial<Business> = {}): Business {
     contact_email: null,
     hero_image_url: null,
     about_image_url: null,
+    about_text: null,
     logo_url: null,
     gallery_urls: [],
     main_video_url: null,
