@@ -16,6 +16,7 @@ import {
   getBusinesses,
   getCities,
   getSubdomainBusiness,
+  isBusinessSubdomainRequest,
 } from "@/lib/public.functions";
 import { buildBusinessHead, toProfileBusiness } from "@/lib/business-seo";
 import { BusinessProfilePreview } from "@/components/business-profile-preview";
@@ -29,6 +30,9 @@ export const Route = createFileRoute("/")({
         loaderData.business,
         `https://${loaderData.business.slug}.luvlit.in/`,
       );
+    }
+    if (loaderData?.type === "unavailable") {
+      return { meta: [{ title: "This page isn't available yet — LuvLit" }] };
     }
     return {
       meta: [
@@ -55,6 +59,13 @@ export const Route = createFileRoute("/")({
     const subdomainBusiness = await getSubdomainBusiness();
     if (subdomainBusiness) {
       return { type: "business" as const, business: subdomainBusiness };
+    }
+    // This host IS a business subdomain (e.g. {slug}.luvlit.in), but no live business resolved
+    // for it — still building, unpublished, or suspended. Never fall through to LuvLit's own
+    // marketplace homepage here: that would put LuvLit's content on the business's own address,
+    // exactly the mix-up loadSubdomainPage already prevents on every other page.
+    if (await isBusinessSubdomainRequest()) {
+      return { type: "unavailable" as const };
     }
     return {
       type: "home" as const,
@@ -106,6 +117,7 @@ const OWNER_PERKS = [
 function Index() {
   const data = Route.useLoaderData() as
     | { type: "business"; business: NonNullable<import("@/lib/public.types").BusinessDetail> }
+    | { type: "unavailable" }
     | {
         type: "home";
         categories: CategoryRow[];
@@ -116,7 +128,25 @@ function Index() {
   if (data.type === "business") {
     return <BusinessProfilePreview business={toProfileBusiness(data.business)} />;
   }
+  if (data.type === "unavailable") {
+    return <SiteUnavailable />;
+  }
   return <HomePage categories={data.categories} featured={data.featured} cities={data.cities} />;
+}
+
+/** Shown on a business's own subdomain when that business hasn't gone live yet (still being
+ * built, or suspended) — deliberately not LuvLit's marketplace homepage, and not full site
+ * chrome either, since this address belongs to the business, not to LuvLit. */
+function SiteUnavailable() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background px-6 text-center">
+      <p className="eyebrow">LuvLit</p>
+      <h1 className="text-2xl">This page isn't available yet</h1>
+      <p className="max-w-sm text-sm text-muted-foreground">
+        The business at this address hasn't published their page yet. Check back soon.
+      </p>
+    </div>
+  );
 }
 
 function HomePage({
