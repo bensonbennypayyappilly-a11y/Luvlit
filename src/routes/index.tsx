@@ -135,12 +135,12 @@ function Index() {
 }
 
 /** Shown on a business's own subdomain when that business hasn't gone live yet (still being
- * built, or suspended) — deliberately not LuvLit's marketplace homepage, and not full site
- * chrome either, since this address belongs to the business, not to LuvLit. */
+ * built, or suspended) — deliberately not LuvLit's marketplace homepage, and not any LuvLit
+ * branding either, since this address belongs to the business, not to LuvLit. Plain and neutral
+ * on purpose, so it can never be mistaken for "LuvLit's own page" at a glance. */
 function SiteUnavailable() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background px-6 text-center">
-      <p className="eyebrow">LuvLit</p>
       <h1 className="text-2xl">This page isn't available yet</h1>
       <p className="max-w-sm text-sm text-muted-foreground">
         The business at this address hasn't published their page yet. Check back soon.
