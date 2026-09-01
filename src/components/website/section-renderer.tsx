@@ -238,7 +238,7 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
         <div className="mx-auto max-w-2xl">
           {logoUrl && <img src={logoUrl} alt={business.name} className="mx-auto mb-8 h-20 w-20 rounded-full border object-cover" />}
           <h1 className={`text-4xl md:text-6xl ${heading(style)}`}>{business.name}</h1>
-          {tagline && <p className="mt-6 text-lg text-muted-foreground">{tagline}</p>}
+          {tagline && <p className="mt-6 whitespace-pre-line text-lg text-muted-foreground">{tagline}</p>}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
             {business.categories.map((c) => (
               <span key={c} className="rounded-full border border-border px-3 py-1 text-[0.6875rem] uppercase tracking-[0.12em] text-muted-foreground">
@@ -278,7 +278,7 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
               </span>
             ))}
           </h1>
-          {tagline && <p className={`mt-6 max-w-sm text-base text-white/90 ${style.bodyClass}`}>{tagline}</p>}
+          {tagline && <p className={`mt-6 max-w-sm whitespace-pre-line text-base text-white/90 ${style.bodyClass}`}>{tagline}</p>}
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <a href="/products" className={ctaClass(style)} style={{ backgroundColor: "#fff", color: "#171717" }}>
               Shop now →
@@ -298,7 +298,7 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
               </span>
             ))}
           </h1>
-          {tagline && <p className={`mt-6 max-w-sm text-muted-foreground ${style.bodyClass}`}>{tagline}</p>}
+          {tagline && <p className={`mt-6 max-w-sm whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{tagline}</p>}
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <a href="/products" className={ctaClass(style)} style={{ backgroundColor: accent, color: "#fff" }}>
               Shop now →
@@ -320,7 +320,7 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
               {business.categories[0] ?? "Welcome"}
             </SectionEyebrow>
             <h1 className={`mt-3 text-4xl md:text-5xl ${heading(style)}`}>{business.name}</h1>
-            {tagline && <p className={`mt-5 max-w-md text-muted-foreground ${style.bodyClass}`}>{tagline}</p>}
+            {tagline && <p className={`mt-5 max-w-md whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{tagline}</p>}
             <div className="mt-8 flex flex-wrap gap-3">
               <a href="/contact" className={ctaClass(style)} style={{ backgroundColor: accent, color: "#fff" }}>
                 {style.hero === "image-right" ? "Shop now" : "Get in touch"}
@@ -356,7 +356,7 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
           {business.is_eco_friendly && <EcoBadge />}
           <FavoriteButton businessId={business.id} />
         </div>
-        {tagline && <p className={`mt-8 max-w-2xl text-lg text-white/90 ${style.bodyClass}`}>{tagline}</p>}
+        {tagline && <p className={`mt-8 max-w-2xl whitespace-pre-line text-lg text-white/90 ${style.bodyClass}`}>{tagline}</p>}
       </div>
     </section>
   ) : (
@@ -375,7 +375,7 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
           {business.is_eco_friendly && <EcoBadge />}
           <FavoriteButton businessId={business.id} />
         </div>
-        {tagline && <p className={`mt-8 max-w-2xl text-lg text-muted-foreground ${style.bodyClass}`}>{tagline}</p>}
+        {tagline && <p className={`mt-8 max-w-2xl whitespace-pre-line text-lg text-muted-foreground ${style.bodyClass}`}>{tagline}</p>}
       </div>
     </section>
   );
