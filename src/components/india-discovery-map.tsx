@@ -90,12 +90,12 @@ type MapSlot = { region: string; top: number; left: number; size: CardSize };
  * re-verify at BOTH widths with the same method — do not eyeball new values.
  */
 const MAP_SLOTS: MapSlot[] = [
-  { region: "North", top: 10, left: 28.5, size: "xs" },
-  { region: "North-West", top: 34, left: 27.5, size: "sm" },
+  { region: "North", top: 10, left: 28.5, size: "sm" },
+  { region: "North-West", top: 34, left: 27.5, size: "md" },
   { region: "West", top: 42, left: 20.5, size: "sm" },
-  { region: "Central", top: 42.5, left: 30.5, size: "lg" },
+  { region: "Central", top: 42.5, left: 30.5, size: "md" },
   { region: "East", top: 45.5, left: 50, size: "md" },
-  { region: "North-East", top: 33.5, left: 88, size: "xs" },
+  { region: "North-East", top: 33.5, left: 88, size: "md" },
   { region: "South-West", top: 55, left: 28.5, size: "md" },
   { region: "South", top: 68, left: 28.5, size: "sm" },
   { region: "South-East", top: 46, left: 36, size: "md" },
@@ -249,13 +249,16 @@ export function IndiaDiscoveryMap({ className = "" }: { className?: string }) {
         className="absolute inset-0 h-full w-full"
         aria-hidden="true"
       >
+        {/* Solid white silhouette with a forest-green outline: the hero now sits over a
+            photographic collage, and a 5%-opacity fill let that texture read straight through
+            the country. Opaque white knocks the shape out of the collage so India stays the
+            dominant element. Literal hex rather than a token — this exact green is specific to
+            the map and matches no existing palette value. */}
         <path
           d={INDIA_OUTLINE_PATH}
-          fill="var(--color-accent)"
-          fillOpacity={0.05}
-          stroke="var(--color-accent)"
+          fill="#FFFFFF"
+          stroke="#075C45"
           strokeWidth={2}
-          strokeOpacity={0.35}
           strokeLinejoin="round"
         />
       </svg>
