@@ -95,6 +95,7 @@ export type Database = {
       }
       businesses: {
         Row: {
+          about_image_url: string | null
           background_color: string | null
           brand_accent_color: string | null
           brand_secondary_color: string | null
@@ -130,6 +131,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          about_image_url?: string | null
           background_color?: string | null
           brand_accent_color?: string | null
           brand_secondary_color?: string | null
@@ -165,6 +167,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          about_image_url?: string | null
           background_color?: string | null
           brand_accent_color?: string | null
           brand_secondary_color?: string | null

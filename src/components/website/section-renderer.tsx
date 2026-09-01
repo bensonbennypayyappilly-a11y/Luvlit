@@ -182,7 +182,7 @@ const EMPTY_HINTS: Partial<Record<SectionType, { title: string; body: string }>>
   products: { title: "Products", body: "Add your first product in the Products page." },
   "featured-products": { title: "Featured", body: "Pick which products to spotlight in this section's Edit panel." },
   gallery: { title: "Gallery", body: "Upload photos in the Gallery panel to show your work here." },
-  video: { title: "Video", body: "Upload a main video or short clips to fill this section." },
+  video: { title: "Video", body: "Upload short clips in Short Videos to fill this section." },
   reviews: { title: "Reviews", body: "Customer reviews appear here automatically once you have some." },
   faq: { title: "FAQ", body: "Add questions and answers in this section's Edit panel." },
   team: { title: "Team", body: "Add team members in Staff & Availability." },
@@ -215,8 +215,20 @@ function EmptyGuard({ empty, type, children }: { empty: boolean; type: SectionTy
 
 // ---------- Hero ----------
 
+/** The hero fills with exactly one media source — a business sets either a photo or a video,
+ * never both (see the hero uploader in the website builder). A video always wins when present:
+ * autoplay/loop/muted so it behaves as a premium background loop, no controls. */
+function HeroMedia({ videoUrl, imageUrl, alt, className }: { videoUrl: string | null; imageUrl: string | null; alt: string; className?: string }) {
+  if (videoUrl) return <video src={videoUrl} autoPlay loop muted playsInline className={className} />;
+  if (imageUrl) return <img src={imageUrl} alt={alt} className={className} />;
+  return null;
+}
+
 function HeroBlock({ business, style, accent, content }: { business: SiteBusiness; style: TemplateStyle; accent: string; content: HeroContent }) {
   const heroUrl = useMediaUrl(business.hero_image_url);
+  const heroVideoUrlRaw = useMediaUrl(business.main_video_url);
+  const heroVideoUrl = heroVideoUrlRaw && isPlayableVideo(heroVideoUrlRaw) ? heroVideoUrlRaw : null;
+  const hasHeroMedia = !!heroVideoUrl || !!heroUrl;
   const logoUrl = useMediaUrl(business.logo_url);
   const tagline = content.tagline || business.description;
 
@@ -241,9 +253,9 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
             </a>
           </div>
         </div>
-        {heroUrl && (
+        {hasHeroMedia && (
           <div className="mx-auto mt-14 max-w-4xl">
-            <img src={heroUrl} alt={business.name} className={`aspect-[16/9] w-full object-cover ${corners(style)}`} />
+            <HeroMedia videoUrl={heroVideoUrl} imageUrl={heroUrl} alt={business.name} className={`aspect-[16/9] w-full object-cover ${corners(style)}`} />
           </div>
         )}
       </section>
@@ -253,9 +265,9 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
   if (style.hero === "bold-overlay") {
     const words = business.name.trim().split(/\s+/);
     const wash = `linear-gradient(115deg, ${accent}CC 0%, ${accent}55 40%, transparent 70%)`;
-    return heroUrl ? (
+    return hasHeroMedia ? (
       <section className="relative flex min-h-[68vh] items-center overflow-hidden md:min-h-[85vh]">
-        <img src={heroUrl} alt={business.name} className="absolute inset-0 h-full w-full object-cover" />
+        <HeroMedia videoUrl={heroVideoUrl} imageUrl={heroUrl} alt={business.name} className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-black/35" />
         <div className="absolute inset-0" style={{ background: wash }} />
         <div className="relative mx-auto w-full max-w-6xl px-6 py-24">
@@ -316,8 +328,8 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
               {business.is_eco_friendly && <EcoBadge />}
             </div>
           </div>
-          {heroUrl ? (
-            <img src={heroUrl} alt={business.name} className={`aspect-[4/3] w-full object-cover ${corners(style)}`} />
+          {hasHeroMedia ? (
+            <HeroMedia videoUrl={heroVideoUrl} imageUrl={heroUrl} alt={business.name} className={`aspect-[4/3] w-full object-cover ${corners(style)}`} />
           ) : (
             <div className={`aspect-[4/3] w-full ${corners(style)}`} style={{ backgroundColor: `${accent}14` }} />
           )}
@@ -328,9 +340,9 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
 
   // full-bleed
   const wash = `linear-gradient(180deg, ${accent}33 0%, ${accent}66 55%, ${accent}E6 100%)`;
-  return heroUrl ? (
+  return hasHeroMedia ? (
     <section className="relative flex min-h-[65vh] items-end overflow-hidden md:min-h-[78vh]">
-      <img src={heroUrl} alt={business.name} className="absolute inset-0 h-full w-full object-cover" />
+      <HeroMedia videoUrl={heroVideoUrl} imageUrl={heroUrl} alt={business.name} className="absolute inset-0 h-full w-full object-cover" />
       <div className="absolute inset-0" style={{ background: wash }} />
       <div className="relative mx-auto w-full max-w-5xl px-6 pb-16 pt-40">
         {logoUrl && <img src={logoUrl} alt={`${business.name} logo`} className="mb-6 h-16 w-16 rounded-md border border-white/40 bg-white/90 object-contain p-1" />}
@@ -372,8 +384,39 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
 // ---------- About ----------
 
 function AboutBlock({ business, style, accent, content }: { business: SiteBusiness; style: TemplateStyle; accent: string; content: AboutContent }) {
+  const aboutImageUrl = useMediaUrl(business.about_image_url);
+  const empty = !business.description && !aboutImageUrl;
+
+  // Same component renders Home's about section and the dedicated /about page (see the shared
+  // renderer note at the top of this file), so the left-photo/right-text layout applies to both
+  // automatically — there's nothing page-specific to wire up here.
+  if (aboutImageUrl) {
+    return (
+      <EmptyGuard empty={empty} type="about">
+        <Reveal>
+          <section className={`mx-auto max-w-6xl px-6 ${pad(style)}`}>
+            <div className="grid items-center gap-10 md:grid-cols-2">
+              <img
+                src={aboutImageUrl}
+                alt={`${business.name} — about us`}
+                className={`aspect-[4/3] w-full object-cover ${corners(style)}`}
+              />
+              <div>
+                <SectionEyebrow accent={accent} show={style.showEyebrows}>
+                  About us
+                </SectionEyebrow>
+                <h2 className={`mt-3 text-3xl ${heading(style)}`}>{content.heading || `About ${business.name}`}</h2>
+                {business.description && <p className={`mt-6 text-lg text-muted-foreground ${style.bodyClass}`}>{business.description}</p>}
+              </div>
+            </div>
+          </section>
+        </Reveal>
+      </EmptyGuard>
+    );
+  }
+
   return (
-    <EmptyGuard empty={!business.description} type="about">
+    <EmptyGuard empty={empty} type="about">
       <Reveal>
         <section className={`mx-auto max-w-5xl px-6 ${pad(style)}`}>
           <div className={style.spacing === "compact" ? "grid gap-8 md:grid-cols-[0.9fr_1.4fr] md:items-start" : ""}>
@@ -728,25 +771,20 @@ function GalleryBlock({ business, style, accent }: { business: SiteBusiness; sty
 
 // ---------- Video ----------
 
+/** Main video no longer shows here — it's promoted to the hero (see HeroBlock), which is the
+ * business's one video slot. This section is now just the short-clip reel. */
 function VideoBlock({ business, style, accent }: { business: SiteBusiness; style: TemplateStyle; accent: string }) {
-  const mainVideoUrl = useMediaUrl(business.main_video_url);
   const shortUrls = useResolvedList(business.short_video_urls ?? []);
   const shorts = shortUrls.filter(isPlayableVideo).slice(0, 3);
-  const hasMain = !!mainVideoUrl && isPlayableVideo(mainVideoUrl);
 
   return (
-    <EmptyGuard empty={!hasMain && shorts.length === 0} type="video">
+    <EmptyGuard empty={shorts.length === 0} type="video">
       <Reveal>
         <section className={`mx-auto max-w-5xl px-6 ${pad(style)}`}>
           <SectionEyebrow accent={accent} show={style.showEyebrows}>
             In motion
           </SectionEyebrow>
           <h2 className={`mt-3 text-3xl ${heading(style)}`}>Video</h2>
-          {hasMain && (
-            <div className={`mt-8 aspect-video w-full overflow-hidden border ${corners(style)}`} style={{ borderColor: `${accent}55` }}>
-              <VideoPlayer url={mainVideoUrl!} className="h-full w-full" />
-            </div>
-          )}
           {shorts.length > 0 && (
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
               {shorts.map((url) => (

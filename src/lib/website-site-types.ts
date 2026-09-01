@@ -16,6 +16,7 @@ export type SiteBusiness = {
   whatsapp: string | null;
   contact_email: string | null;
   hero_image_url: string | null;
+  about_image_url: string | null;
   logo_url: string | null;
   gallery_urls: string[];
   main_video_url: string | null;

@@ -39,6 +39,7 @@ async function resolveBusinessMedia(
   const b = business;
   const paths: string[] = [];
   if (isPath(b.hero_image_url)) paths.push(b.hero_image_url);
+  if (isPath(b.about_image_url)) paths.push(b.about_image_url);
   if (isPath(b.logo_url)) paths.push(b.logo_url);
   if (isPath(b.main_video_url)) paths.push(b.main_video_url);
   const shorts = Array.isArray(b.short_video_urls) ? (b.short_video_urls as string[]) : [];
@@ -67,6 +68,7 @@ async function resolveBusinessMedia(
       if (s.path && s.signedUrl) map.set(s.path, s.signedUrl);
     });
     if (isPath(b.hero_image_url)) b.hero_image_url = map.get(b.hero_image_url) ?? b.hero_image_url;
+    if (isPath(b.about_image_url)) b.about_image_url = map.get(b.about_image_url) ?? b.about_image_url;
     if (isPath(b.logo_url)) b.logo_url = map.get(b.logo_url) ?? b.logo_url;
     if (isPath(b.main_video_url)) b.main_video_url = map.get(b.main_video_url) ?? b.main_video_url;
     if (shorts.length) b.short_video_urls = shorts.map((s) => (isPath(s) ? map.get(s) ?? s : s));

@@ -34,6 +34,7 @@ function makeBusiness(overrides: Partial<SiteBusiness> = {}): SiteBusiness {
     whatsapp: "+91 98765 43210",
     contact_email: "hello@priyascakes.in",
     hero_image_url: "https://example.test/hero.jpg",
+    about_image_url: null,
     logo_url: "https://example.test/logo.png",
     gallery_urls: ["https://example.test/g1.jpg", "https://example.test/g2.jpg", "https://example.test/g3.jpg"],
     main_video_url: "https://youtu.be/abc123",

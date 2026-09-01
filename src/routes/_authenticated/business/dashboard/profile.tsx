@@ -46,9 +46,10 @@ function ProfilePage() {
     setThumb(path);
     if (!businessId) return;
     setStatus("Saving…");
+    // The hero is a single slot — setting a photo here replaces a video hero, if one was set.
     const { error } = await supabase
       .from("businesses")
-      .update({ hero_image_url: path })
+      .update(path ? { hero_image_url: path, main_video_url: null } : { hero_image_url: null })
       .eq("id", businessId);
     setStatus(error ? error.message : "Thumbnail updated — it now shows on your listing card.");
     if (!error) await queryClient.invalidateQueries({ queryKey: ["dashboard-profile-full", businessId] });

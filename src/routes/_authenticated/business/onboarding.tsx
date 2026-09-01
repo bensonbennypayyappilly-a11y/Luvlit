@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { MediaUploader } from "@/components/media-uploader";
+import { HeroMediaUploader, MediaUploader } from "@/components/media-uploader";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { ACCENT_COLORS, BUSINESS_TYPES, CITIES, ECO_CATEGORIES } from "@/lib/constants";
 import { slugify } from "@/lib/slugify";
@@ -393,14 +393,13 @@ function Onboarding() {
       body: businessId ? (
         <div className="space-y-6">
           <p className="text-sm text-muted-foreground">
-            Upload a hero image, up to 3 short videos (max 60s / 15MB each) and one main feature
-            video (max 3 min / 150MB). These play directly on your page.
+            Upload one hero photo or video (a video autoplays on loop) and up to 3 short clips
+            (max 60s / 15MB each). These play directly on your page.
           </p>
-          <MediaUploader
+          <HeroMediaUploader
             businessId={businessId}
-            kind="hero"
-            value={form.hero_image_url}
-            onChange={(path) => set({ hero_image_url: path })}
+            value={{ image: form.hero_image_url, video: form.main_video_url }}
+            onChange={({ image, video }) => set({ hero_image_url: image, main_video_url: video })}
           />
           <div className="space-y-4">
             <p className="text-sm font-medium">Short videos (up to 3)</p>
@@ -418,12 +417,6 @@ function Onboarding() {
               />
             ))}
           </div>
-          <MediaUploader
-            businessId={businessId}
-            kind="main"
-            value={form.main_video_url}
-            onChange={(path) => set({ main_video_url: path })}
-          />
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">Saving your business…</p>

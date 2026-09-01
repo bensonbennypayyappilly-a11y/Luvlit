@@ -22,6 +22,12 @@ export const MEDIA_LIMITS = {
     accept: "image/*",
     label: "Gallery photo",
   },
+  about: {
+    maxBytes: 10 * 1024 * 1024,
+    maxSeconds: 0,
+    accept: "image/*",
+    label: "About us photo",
+  },
   short: {
     maxBytes: 15 * 1024 * 1024,
     maxSeconds: 60,
@@ -88,7 +94,7 @@ function readDuration(file: File) {
   });
 }
 
-const IMAGE_KINDS: MediaKind[] = ["logo", "hero", "gallery", "poster", "product"];
+const IMAGE_KINDS: MediaKind[] = ["logo", "hero", "gallery", "about", "poster", "product"];
 
 /** Downscale + re-encode large images in the browser so we never upload raw 20MB JPEGs. */
 async function compressImage(file: File, maxEdge: number, quality = 0.82): Promise<File> {
@@ -218,6 +224,123 @@ export function MediaUploader({
         }}
         className="mt-4 block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border file:border-accent file:bg-transparent file:px-4 file:py-2 file:text-sm file:text-accent"
       />
+
+      {progress != null && (
+        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+          <div
+            className="h-full bg-primary transition-all"
+            style={{ width: `${progress}%` }}
+            role="progressbar"
+            aria-valuenow={progress}
+          />
+        </div>
+      )}
+      {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+    </div>
+  );
+}
+
+export type HeroMediaValue = { image: string | null; video: string | null };
+
+/**
+ * The hero fills with exactly one upload — a photo or a video, never both — so this is one
+ * control instead of the separate hero-image and main-video uploaders it replaces. Picking a
+ * video file clears the stored image (and vice versa); the site then autoplays a video hero on
+ * loop, or falls back to a still photo.
+ */
+export function HeroMediaUploader({
+  businessId,
+  value,
+  onChange,
+}: {
+  businessId: string;
+  value: HeroMediaValue;
+  onChange: (value: HeroMediaValue) => void;
+}) {
+  const imagePreview = useMediaUrl(value.image);
+  const videoPreview = useMediaUrl(value.video);
+  const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<number | null>(null);
+
+  const upload = useCallback(
+    async (input: File) => {
+      setError(null);
+      const isVideo = input.type.startsWith("video/");
+      const kind: MediaKind = isVideo ? "main" : "hero";
+      const limits = MEDIA_LIMITS[kind];
+      const file = isVideo ? input : await compressImage(input, 2200);
+      if (file.size > limits.maxBytes) {
+        return setError(
+          `That file is ${(file.size / 1024 / 1024).toFixed(1)}MB — the limit is ${
+            limits.maxBytes / 1024 / 1024
+          }MB.`,
+        );
+      }
+      if (isVideo) {
+        const seconds = await readDuration(file);
+        if (seconds && seconds > limits.maxSeconds + 1) {
+          return setError(`That video is ${Math.round(seconds)}s long — the limit is ${limits.maxSeconds}s.`);
+        }
+      }
+      setProgress(10);
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
+      const path = `${businessId}/${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const timer = setInterval(() => setProgress((p) => (p == null ? p : Math.min(p + 7, 92))), 400);
+      const { error: uploadError } = await supabase.storage
+        .from(MEDIA_BUCKET)
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+      clearInterval(timer);
+      if (uploadError) {
+        setProgress(null);
+        return setError(uploadError.message);
+      }
+      setProgress(100);
+      onChange(isVideo ? { image: null, video: path } : { image: path, video: null });
+      setTimeout(() => setProgress(null), 600);
+    },
+    [businessId, onChange],
+  );
+
+  const hasMedia = !!value.image || !!value.video;
+
+  return (
+    <div className="rounded-lg border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm font-medium">Hero photo or video</p>
+        {hasMedia && (
+          <button
+            type="button"
+            onClick={() => onChange({ image: null, video: null })}
+            className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+          >
+            Remove
+          </button>
+        )}
+      </div>
+
+      {value.video && videoPreview ? (
+        <div className="mt-4 overflow-hidden rounded-md border border-border">
+          <video src={videoPreview} controls muted loop className="h-44 w-full bg-black object-contain" />
+        </div>
+      ) : value.image && imagePreview ? (
+        <div className="mt-4 overflow-hidden rounded-md border border-border">
+          <img src={imagePreview} alt="Uploaded preview" className="h-44 w-full object-cover" />
+        </div>
+      ) : null}
+
+      <input
+        type="file"
+        accept="image/*,video/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          if (file) void upload(file);
+        }}
+        className="mt-4 block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border file:border-accent file:bg-transparent file:px-4 file:py-2 file:text-sm file:text-accent"
+      />
+      <p className="mt-2 text-xs text-muted-foreground">
+        A video autoplays on loop as your hero background. Photo max 20MB · video max 20MB / 180s.
+      </p>
 
       {progress != null && (
         <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-secondary">

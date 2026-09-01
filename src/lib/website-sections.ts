@@ -64,8 +64,8 @@ export const CORE_SECTION_TYPES: SectionType[] = [
 
 /** Library metadata for the editor's "add a section" picker — not used by the renderer. */
 export const SECTION_LIBRARY: Record<SectionType, { label: string; description: string; core: boolean }> = {
-  hero: { label: "Hero", description: "Your name, photo and a short tagline at the top of the page.", core: true },
-  about: { label: "About", description: "Your business description.", core: true },
+  hero: { label: "Hero", description: "Your name, a photo or video, and a short tagline at the top of the page.", core: true },
+  about: { label: "About", description: "Your photo and business description.", core: true },
   services: { label: "Services", description: "What you offer — managed in Services.", core: true },
   products: { label: "Products", description: "Your catalogue — managed in Products.", core: true },
   gallery: { label: "Gallery", description: "Photos of your work — managed in Gallery.", core: true },
@@ -77,7 +77,7 @@ export const SECTION_LIBRARY: Record<SectionType, { label: string; description: 
   team: { label: "Team", description: "Introduce your staff — managed in Staff.", core: false },
   hours: { label: "Opening hours", description: "When you're open — set in Website Settings.", core: false },
   "delivery-areas": { label: "Delivery areas", description: "Cities you deliver or serve.", core: false },
-  video: { label: "Video", description: "Your main video and short clips.", core: false },
+  video: { label: "Video", description: "Short clips shown as a reel — managed in Short Videos.", core: false },
   social: { label: "Social links", description: "Instagram and other links.", core: false },
   "featured-products": { label: "Featured products", description: "Spotlight a few products.", core: false },
   booking: { label: "Booking", description: "Appointment booking — only if you take appointments.", core: false },
