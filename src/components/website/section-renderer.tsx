@@ -391,6 +391,15 @@ function AboutBlock({ business, style, accent, content }: { business: SiteBusine
   );
 }
 
+/** Resolves a product/service's stored image path to a real signed URL before rendering.
+ * Unlike hero/logo/gallery images, items/services image_url isn't pre-signed server-side, so
+ * using it directly as <img src> resolves as a relative URL against the current page and 404s. */
+function ItemImage({ path, alt, className }: { path: string; alt: string; className?: string }) {
+  const url = useMediaUrl(path);
+  if (!url) return null;
+  return <img src={url} alt={alt} className={className} />;
+}
+
 // ---------- Services ----------
 
 function ServicesBlock({ business, style, accent }: { business: SiteBusiness; style: TemplateStyle; accent: string }) {
@@ -407,8 +416,8 @@ function ServicesBlock({ business, style, accent }: { business: SiteBusiness; st
             {services.map((s) => (
               <div key={s.id} className={cardClass(style)}>
                 {s.image_url && (
-                  <img
-                    src={s.image_url}
+                  <ItemImage
+                    path={s.image_url}
                     alt={s.name}
                     className={`aspect-[4/3] w-full object-cover ${style.cardStyle === "editorial-frame" ? "" : `${corners(style)} rounded-b-none`}`}
                   />
@@ -489,8 +498,8 @@ function CatalogueProductCard({ item, accent }: { item: SiteBusiness["items"][nu
     <div className="group">
       <div className="relative overflow-hidden rounded-md bg-secondary/60">
         {item.image_url ? (
-          <img
-            src={item.image_url}
+          <ItemImage
+            path={item.image_url}
             alt={item.name}
             className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
@@ -614,8 +623,8 @@ function ProductsPageBlock({
               ) : (
                 <div key={item.id} className={cardClass(style)}>
                   {item.image_url && (
-                    <img
-                      src={item.image_url}
+                    <ItemImage
+                      path={item.image_url}
                       alt={item.name}
                       className={`aspect-square w-full object-cover ${style.cardStyle === "editorial-frame" ? "" : corners(style)} ${style.cardStyle !== "editorial-frame" ? "rounded-b-none" : ""}`}
                     />
@@ -667,7 +676,7 @@ function FeaturedProductsBlock({
           <div className="mt-10 grid grid-cols-2 gap-5 sm:grid-cols-4">
             {items.map((item) => (
               <div key={item.id} className={cardClass(style)}>
-                {item.image_url && <img src={item.image_url} alt={item.name} className={`aspect-square w-full object-cover ${corners(style)}`} />}
+                {item.image_url && <ItemImage path={item.image_url} alt={item.name} className={`aspect-square w-full object-cover ${corners(style)}`} />}
                 <div className="p-3">
                   <p className="text-sm font-medium">{item.name}</p>
                   {item.price != null && <p className="text-xs text-muted-foreground">₹{item.price}</p>}
@@ -686,9 +695,16 @@ function FeaturedProductsBlock({
 function GalleryBlock({ business, style, accent }: { business: SiteBusiness; style: TemplateStyle; accent: string }) {
   const galleryUrls = useResolvedList(business.gallery_urls ?? []);
   const items = business.items.filter((i) => i.is_active);
-  const fallback = items
+  const fallbackRaw = items
     .map((i) => ({ ...i, image_url: (i as { image_urls?: string[] }).image_urls?.[0] ?? i.image_url }))
     .filter((i): i is (typeof items)[number] & { image_url: string } => !!i.image_url);
+  // Product photos aren't pre-signed server-side the way gallery_urls is — resolve them here too,
+  // the same way, or the raw storage path ends up used directly as <img src> and 404s.
+  const fallbackResolvedUrls = useResolvedList(fallbackRaw.map((i) => i.image_url));
+  const fallback =
+    fallbackResolvedUrls.length === fallbackRaw.length
+      ? fallbackRaw.map((i, idx) => ({ ...i, image_url: fallbackResolvedUrls[idx] }))
+      : [];
   const galleryItems = galleryUrls.length
     ? galleryUrls.map((url, i) => ({ id: `gallery-${i}`, image_url: url, name: `${business.name} photo ${i + 1}` }))
     : fallback.map((i) => ({ id: i.id, image_url: i.image_url, name: i.name, price: i.price, description: i.description }));
