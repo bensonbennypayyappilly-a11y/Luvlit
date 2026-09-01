@@ -147,6 +147,16 @@ function HomePage({
       <main className="flex-1">
         {/* Hero — search-first, India-outline discovery map on the right, no photo */}
         <section className="relative isolate overflow-hidden bg-background">
+          {/* Editorial greyscale collage behind the right half only. Purely decorative: it is
+              aria-hidden, takes no pointer events, and sits below the content in the section's
+              own stacking context (the section is `isolate`), so the map and its animated
+              discovery cards are untouched.
+              Shown from lg up, not md: the hero only splits into two columns at lg, so below
+              that the headline runs full-width and a right-hand collage would sit behind it. */}
+          <div
+            aria-hidden="true"
+            className="hero-collage pointer-events-none absolute inset-y-0 right-0 -z-10 hidden w-[55%] lg:block xl:w-[52%]"
+          />
           <div className="mx-auto max-w-7xl px-6 pb-8 pt-12 md:pb-10 md:pt-14">
             <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div>
@@ -157,8 +167,8 @@ function HomePage({
                   className="headline rise-in mt-5 max-w-xl text-4xl sm:text-5xl lg:text-[56px]"
                   style={{ animationDelay: "160ms" }}
                 >
-                  Find local businesses you&rsquo;ll <span className="text-accent">love</span> to
-                  support.
+                  Find local businesses you&rsquo;ll{" "}
+                  <span className="love-underline text-accent">love</span> to support.
                 </h1>
                 <p
                   className="rise-in mt-4 max-w-md text-[15px] text-muted-foreground md:text-base"
@@ -196,7 +206,13 @@ function HomePage({
                 </Link>
               </div>
 
-              <div className="rise-in" style={{ animationDelay: "220ms" }}>
+              <div className="rise-in relative" style={{ animationDelay: "220ms" }}>
+                {/* Lifts the map off the collage behind it. Sits under the map in DOM order, so
+                    the outline and the animated discovery cards both still paint above it. */}
+                <div
+                  aria-hidden="true"
+                  className="hero-map-halo pointer-events-none absolute inset-x-[2%] inset-y-[2%] hidden lg:block"
+                />
                 <IndiaDiscoveryMap />
                 <div className="mt-4 flex items-center justify-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
                   <span className="relative flex h-1.5 w-1.5">

@@ -386,6 +386,63 @@
   animation: luv-discovery-drift 22s ease-in-out infinite;
 }
 
+/* Editorial photographic texture behind the right side of the homepage hero. Greyscale is
+ * applied here rather than baked into the file, so the source asset stays reusable and the
+ * green accents elsewhere in the hero are unaffected. The mask is what stops it reading as a
+ * pasted rectangle: it fades out to fully transparent on the left, well before the headline,
+ * and softens the top and bottom edges into the white background. */
+@utility hero-collage {
+  background-image: url("/images/hero/business-collage.webp");
+  background-size: cover;
+  background-position: 60% center;
+  filter: grayscale(1) contrast(0.9) brightness(1.08);
+  opacity: 0.42;
+  --hero-collage-fade: linear-gradient(
+      to right,
+      transparent 0%,
+      transparent 12%,
+      rgb(0 0 0 / 0.35) 30%,
+      rgb(0 0 0 / 0.85) 52%,
+      #000 72%
+    ),
+    linear-gradient(to bottom, transparent 0%, #000 14%, #000 84%, transparent 100%);
+  -webkit-mask-image: var(--hero-collage-fade);
+  mask-image: var(--hero-collage-fade);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/* Soft white pool directly behind the India outline, so the thin accent stroke keeps its
+ * contrast against the photography without the map itself being altered in any way. */
+@utility hero-map-halo {
+  background-image: radial-gradient(
+    ellipse at center,
+    color-mix(in oklab, var(--color-background) 88%, transparent) 0%,
+    color-mix(in oklab, var(--color-background) 62%, transparent) 34%,
+    transparent 62%
+  );
+}
+
+/* Hand-drawn-feeling emphasis under "love" in the hero headline. Sized in em so it tracks the
+ * responsive heading scale, and inherits currentColor so it stays the accent green. */
+@utility love-underline {
+  position: relative;
+  display: inline-block;
+}
+.love-underline::after {
+  content: "";
+  position: absolute;
+  left: -0.05em;
+  right: -0.05em;
+  bottom: 0.02em;
+  height: 0.055em;
+  border-radius: 9999px;
+  background-color: currentColor;
+  transform: rotate(-1.4deg);
+  transform-origin: center;
+  pointer-events: none;
+}
+
 /* One-shot signal ring played when a discovery card arrives at a new map slot. */
 @keyframes luv-discovery-ping {
   0% { transform: scale(0.55); opacity: 0.55; }
