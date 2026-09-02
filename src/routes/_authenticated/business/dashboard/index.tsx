@@ -1,7 +1,6 @@
-import type { CSSProperties } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   ArrowDownRight,
   ArrowRight,
@@ -25,6 +24,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { localDateString } from "@/lib/utils";
 import type { Section, ServicesContent } from "@/lib/website-sections";
+
+// Pure-white card surface for Overview only — the shared `surface-card` utility keeps its
+// off-white/cream tint everywhere else in the app; this local class is deliberately scoped to
+// this file so the rest of the dashboard is untouched.
+const CARD = "rounded-xl border border-border bg-white";
 
 type ChecklistItem = { key: string; label: string; done: boolean; href: string };
 
@@ -247,8 +251,7 @@ function Overview() {
     label: string;
     value: number;
     icon: LucideIcon;
-    badgeClassName?: string;
-    badgeStyle?: CSSProperties;
+    badgeClassName: string;
     trend?: { current: number; previous: number; periodLabel: string };
     caption?: string;
   }[] = [
@@ -263,21 +266,21 @@ function Overview() {
       label: "Today's appointments",
       value: stats?.upcomingToday ?? 0,
       icon: Calendar,
-      badgeStyle: { backgroundColor: "#c1613f1f", color: "#c1613f" },
+      badgeClassName: "bg-violet-50 text-violet-600",
       trend: { current: stats?.upcomingToday ?? 0, previous: stats?.upcomingYesterday ?? 0, periodLabel: "from yesterday" },
     },
     {
       label: "Active conversations",
       value: stats?.activeConversations ?? 0,
       icon: MessageSquare,
-      badgeClassName: "bg-primary-soft text-primary",
+      badgeClassName: "bg-blue-50 text-blue-600",
       caption: stats?.unreadCount ? `${stats.unreadCount} unread` : "All caught up",
     },
     {
       label: "Profile views (all-time)",
       value: business?.view_count ?? 0,
       icon: Eye,
-      badgeStyle: { backgroundColor: "#63705f1a", color: "#63705f" },
+      badgeClassName: "bg-amber-50 text-amber-600",
       caption: "Since your page went live",
     },
   ];
@@ -285,6 +288,8 @@ function Overview() {
   const chartConfig: ChartConfig = {
     count: { label: "Requirements received", color: "var(--chart-1)" },
   };
+  const hasRequirementsData = (stats?.requirementsTrend ?? []).some((w) => w.count > 0);
+  const firstIncomplete = checklist.find((c) => !c.done);
 
   return (
     <div>
@@ -306,13 +311,10 @@ function Overview() {
         {cards.map((c) => {
           const Icon = c.icon;
           return (
-            <div key={c.label} className="surface-card p-4 transition-shadow duration-150 hover:shadow-sm">
+            <div key={c.label} className={`${CARD} p-4 transition-shadow duration-150 hover:shadow-sm`}>
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium text-muted-foreground">{c.label}</p>
-                <span
-                  className={`flex size-8 shrink-0 items-center justify-center rounded-full ${c.badgeClassName ?? ""}`}
-                  style={c.badgeStyle}
-                >
+                <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${c.badgeClassName}`}>
                   <Icon className="size-4" strokeWidth={1.75} aria-hidden="true" />
                 </span>
               </div>
@@ -355,7 +357,7 @@ function Overview() {
       </Link>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-2">
-        <div className="surface-card p-5">
+        <div className={`${CARD} p-5`}>
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">Profile completeness</p>
             <p className="text-sm font-medium text-muted-foreground tabular-nums">{completePct}%</p>
@@ -383,9 +385,22 @@ function Overview() {
               </li>
             ))}
           </ul>
+          {firstIncomplete ? (
+            <Link
+              to={firstIncomplete.href}
+              className="mt-4 inline-flex min-h-9 items-center rounded-md bg-accent-soft px-4 text-sm font-medium text-accent transition-colors hover:bg-accent-soft/70"
+            >
+              Complete your profile
+            </Link>
+          ) : (
+            <p className="mt-4 flex items-center gap-1.5 text-sm font-medium text-accent">
+              <span className="flex size-4 items-center justify-center rounded-full bg-accent text-[0.625rem] text-accent-foreground">✓</span>
+              Your profile is complete
+            </p>
+          )}
         </div>
 
-        <div className="surface-card p-5">
+        <div className={`${CARD} p-5`}>
           <div className="flex items-center gap-2">
             <p className="text-sm font-medium">Needs attention</p>
             {attention.length > 0 && (
@@ -423,26 +438,40 @@ function Overview() {
         </div>
       </div>
 
-      <div className="mt-5 surface-card flex flex-col gap-6 p-5 sm:flex-row sm:items-stretch">
-        <div className="flex-1">
-          <p className="text-sm font-medium">Requirements received</p>
-          <p className="text-xs text-muted-foreground">Last {CHART_WEEKS} weeks</p>
-          <ChartContainer config={chartConfig} className="mt-3 aspect-auto h-36 w-full">
-            <BarChart data={stats?.requirementsTrend ?? []} margin={{ left: -20, right: 4, top: 4, bottom: 0 }}>
+      <div className={`${CARD} mt-5 p-5`}>
+        <p className="text-sm font-medium">Requirements received</p>
+        <p className="text-xs text-muted-foreground">Last {CHART_WEEKS} weeks</p>
+        {hasRequirementsData ? (
+          <ChartContainer config={chartConfig} className="mt-4 aspect-auto h-56 w-full">
+            <AreaChart data={stats?.requirementsTrend ?? []} margin={{ left: -20, right: 12, top: 8, bottom: 0 }}>
+              <defs>
+                <linearGradient id="requirementsFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-count)" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="var(--color-count)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
-              <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} interval={1} />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} interval={0} />
+              <YAxis tickLine={false} axisLine={false} width={32} fontSize={11} allowDecimals={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} maxBarSize={22} />
-            </BarChart>
+              <Area
+                type="monotone"
+                dataKey="count"
+                isAnimationActive={false}
+                stroke="var(--color-count)"
+                strokeWidth={2}
+                fill="url(#requirementsFill)"
+                dot={{ r: 3, stroke: "var(--color-count)", strokeWidth: 2, fill: "white" }}
+                activeDot={{ r: 5, stroke: "var(--color-count)", strokeWidth: 2, fill: "white" }}
+              />
+            </AreaChart>
           </ChartContainer>
-        </div>
-        <div className="flex shrink-0 flex-col justify-center border-t border-border pt-4 sm:w-48 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
-          <span className="flex size-9 items-center justify-center rounded-full" style={{ backgroundColor: "#63705f1a", color: "#63705f" }}>
-            <Eye className="size-4" strokeWidth={1.75} aria-hidden="true" />
-          </span>
-          <p className="mt-2 text-2xl font-medium tabular-nums">{business?.view_count ?? 0}</p>
-          <p className="text-xs text-muted-foreground">Total page visitors, all-time</p>
-        </div>
+        ) : (
+          <div className="mt-4 flex h-56 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border text-center">
+            <TrendingUp className="size-6 text-muted-foreground/50" strokeWidth={1.5} aria-hidden="true" />
+            <p className="text-sm text-muted-foreground">No requirements received in the last {CHART_WEEKS} weeks yet.</p>
+          </div>
+        )}
       </div>
     </div>
   );

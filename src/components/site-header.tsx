@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Compass, LayoutDashboard } from "lucide-react";
+import { Home, Search } from "lucide-react";
 import { useAccount, useSession } from "@/hooks/use-session";
 import { AccountMenu } from "@/components/account-menu";
 import { LuvLitLogo } from "@/components/luvlit-logo";
@@ -133,16 +133,16 @@ export function SiteHeader() {
               <>
                 <Link
                   to="/business/dashboard"
-                  className="flex min-h-11 items-center gap-2 rounded-md bg-accent-soft px-4 text-sm font-medium text-accent transition-colors hover:bg-accent-soft/70"
+                  className="flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
                 >
-                  <LayoutDashboard className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                  <Home className="size-4" strokeWidth={1.75} aria-hidden="true" />
                   Dashboard
                 </Link>
                 <Link
                   to="/browse"
-                  className="flex min-h-11 items-center gap-2 rounded-md border border-border px-4 text-sm font-medium text-foreground transition-colors hover:border-accent hover:bg-secondary"
+                  className="flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
                 >
-                  <Compass className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                  <Search className="size-4" strokeWidth={1.75} aria-hidden="true" />
                   Explore other businesses
                 </Link>
                 <NotificationsPopover
@@ -190,17 +190,17 @@ export function SiteHeader() {
                 <Link
                   to="/business/dashboard"
                   onClick={() => setMobileOpen(false)}
-                  className="flex min-h-11 items-center gap-2 rounded-md bg-accent-soft px-4 text-sm font-medium text-accent transition-colors hover:bg-accent-soft/70"
+                  className="flex min-h-11 items-center gap-2 rounded-md border border-border px-4 text-sm font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
                 >
-                  <LayoutDashboard className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                  <Home className="size-4" strokeWidth={1.75} aria-hidden="true" />
                   Dashboard
                 </Link>
                 <Link
                   to="/browse"
                   onClick={() => setMobileOpen(false)}
-                  className="flex min-h-11 items-center gap-2 rounded-md border border-border px-4 text-sm font-medium text-foreground transition-colors hover:border-accent hover:bg-accent-soft"
+                  className="flex min-h-11 items-center gap-2 rounded-md border border-border px-4 text-sm font-medium text-foreground/80 transition-colors hover:bg-secondary hover:text-foreground"
                 >
-                  <Compass className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                  <Search className="size-4" strokeWidth={1.75} aria-hidden="true" />
                   Explore other businesses
                 </Link>
               </div>

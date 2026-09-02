@@ -40,7 +40,7 @@ export function NotificationsPopover({
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label={unreadCount ? `Notifications, ${unreadCount} unread` : "Notifications"}
-        className="relative flex h-11 w-11 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-accent hover:text-foreground"
+        className="relative flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
       >
         <Bell className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
         {!!unreadCount && (
