@@ -145,7 +145,7 @@ function AppointmentsPage() {
 
       <div className="mt-6 space-y-6">
         {byDate.map(([date, rows]) => (
-          <div key={date} className="surface-card p-5">
+          <div key={date} className="dashboard-card p-5">
             <p className="text-sm font-medium">
               {date === "Unscheduled" ? (
                 <span className="text-muted-foreground">Date unavailable</span>

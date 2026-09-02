@@ -45,7 +45,7 @@ function BillingPage() {
       <p className="eyebrow">Billing</p>
       <h1 className="mt-2 text-2xl font-medium">Plan & billing</h1>
 
-      <div className="surface-card mt-6 max-w-xl p-6 text-sm">
+      <div className="dashboard-card mt-6 max-w-xl p-6 text-sm">
         <p className="text-xs text-muted-foreground">Current status</p>
         {isLoading ? (
           <Skeleton className="mt-1 h-5 w-40" />

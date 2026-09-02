@@ -367,7 +367,7 @@ function StaffPage() {
         Add team members, set their working hours and generate bookable slots.
       </p>
 
-      <div className="surface-card mt-6 flex flex-wrap items-center gap-3 p-5">
+      <div className="dashboard-card mt-6 flex flex-wrap items-center gap-3 p-5">
         <input
           value={draftName}
           onChange={(e) => setDraftName(e.target.value)}
@@ -395,7 +395,7 @@ function StaffPage() {
           const isEditing = editingId === s.id;
           const displayHours = normalizeWorkingHours(s.working_hours);
           return (
-            <div key={s.id} className="surface-card p-5">
+            <div key={s.id} className="dashboard-card p-5">
               {!isEditing ? (
                 <div>
                   <div className="flex flex-wrap items-start justify-between gap-3">

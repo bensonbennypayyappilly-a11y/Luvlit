@@ -66,7 +66,7 @@ function RequestCard({ request, businessId, onChanged }: { request: RequestRow; 
   }
 
   return (
-    <div className="surface-card p-6">
+    <div className="dashboard-card p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg">{request.influencer_profiles?.display_name ?? "An influencer"}</h3>
@@ -157,7 +157,7 @@ function CollaborationsPage() {
             <RequestCard key={r.id} request={r} businessId={businessId!} onChanged={refresh} />
           ))}
         {!requestsLoading && !requestsError && !requests?.length && (
-          <p className="surface-card p-6 text-sm text-muted-foreground">
+          <p className="dashboard-card p-6 text-sm text-muted-foreground">
             You haven't reached out to any influencers yet.{" "}
             <Link to="/dashboard/find-influencer" className="text-primary hover:underline">
               Find an influencer →

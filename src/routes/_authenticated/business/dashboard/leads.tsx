@@ -157,7 +157,7 @@ function LeadsPage() {
       <h1 className="mt-2 text-2xl font-medium">Inbox</h1>
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[22rem_1fr]">
-        <div className="surface-card divide-y divide-border p-0">
+        <div className="dashboard-card divide-y divide-border p-0">
           {(leadsError || conversationsError) && (
             <div className="flex flex-wrap items-center justify-between gap-3 p-5">
               <p className="text-sm text-destructive">Couldn't load this information. Try again.</p>
@@ -205,7 +205,7 @@ function LeadsPage() {
               title={rows.find((r) => r.conversationId === activeConversationId)?.title ?? "Conversation"}
             />
           ) : (
-            <div className="surface-card flex min-h-[24rem] items-center justify-center text-sm text-muted-foreground">
+            <div className="dashboard-card flex min-h-[24rem] items-center justify-center text-sm text-muted-foreground">
               Select a conversation to chat.
             </div>
           )}

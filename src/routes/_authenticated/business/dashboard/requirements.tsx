@@ -99,7 +99,7 @@ function RequirementsPage() {
 
       {isLoading && <CardListSkeleton />}
       {!isLoading && error && (
-        <div className="surface-card mt-6 flex flex-wrap items-center justify-between gap-4 p-5">
+        <div className="dashboard-card mt-6 flex flex-wrap items-center justify-between gap-4 p-5">
           <p className="text-sm text-destructive">Couldn't load this information. Try again.</p>
           <button
             type="button"
@@ -116,7 +116,7 @@ function RequirementsPage() {
 
       <div className="mt-6 space-y-4">
         {!error && (requirements ?? []).map((r) => (
-          <div key={r.id} className="surface-card p-5">
+          <div key={r.id} className="dashboard-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="font-medium">{r.category}</p>
               <p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>

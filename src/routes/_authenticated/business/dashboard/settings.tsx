@@ -75,7 +75,7 @@ function Settings() {
         <span className="font-medium text-foreground">Website Builder</span>.
       </p>
 
-      <div className="surface-card mt-8 space-y-5 p-6">
+      <div className="dashboard-card mt-8 space-y-5 p-6">
         <label className="block text-sm">
           Name
           <input
@@ -127,7 +127,7 @@ function Settings() {
         </div>
       </div>
 
-      <div className="surface-card mt-6 p-6">
+      <div className="dashboard-card mt-6 p-6">
         <h2 className="text-base font-medium">Delete account</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Your business profile goes offline immediately. Existing conversations stay visible to the other

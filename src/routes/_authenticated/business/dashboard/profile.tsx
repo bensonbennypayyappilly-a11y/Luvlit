@@ -94,7 +94,7 @@ function ProfilePage() {
       {fullLoading && <CardListSkeleton rows={1} />}
 
       {full && (
-        <div className="surface-card mt-6 space-y-4 p-6 text-sm">
+        <div className="dashboard-card mt-6 space-y-4 p-6 text-sm">
           <div>
             <p className="text-xs text-muted-foreground">Name</p>
             <p className="mt-1">{full.name}</p>

@@ -111,7 +111,7 @@ function FeaturedPage() {
       <p className="eyebrow">Featured Placement</p>
       <h1 className="mt-2 text-2xl font-medium">Get featured</h1>
 
-      <div className="surface-card mt-6 max-w-xl space-y-4 p-6">
+      <div className="dashboard-card mt-6 max-w-xl space-y-4 p-6">
         <div>
           <p className="text-xs text-muted-foreground">Category</p>
           <select
@@ -195,7 +195,7 @@ function FeaturedPage() {
         <div className="mt-3 space-y-2">
           {!placementsLoading && (myPlacements ?? []).length === 0 && <p className="text-sm text-muted-foreground">None yet.</p>}
           {!placementsLoading && (myPlacements ?? []).map((p) => (
-            <div key={p.id} className="surface-card flex flex-wrap items-center justify-between gap-2 p-4 text-sm">
+            <div key={p.id} className="dashboard-card flex flex-wrap items-center justify-between gap-2 p-4 text-sm">
               <span>
                 {p.category} · {p.scope === "city" ? p.city : "All India"} · {p.plan_tier}
               </span>

@@ -228,7 +228,7 @@ function ServicesPage() {
         Separate from Products — for things you do, not things you sell. Price is treated as a starting price.
       </p>
 
-      <div className="surface-card mt-6 p-5">
+      <div className="dashboard-card mt-6 p-5">
         <p className="text-sm font-medium">Add a service</p>
         <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
           <div>

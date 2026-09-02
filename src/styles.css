@@ -248,6 +248,15 @@
   border-radius: var(--radius-lg);
 }
 
+/* Pure-white card surface for the business dashboard specifically (Overview through Settings) —
+ * a deliberately crisper look than surface-card's off-white tint, which the rest of the app
+ * (public site, customer dashboard) keeps unchanged. */
+@utility dashboard-card {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
 /* ---------- Motion: premium marketplace feel ---------- */
 
 @keyframes luv-marquee {

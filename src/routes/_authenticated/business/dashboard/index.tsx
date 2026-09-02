@@ -25,10 +25,10 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { localDateString } from "@/lib/utils";
 import type { Section, ServicesContent } from "@/lib/website-sections";
 
-// Pure-white card surface for Overview only — the shared `surface-card` utility keeps its
-// off-white/cream tint everywhere else in the app; this local class is deliberately scoped to
-// this file so the rest of the dashboard is untouched.
-const CARD = "rounded-xl border border-border bg-white";
+// Pure-white card surface shared across the business dashboard (see styles.css's
+// `dashboard-card` utility) — the plain `surface-card` utility keeps its off-white/cream tint
+// everywhere else in the app (public site, customer dashboard).
+const CARD = "dashboard-card";
 
 type ChecklistItem = { key: string; label: string; done: boolean; href: string };
 

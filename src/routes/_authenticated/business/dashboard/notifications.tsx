@@ -23,7 +23,7 @@ function NotificationsPage() {
       <DashboardBackLink />
       <p className="eyebrow">Notifications</p>
       <h1 className="mt-2 text-2xl font-medium">Activity</h1>
-      <div className="surface-card mt-6 p-2">
+      <div className="dashboard-card mt-6 p-2">
         <NotificationsList recipientType="business" recipientId={business?.id ?? null} />
       </div>
     </div>
