@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { acceptCollaborationRequest } from "@/lib/collaboration";
 import { DashboardBackLink } from "@/components/dashboard-back-link";
+import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/collaborations")({
   head: () => ({
@@ -116,7 +117,7 @@ function CollaborationsPage() {
   const businessId = business?.id ?? null;
   const queryClient = useQueryClient();
 
-  const { data: requests, error: requestsError } = useQuery({
+  const { data: requests, error: requestsError, isLoading: requestsLoading } = useQuery({
     queryKey: ["business-collaboration-requests", businessId],
     enabled: !!businessId,
     queryFn: async () => {
@@ -146,14 +147,16 @@ function CollaborationsPage() {
       </p>
 
       <div className="mt-6 space-y-4">
+        {requestsLoading && <CardListSkeleton rows={3} />}
         {requestsError && (
           <p className="text-sm text-destructive">Couldn't load your collaboration requests. Try again.</p>
         )}
-        {!requestsError &&
+        {!requestsLoading &&
+          !requestsError &&
           (requests ?? []).map((r) => (
             <RequestCard key={r.id} request={r} businessId={businessId!} onChanged={refresh} />
           ))}
-        {!requestsError && !requests?.length && (
+        {!requestsLoading && !requestsError && !requests?.length && (
           <p className="surface-card p-6 text-sm text-muted-foreground">
             You haven't reached out to any influencers yet.{" "}
             <Link to="/dashboard/find-influencer" className="text-primary hover:underline">

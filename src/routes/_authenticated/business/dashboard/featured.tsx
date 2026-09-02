@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { DashboardBackLink } from "@/components/dashboard-back-link";
+import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
 import { CITIES } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/featured")({
@@ -39,7 +40,7 @@ function FeaturedPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const { data: myPlacements } = useQuery({
+  const { data: myPlacements, isLoading: placementsLoading } = useQuery({
     queryKey: ["dashboard-my-placements", businessId],
     enabled: !!businessId,
     queryFn: async () =>
@@ -190,9 +191,10 @@ function FeaturedPage() {
 
       <div className="mt-8">
         <p className="text-sm font-medium">Your placements</p>
+        {placementsLoading && <CardListSkeleton rows={2} />}
         <div className="mt-3 space-y-2">
-          {(myPlacements ?? []).length === 0 && <p className="text-sm text-muted-foreground">None yet.</p>}
-          {(myPlacements ?? []).map((p) => (
+          {!placementsLoading && (myPlacements ?? []).length === 0 && <p className="text-sm text-muted-foreground">None yet.</p>}
+          {!placementsLoading && (myPlacements ?? []).map((p) => (
             <div key={p.id} className="surface-card flex flex-wrap items-center justify-between gap-2 p-4 text-sm">
               <span>
                 {p.category} · {p.scope === "city" ? p.city : "All India"} · {p.plan_tier}

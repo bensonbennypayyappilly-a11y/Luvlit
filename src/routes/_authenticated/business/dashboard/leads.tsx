@@ -6,6 +6,7 @@ import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { ChatPanel } from "@/components/chat-panel";
 import { isStoragePath, useMediaUrl } from "@/components/media-uploader";
 import { DashboardBackLink } from "@/components/dashboard-back-link";
+import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/leads")({
   head: () => ({
@@ -55,6 +56,7 @@ function LeadsPage() {
   const {
     data: leads,
     error: leadsError,
+    isLoading: leadsLoading,
     refetch: refetchLeads,
   } = useQuery({
     queryKey: ["dashboard-leads", businessId],
@@ -73,6 +75,7 @@ function LeadsPage() {
   const {
     data: conversations,
     error: conversationsError,
+    isLoading: conversationsLoading,
     refetch: refetchConversations,
   } = useQuery({
     queryKey: ["dashboard-conversations", businessId],
@@ -170,10 +173,11 @@ function LeadsPage() {
               </button>
             </div>
           )}
-          {!leadsError && !conversationsError && rows.length === 0 && (
+          {(leadsLoading || conversationsLoading) && <CardListSkeleton rows={4} />}
+          {!leadsLoading && !conversationsLoading && !leadsError && !conversationsError && rows.length === 0 && (
             <p className="p-5 text-sm text-muted-foreground">No leads or conversations yet.</p>
           )}
-          {!leadsError && !conversationsError && rows.map((row) => (
+          {!leadsLoading && !conversationsLoading && !leadsError && !conversationsError && rows.map((row) => (
             <button
               key={row.id}
               onClick={() => row.conversationId && openConversation(row.conversationId)}

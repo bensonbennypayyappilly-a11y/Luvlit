@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
 import { getInfluencers, getCategories } from "@/lib/public.functions";
 import { useCities } from "@/hooks/use-cities";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
@@ -135,10 +133,8 @@ function FindInfluencer() {
   const select = "rounded-md border border-border bg-card px-4 py-3 text-sm";
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-20">
-        <p className="eyebrow">Business tools</p>
+    <div className="mx-auto w-full max-w-6xl">
+      <p className="eyebrow">Business tools</p>
         <h1 className="mt-4 text-4xl md:text-5xl">Find an influencer</h1>
         <p className="mt-4 max-w-xl text-muted-foreground">
           Every creator here has been reviewed and approved by our team.
@@ -227,8 +223,6 @@ function FindInfluencer() {
             <p className="text-muted-foreground">No approved creators match this yet.</p>
           )}
         </div>
-      </main>
-      <SiteFooter />
     </div>
   );
 }

@@ -2,9 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
 import { ChatPanel } from "@/components/chat-panel";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { useAccount } from "@/hooks/use-session";
 import { isStoragePath, useMediaUrl } from "@/components/media-uploader";
 
@@ -104,10 +103,9 @@ function Requirements() {
   });
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-20">
-        <p className="eyebrow">Your requests</p>
+    <div className="mx-auto w-full max-w-5xl">
+      <DashboardBackLink to="/dashboard" />
+      <p className="eyebrow">Your requests</p>
         <h1 className="mt-4 text-4xl">My requirements</h1>
         <p className="mt-3 max-w-xl text-muted-foreground">
           Every requirement you've posted, and the quotes businesses have sent you.
@@ -182,8 +180,6 @@ function Requirements() {
             <p className="text-muted-foreground">You haven't posted a requirement yet.</p>
           )}
         </div>
-      </main>
-      <SiteFooter />
     </div>
   );
 }

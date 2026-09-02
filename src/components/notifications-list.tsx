@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
 
 type Notification = {
   id: string;
@@ -52,7 +53,7 @@ export function NotificationsList({
     qc.invalidateQueries({ queryKey: ["customer-unread-notifications"] });
   }
 
-  if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (isLoading) return <CardListSkeleton rows={4} />;
   if (error) {
     return (
       <div className="text-sm">
@@ -85,7 +86,11 @@ export function NotificationsList({
                 {new Date(n.created_at).toLocaleString()}
               </p>
             </div>
-            {!n.read_at && <span className="mt-1 size-2 shrink-0 rounded-full bg-primary" aria-hidden />}
+            {!n.read_at && (
+              <span className="mt-0.5 shrink-0 rounded-full bg-primary px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-primary-foreground">
+                New
+              </span>
+            )}
           </div>
         );
         return n.link ? (

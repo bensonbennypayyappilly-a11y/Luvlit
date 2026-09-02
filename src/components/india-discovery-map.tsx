@@ -88,6 +88,14 @@ type MapSlot = { region: string; top: number; left: number; size: CardSize };
  * both needed the smallest size tier to clear every probe at the 300px floor.
  * If you resize the container, change SIZE_PX, or move a slot, re-solve and
  * re-verify at BOTH widths with the same method — do not eyeball new values.
+ *
+ * The actual rendered size is `min(SIZE_PX, SIZE_CQW)` (see below): at or above the
+ * verified 300px floor this is always exactly SIZE_PX, pixel-identical to the
+ * verified geometry above — SIZE_CQW only takes over BELOW 300px, where it shrinks
+ * the card instead of holding an unverified, relatively-larger fixed pixel size in
+ * an even narrower outline. That's a one-way safety net, not a substitute for the
+ * verification above: it can't make an unsolved size range safe, only make an
+ * already-narrower-than-verified one safer than doing nothing.
  */
 const MAP_SLOTS: MapSlot[] = [
   { region: "North", top: 10, left: 28.5, size: "sm" },
@@ -103,6 +111,19 @@ const MAP_SLOTS: MapSlot[] = [
 
 const SIZE_PX: Record<CardSize, number> = { xs: 30, sm: 52, md: 68, lg: 88 };
 const RING_PX: Record<CardSize, number> = { xs: 48, sm: 80, md: 100, lg: 124 };
+/**
+ * Same ratio as SIZE_PX/RING_PX relative to the verified 300px floor (e.g. 52/300 = 17.333%),
+ * used as a `min()` cap against the container's own width in `cqw` units (1cqw = 1% of the
+ * nearest `container-type: inline-size` ancestor — see the wrapper below). This never changes
+ * anything at or above the verified 300–384px range: `min(52px, 17.333cqw)` is 52px at any
+ * container ≥300px, since 17.333% of ≥300px is always ≥52px, so every already-solved slot
+ * renders pixel-identical to before. It only kicks in BELOW the verified floor, where it makes
+ * the card proportionally smaller — strictly safer than keeping an unverified fixed 52px in an
+ * even narrower outline — so a narrower container degrades gracefully instead of needing a
+ * fresh manual re-solve.
+ */
+const SIZE_CQW: Record<CardSize, number> = { xs: 10, sm: 17.333, md: 22.667, lg: 29.333 };
+const RING_CQW: Record<CardSize, number> = { xs: 16, sm: 26.667, md: 33.333, lg: 41.333 };
 /** Smaller cards use a proportionally smaller radius — rounded-xl at 30px would read as a circle. */
 const CARD_ROUNDING: Record<CardSize, string> = {
   xs: "rounded-lg",
@@ -169,14 +190,17 @@ function DiscoverySlot({
             key={cycleKey}
             aria-hidden="true"
             className="discovery-ping pointer-events-none absolute rounded-full border border-accent/50"
-            style={{ width: RING_PX[slot.size], height: RING_PX[slot.size] }}
+            style={{
+              width: `min(${RING_PX[slot.size]}px, ${RING_CQW[slot.size]}cqw)`,
+              height: `min(${RING_PX[slot.size]}px, ${RING_CQW[slot.size]}cqw)`,
+            }}
           />
         )}
         <div
           className={`overflow-hidden border border-background/40 bg-foreground shadow-[0_10px_28px_-14px_oklch(0_0_0/0.45)] ${CARD_ROUNDING[slot.size]} ${reducedMotion ? "" : "transition-opacity ease-in-out"} ${visible ? "opacity-100" : "opacity-0"}`}
           style={{
-            width: SIZE_PX[slot.size],
-            height: SIZE_PX[slot.size],
+            width: `min(${SIZE_PX[slot.size]}px, ${SIZE_CQW[slot.size]}cqw)`,
+            height: `min(${SIZE_PX[slot.size]}px, ${SIZE_CQW[slot.size]}cqw)`,
             transitionDuration: reducedMotion ? "0ms" : `${FADE_MS}ms`,
           }}
           title={slot.region}
@@ -242,6 +266,7 @@ export function IndiaDiscoveryMap({ className = "" }: { className?: string }) {
   return (
     <div
       className={`relative mx-auto aspect-[667/777] w-full max-w-[300px] sm:max-w-sm ${className}`}
+      style={{ containerType: "inline-size" }}
     >
       <div className="discovery-glow absolute inset-0 -z-10" aria-hidden="true" />
       <svg

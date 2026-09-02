@@ -2,9 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
 import { DeleteAccountDialog } from "@/components/delete-account-dialog";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { useAccount } from "@/hooks/use-session";
 
 export const Route = createFileRoute("/_authenticated/dashboard/settings")({
@@ -63,10 +62,9 @@ function Settings() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-20">
-        <p className="eyebrow">Your account</p>
+    <div className="mx-auto w-full max-w-2xl">
+      <DashboardBackLink to="/dashboard" />
+      <p className="eyebrow">Your account</p>
         <h1 className="mt-4 text-4xl">Account settings</h1>
 
         <div className="surface-card mt-10 space-y-5 p-8">
@@ -122,8 +120,6 @@ function Settings() {
             Delete my account
           </button>
         </div>
-      </main>
-      <SiteFooter />
       {showDelete && <DeleteAccountDialog role="customer" onClose={() => setShowDelete(false)} />}
     </div>
   );

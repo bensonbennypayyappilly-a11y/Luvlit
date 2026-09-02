@@ -2,8 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
 import { useAccount } from "@/hooks/use-session";
 import { getStaffAvailability } from "@/lib/public.functions";
 
@@ -145,10 +143,8 @@ function Dashboard() {
   });
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-20">
-        <p className="eyebrow">Hey {displayName ?? "there"} 👋</p>
+    <div className="mx-auto w-full max-w-5xl">
+      <p className="eyebrow">Hey {displayName ?? "there"} 👋</p>
         <h1 className="mt-4 text-4xl">Welcome back to LuvLit</h1>
         <p className="mt-3 max-w-xl text-muted-foreground">
           Here's a warm little snapshot of your appointments, requirements, chats and favourite
@@ -271,8 +267,6 @@ function Dashboard() {
             )}
           </div>
         </section>
-      </main>
-      <SiteFooter />
     </div>
   );
 }

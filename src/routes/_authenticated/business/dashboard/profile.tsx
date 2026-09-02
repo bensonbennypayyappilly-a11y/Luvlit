@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { MediaUploader } from "@/components/media-uploader";
 import { DashboardBackLink } from "@/components/dashboard-back-link";
+import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/profile")({
   head: () => ({
@@ -25,7 +26,7 @@ function ProfilePage() {
   const [thumb, setThumb] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
-  const { data: full } = useQuery({
+  const { data: full, isLoading: fullLoading } = useQuery({
     queryKey: ["dashboard-profile-full", businessId],
     enabled: !!businessId,
     queryFn: async () =>
@@ -89,6 +90,8 @@ function ProfilePage() {
           {status && <p className="mt-2 text-xs text-muted-foreground">{status}</p>}
         </div>
       )}
+
+      {fullLoading && <CardListSkeleton rows={1} />}
 
       {full && (
         <div className="surface-card mt-6 space-y-4 p-6 text-sm">

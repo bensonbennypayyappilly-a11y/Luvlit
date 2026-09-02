@@ -2,9 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
 import { BusinessCard } from "@/components/business-card";
+import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { useAccount } from "@/hooks/use-session";
 
 export const Route = createFileRoute("/_authenticated/dashboard/saved")({
@@ -50,10 +49,9 @@ function Saved() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-20">
-        <p className="eyebrow">Your shortlist</p>
+    <div className="mx-auto w-full max-w-6xl">
+      <DashboardBackLink to="/dashboard" />
+      <p className="eyebrow">Your shortlist</p>
         <h1 className="mt-4 text-4xl">Saved businesses</h1>
         <p className="mt-3 max-w-xl text-muted-foreground">
           Businesses you've favourited, ready whenever you need them.
@@ -78,8 +76,6 @@ function Saved() {
             <p className="text-muted-foreground">No favourites yet — browse and save some businesses.</p>
           )}
         </div>
-      </main>
-      <SiteFooter />
     </div>
   );
 }

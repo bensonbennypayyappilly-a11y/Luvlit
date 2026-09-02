@@ -135,6 +135,7 @@ export function ChatPanel({ conversationId, senderType, senderId, title, accent 
           onChange={(e) => setDraft(e.target.value)}
           maxLength={2000}
           placeholder="Write a message"
+          aria-label="Message"
           className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
         />
         <button
