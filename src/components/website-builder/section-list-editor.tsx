@@ -12,6 +12,7 @@ import {
   type Section,
   type SectionType,
 } from "@/lib/website-sections";
+import { ColorField } from "@/components/website-builder/color-field";
 
 type ItemOption = { id: string; name: string };
 
@@ -63,70 +64,85 @@ export function SectionListEditor({
   const availableToAdd = (Object.keys(SECTION_LIBRARY) as SectionType[]).filter((t) => !usedTypes.has(t));
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {sections.map((section, i) => {
         const meta = SECTION_LIBRARY[section.type];
         const deletable = !NON_DELETABLE.includes(section.type);
         const isExpanded = expanded === section.id;
 
         return (
-          <div key={section.id} className="rounded-md border border-border bg-card">
-            <div className="flex items-center gap-1 p-1">
-              <div className="flex shrink-0 flex-col">
+          <div
+            key={section.id}
+            className={`rounded-[10px] border transition-colors duration-150 ${
+              isExpanded ? "border-accent/30 bg-accent-soft/40" : "border-[#EEEEEE] bg-white"
+            }`}
+          >
+            <div className="flex items-center gap-0.5 py-1 pl-1 pr-2">
+              <div className="flex shrink-0 flex-col text-muted-foreground/60">
                 <button
                   type="button"
                   disabled={i === 0}
                   onClick={() => move(i, -1)}
                   aria-label="Move up"
-                  className="flex h-11 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-30"
+                  className="flex h-6 w-7 items-center justify-center rounded-[6px] transition-colors hover:bg-black/[0.04] hover:text-foreground disabled:opacity-25"
                 >
-                  ▲
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="m18 15-6-6-6 6" />
+                  </svg>
                 </button>
                 <button
                   type="button"
                   disabled={i === sections.length - 1}
                   onClick={() => move(i, 1)}
                   aria-label="Move down"
-                  className="flex h-11 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-30"
+                  className="flex h-6 w-7 items-center justify-center rounded-[6px] transition-colors hover:bg-black/[0.04] hover:text-foreground disabled:opacity-25"
                 >
-                  ▼
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
                 </button>
               </div>
-              <div className="min-w-0 flex-1 px-1">
-                <p className="truncate text-sm font-medium">{meta.label}</p>
-                {!section.visible && <p className="text-xs text-muted-foreground">Hidden</p>}
+              <div className="min-w-0 flex-1 px-2 py-1.5">
+                <p className="truncate text-[13px] font-medium">{meta.label}</p>
+                {!section.visible && <p className="text-[11px] text-muted-foreground">Hidden</p>}
               </div>
-              <button
-                type="button"
-                onClick={() => setExpanded(isExpanded ? null : section.id)}
-                className="inline-flex min-h-11 shrink-0 items-center rounded-md border border-border px-3 text-xs hover:border-accent"
-              >
-                {isExpanded ? "Done" : "Edit"}
-              </button>
-              <button
-                type="button"
-                onClick={() => update(section.id, { visible: !section.visible })}
-                aria-label={section.visible ? "Hide section" : "Show section"}
-                className={`inline-flex min-h-11 shrink-0 items-center rounded-md border px-3 text-xs ${
-                  section.visible ? "border-border" : "border-accent bg-accent-soft text-accent"
-                }`}
-              >
-                {section.visible ? "Hide" : "Show"}
-              </button>
-              {deletable && (
+              <div className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => remove(section.id)}
-                  aria-label="Remove section"
-                  className="flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-destructive"
+                  onClick={() => setExpanded(isExpanded ? null : section.id)}
+                  className={`inline-flex h-8 items-center rounded-[8px] px-2.5 text-xs font-medium transition-colors ${
+                    isExpanded ? "bg-accent text-white" : "text-muted-foreground hover:bg-black/[0.04] hover:text-foreground"
+                  }`}
                 >
-                  ✕
+                  {isExpanded ? "Done" : "Edit"}
                 </button>
-              )}
+                <button
+                  type="button"
+                  onClick={() => update(section.id, { visible: !section.visible })}
+                  aria-label={section.visible ? "Hide section" : "Show section"}
+                  className={`inline-flex h-8 items-center rounded-[8px] px-2.5 text-xs font-medium transition-colors ${
+                    section.visible ? "text-muted-foreground hover:bg-black/[0.04] hover:text-foreground" : "text-accent"
+                  }`}
+                >
+                  {section.visible ? "Hide" : "Show"}
+                </button>
+                {deletable && (
+                  <button
+                    type="button"
+                    onClick={() => remove(section.id)}
+                    aria-label="Remove section"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-[8px] text-muted-foreground/70 transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
 
             {isExpanded && (
-              <div className="space-y-3 border-t border-border p-3">
+              <div className="builder-pop-in space-y-3 border-t border-accent/20 p-3">
                 <SectionContentEditor section={section} items={items} onChange={(c) => updateContent(section.id, c)} />
               </div>
             )}
@@ -135,23 +151,23 @@ export function SectionListEditor({
       })}
 
       {adding ? (
-        <div className="rounded-md border border-border bg-card p-3">
-          <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">Add a section</p>
-          <div className="mt-2 space-y-1">
+        <div className="rounded-[10px] border border-[#EEEEEE] bg-white p-3">
+          <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">Add a section</p>
+          <div className="mt-2 space-y-0.5">
             {availableToAdd.length === 0 && <p className="text-xs text-muted-foreground">All sections added.</p>}
             {availableToAdd.map((t) => (
               <button
                 key={t}
                 type="button"
                 onClick={() => add(t)}
-                className="block w-full rounded-md px-2.5 py-2 text-left text-sm hover:bg-secondary"
+                className="block w-full rounded-[8px] px-2.5 py-2 text-left text-sm transition-colors hover:bg-[#FAFAFA]"
               >
                 <span className="font-medium">{SECTION_LIBRARY[t].label}</span>
                 <span className="ml-2 text-xs text-muted-foreground">{SECTION_LIBRARY[t].description}</span>
               </button>
             ))}
           </div>
-          <button type="button" onClick={() => setAdding(false)} className="mt-2 text-xs text-muted-foreground hover:text-foreground">
+          <button type="button" onClick={() => setAdding(false)} className="mt-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
             Cancel
           </button>
         </div>
@@ -159,9 +175,12 @@ export function SectionListEditor({
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="w-full rounded-md border border-dashed border-border py-2.5 text-sm text-muted-foreground hover:border-accent hover:text-accent"
+          className="flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-[#EAEAEA] py-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:border-accent hover:text-accent"
         >
-          + Add a section
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          Add a section
         </button>
       )}
     </div>
@@ -177,7 +196,8 @@ function SectionContentEditor({
   items: ItemOption[];
   onChange: (content: Record<string, unknown>) => void;
 }) {
-  const input = "w-full rounded-md border border-border bg-background px-3 py-2 text-sm";
+  const input =
+    "w-full rounded-[10px] border border-[#EAEAEA] bg-white px-3 py-2.5 text-sm outline-none transition-colors duration-150 focus:border-accent";
 
   // Local copy so typing feels instant; only the propagation upstream (a real DB write, via
   // the parent's onImmediateChange) is debounced — otherwise every keystroke fired a save.
@@ -200,54 +220,34 @@ function SectionContentEditor({
   return (
     <>
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">Background</p>
-          <div className="mt-2 flex items-center gap-2">
-            <input
-              type="color"
-              value={backgroundColor || "#ffffff"}
-              onChange={(e) => set({ ...local, backgroundColor: e.target.value })}
-              aria-label="Section background colour"
-              className="h-9 w-12 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
-            />
-            {backgroundColor && (
-              <button
-                type="button"
-                onClick={() => {
+        <ColorField
+          label="Background"
+          value={backgroundColor || null}
+          defaultColor="#ffffff"
+          onChange={(hex) => set({ ...local, backgroundColor: hex })}
+          onClear={
+            backgroundColor
+              ? () => {
                   const { backgroundColor: _drop, ...rest } = local;
                   set(rest);
-                }}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Reset
-              </button>
-            )}
-          </div>
-        </div>
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground">Text colour</p>
-          <div className="mt-2 flex items-center gap-2">
-            <input
-              type="color"
-              value={textColor || "#000000"}
-              onChange={(e) => set({ ...local, textColor: e.target.value })}
-              aria-label="Section text colour"
-              className="h-9 w-12 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
-            />
-            {textColor && (
-              <button
-                type="button"
-                onClick={() => {
+                }
+              : undefined
+          }
+        />
+        <ColorField
+          label="Text colour"
+          value={textColor || null}
+          defaultColor="#000000"
+          onChange={(hex) => set({ ...local, textColor: hex })}
+          onClear={
+            textColor
+              ? () => {
                   const { textColor: _drop, ...rest } = local;
                   set(rest);
-                }}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Reset
-              </button>
-            )}
-          </div>
-        </div>
+                }
+              : undefined
+          }
+        />
       </div>
       <p className="text-xs text-muted-foreground/80">
         Applies to this section's headings and body text. Muted/secondary text keeps its own subtler shade.
@@ -319,7 +319,7 @@ function SectionTypeEditor({
       return (
         <div className="space-y-3">
           {list.map((it, i) => (
-            <div key={i} className="space-y-1.5 rounded-md border border-border p-2.5">
+            <div key={i} className="space-y-1.5 rounded-[10px] border border-[#EEEEEE] p-2.5">
               <input
                 value={it.q}
                 onChange={(e) => {

@@ -117,6 +117,8 @@ async function compressImage(file: File, maxEdge: number, quality = 0.82): Promi
   }
 }
 
+const DEFAULT_WRAPPER = "rounded-lg border border-border bg-card p-5";
+
 type Props = {
   businessId: string;
   kind: MediaKind;
@@ -125,6 +127,10 @@ type Props = {
   label?: string;
   /** Storage bucket override; defaults to business-media. */
   bucket?: string;
+  /** Overrides the default bordered-card wrapper look — used by the website builder, which
+   * wants a flatter style, without changing the default everywhere else this is used
+   * (onboarding, the dashboard profile page). */
+  wrapperClassName?: string;
 };
 
 export function MediaUploader({
@@ -134,6 +140,7 @@ export function MediaUploader({
   onChange,
   label,
   bucket = MEDIA_BUCKET,
+  wrapperClassName = DEFAULT_WRAPPER,
 }: Props) {
   const limits = MEDIA_LIMITS[kind];
   const previewUrl = useMediaUrl(value, bucket);
@@ -182,7 +189,7 @@ export function MediaUploader({
   );
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5">
+    <div className={wrapperClassName}>
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm font-medium">{label ?? limits.label}</p>
         {value && (
@@ -252,10 +259,12 @@ export function HeroMediaUploader({
   businessId,
   value,
   onChange,
+  wrapperClassName = DEFAULT_WRAPPER,
 }: {
   businessId: string;
   value: HeroMediaValue;
   onChange: (value: HeroMediaValue) => void;
+  wrapperClassName?: string;
 }) {
   const imagePreview = useMediaUrl(value.image);
   const videoPreview = useMediaUrl(value.video);
@@ -304,7 +313,7 @@ export function HeroMediaUploader({
   const hasMedia = !!value.image || !!value.video;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5">
+    <div className={wrapperClassName}>
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm font-medium">Hero photo or video</p>
         {hasMedia && (

@@ -8,6 +8,7 @@ import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { type ProfileBusiness } from "@/components/business-profile-preview";
 import { BusinessSitePage } from "@/components/website/site-page";
 import { BuilderSection, SaveStatus } from "@/components/website-builder/section";
+import { ColorField } from "@/components/website-builder/color-field";
 import { GalleryEditor } from "@/components/website-builder/gallery-editor";
 import { LocationsEditor } from "@/components/website-builder/locations-editor";
 import { SectionListEditor } from "@/components/website-builder/section-list-editor";
@@ -140,6 +141,52 @@ function useBusinessDraft(businessId: string | undefined) {
       };
     },
   });
+}
+
+/** A "manage this elsewhere, toggle it here" row — shared by Products, Services and Book
+ * Appointments, which all point at their own dedicated page but still need a quick on/off for
+ * whether that content shows on the public site. */
+function ManageLinkRow({
+  to,
+  label,
+  count,
+  visible,
+  onToggle,
+}: {
+  to: string;
+  label: string;
+  count?: string;
+  visible: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-[10px] border border-[#EEEEEE] px-4 py-3.5 transition-colors duration-150 hover:border-accent/25">
+      <div className="min-w-0">
+        <Link to={to} className="inline-flex items-center gap-1 text-sm font-medium text-accent transition-colors hover:text-accent/80">
+          {label}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </Link>
+        {count && <p className="mt-0.5 text-xs text-muted-foreground">{count}</p>}
+      </div>
+      <label className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
+        On website
+        <Switch checked={visible} onCheckedChange={onToggle} />
+      </label>
+    </div>
+  );
+}
+
+/** One labeled group of fields inside Website Settings (Brand/Contact/Social/Domain/Locations) —
+ * a small uppercase eyebrow + a divider, not another nested bordered card. */
+function SettingsGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="border-t border-[#EEEEEE] pt-5 first:border-t-0 first:pt-0">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
+      <div className="mt-3 space-y-3">{children}</div>
+    </div>
+  );
 }
 
 function WebsiteBuilder() {
@@ -280,6 +327,12 @@ function WebsiteBuilder() {
   };
   const blocked = hasErrors(fieldErrors);
 
+  const fieldClass = (hasError?: boolean) =>
+    `w-full rounded-[10px] border bg-white px-3.5 py-2.5 text-sm outline-none transition-colors duration-150 focus:border-accent ${
+      hasError ? "border-destructive" : "border-[#EAEAEA]"
+    }`;
+  const uploaderWrapper = "rounded-[10px] border border-[#EAEAEA] bg-white p-4";
+
   const previewBusiness: ProfileBusiness = {
     id: businessId,
     name: draft.name,
@@ -344,35 +397,39 @@ function WebsiteBuilder() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-4">
+    // Below `lg` the aside and preview stack vertically and the whole page scrolls together
+    // (the aside's own overflow-y-auto is lg-only too — see the aside below), so only bound
+    // this to the viewport height — enabling the aside/preview to scroll independently of each
+    // other — at `lg` and up.
+    <div className="flex flex-col bg-white lg:h-[calc(100dvh-6rem)] lg:overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EEEEEE] bg-white px-5 py-3.5">
         <DashboardBackLink className="" />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <SaveStatus state={saveState} error={saveError} />
           <button
             type="button"
             onClick={publish}
             disabled={publishState === "saving" || blocked}
             title={blocked ? "Fix the highlighted fields first" : undefined}
-            className="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            className="rounded-[10px] bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-all duration-150 hover:shadow-md disabled:opacity-60 disabled:shadow-none"
           >
             {publishState === "saving" ? "Saving…" : "Save and Publish"}
           </button>
         </div>
       </div>
       {blocked && (
-        <p className="px-4 pt-3 text-sm text-destructive">
+        <p className="border-b border-[#EEEEEE] bg-white px-5 py-2.5 text-sm text-destructive">
           Fix the highlighted fields in the editor before publishing.
         </p>
       )}
-      {publishError && <p className="px-4 pt-3 text-sm text-destructive">{publishError}</p>}
+      {publishError && <p className="border-b border-[#EEEEEE] bg-white px-5 py-2.5 text-sm text-destructive">{publishError}</p>}
       {publishState === "saved" && !publishError && (
-        <p className="px-4 pt-3 text-xs text-muted-foreground">Your website is live.</p>
+        <p className="border-b border-[#EEEEEE] bg-white px-5 py-2.5 text-xs text-muted-foreground">Your website is live.</p>
       )}
 
-      <div className="flex flex-1 flex-col lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* Editor */}
-        <aside className="w-full shrink-0 border-b border-border bg-card lg:w-[320px] lg:border-b-0 lg:border-r lg:overflow-y-auto">
+        <aside className="w-full shrink-0 border-b border-[#EEEEEE] bg-white lg:w-[320px] lg:min-h-0 lg:border-b-0 lg:border-r lg:overflow-y-auto">
           <BuilderSection title="Template" subtitle="Pick a look for your website. Your content stays the same either way." defaultOpen>
             <div className="grid grid-cols-2 gap-2.5">
               {TEMPLATE_LIST.map((t) => (
@@ -380,15 +437,25 @@ function WebsiteBuilder() {
                   key={t.id}
                   type="button"
                   onClick={() => onImmediateChange({ template: t.id })}
-                  className={`rounded-md border p-2.5 text-left transition-colors ${
-                    draft.template === t.id ? "border-accent bg-accent-soft" : "border-border hover:border-accent/60"
+                  className={`group rounded-[12px] border p-2.5 text-left transition-all duration-150 ${
+                    draft.template === t.id
+                      ? "border-accent bg-accent-soft shadow-[0_0_0_1px_var(--accent)]"
+                      : "border-[#EAEAEA] hover:border-accent/40 hover:shadow-sm"
                   }`}
                 >
                   <span
-                    className="block h-10 w-full rounded-sm"
+                    className="relative block h-11 w-full overflow-hidden rounded-[8px]"
                     style={{ background: `linear-gradient(135deg, ${t.previewSurface}, ${t.previewAccent})` }}
-                  />
-                  <span className="mt-2 block text-xs font-medium">{t.label}</span>
+                  >
+                    {draft.template === t.id && (
+                      <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-accent text-white">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                      </span>
+                    )}
+                  </span>
+                  <span className={`mt-2 block text-xs font-medium ${draft.template === t.id ? "text-accent" : "text-foreground"}`}>{t.label}</span>
                   <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">{t.suitedFor}</span>
                 </button>
               ))}
@@ -404,13 +471,14 @@ function WebsiteBuilder() {
               businessId={businessId}
               value={{ image: draft.hero_image_url, video: draft.main_video_url }}
               onChange={({ image, video }) => onImmediateChange({ hero_image_url: image, main_video_url: video })}
+              wrapperClassName={uploaderWrapper}
             />
             <textarea
               rows={3}
               value={draft.description ?? ""}
               onChange={(e) => onTextChange("description", e.target.value)}
               placeholder="A short tagline — a couple of sentences shown under your name."
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              className={fieldClass()}
             />
           </BuilderSection>
 
@@ -422,6 +490,7 @@ function WebsiteBuilder() {
                 kind="short"
                 value={draft.short_video_urls[i] ?? null}
                 onChange={(path) => setShortVideo(i, path)}
+                wrapperClassName={uploaderWrapper}
               />
             ))}
           </BuilderSection>
@@ -432,6 +501,7 @@ function WebsiteBuilder() {
               kind="logo"
               value={draft.logo_url}
               onChange={(path) => onImmediateChange({ logo_url: path })}
+              wrapperClassName={uploaderWrapper}
             />
           </BuilderSection>
 
@@ -443,69 +513,76 @@ function WebsiteBuilder() {
             />
           </BuilderSection>
 
-          <BuilderSection title="About Your Business" subtitle="Name, your story, photo, categories and business type.">
-            <input
-              value={draft.name}
-              onChange={(e) => onTextChange("name", e.target.value, validateBusinessName(e.target.value))}
-              placeholder="Business name"
-              aria-invalid={!!fieldErrors.name}
-              aria-describedby={fieldErrors.name ? "err-name" : undefined}
-              className={`w-full rounded-md border bg-background px-3 py-2 text-sm ${
-                fieldErrors.name ? "border-destructive" : "border-border"
-              }`}
-            />
-            <span id="err-name">
-              <FieldError message={fieldErrors.name} />
-            </span>
-            <textarea
-              rows={6}
-              value={draft.about_text ?? ""}
-              onChange={(e) => onTextChange("about_text", e.target.value)}
-              placeholder="Tell your story — this shows in the About section, separate from your hero tagline."
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
-            />
+          <BuilderSection title="About Your Business" subtitle="Your business's own content — name, story, photo, categories and type.">
+            <div>
+              <label className="text-[13px] font-medium text-foreground">Business name</label>
+              <input
+                value={draft.name}
+                onChange={(e) => onTextChange("name", e.target.value, validateBusinessName(e.target.value))}
+                placeholder="Business name"
+                aria-invalid={!!fieldErrors.name}
+                aria-describedby={fieldErrors.name ? "err-name" : undefined}
+                className={`mt-2 ${fieldClass(!!fieldErrors.name)}`}
+              />
+              <span id="err-name">
+                <FieldError message={fieldErrors.name} />
+              </span>
+            </div>
+            <div>
+              <label className="text-[13px] font-medium text-foreground">Your story</label>
+              <textarea
+                rows={6}
+                value={draft.about_text ?? ""}
+                onChange={(e) => onTextChange("about_text", e.target.value)}
+                placeholder="Tell your story — this shows in the About section, separate from your hero tagline."
+                className={`mt-2 ${fieldClass()}`}
+              />
+            </div>
             <MediaUploader
               businessId={businessId}
               kind="about"
               value={draft.about_image_url}
               onChange={(path) => onImmediateChange({ about_image_url: path })}
+              wrapperClassName={uploaderWrapper}
             />
-            <div className="flex flex-wrap gap-2">
-              {(categories ?? []).map((c) => (
-                <button
-                  type="button"
-                  key={c.id}
-                  onClick={() => onImmediateChange({ categories: toggle(draft.categories, c.name) })}
-                  className={`rounded-full border px-3 py-1.5 text-xs ${
-                    draft.categories.includes(c.name) ? "border-accent bg-accent-soft" : "border-border"
-                  }`}
-                >
-                  {c.name}
-                </button>
-              ))}
+            <div>
+              <label className="text-[13px] font-medium text-foreground">Categories</label>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {(categories ?? []).map((c) => (
+                  <button
+                    type="button"
+                    key={c.id}
+                    onClick={() => onImmediateChange({ categories: toggle(draft.categories, c.name) })}
+                    className={`rounded-full border px-3 py-1.5 text-xs transition-colors duration-150 ${
+                      draft.categories.includes(c.name) ? "border-accent bg-accent-soft text-accent" : "border-[#EAEAEA] hover:border-accent/40"
+                    }`}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {["product", "appointment", "custom"].map((t) => (
-                <button
-                  type="button"
-                  key={t}
-                  onClick={() => onImmediateChange({ business_types: toggle(draft.business_types, t) })}
-                  className={`rounded-full border px-3 py-1.5 text-xs capitalize ${
-                    draft.business_types.includes(t) ? "border-accent bg-accent-soft" : "border-border"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+            <div>
+              <label className="text-[13px] font-medium text-foreground">Business type</label>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {["product", "appointment", "custom"].map((t) => (
+                  <button
+                    type="button"
+                    key={t}
+                    onClick={() => onImmediateChange({ business_types: toggle(draft.business_types, t) })}
+                    className={`rounded-full border px-3 py-1.5 text-xs capitalize transition-colors duration-150 ${
+                      draft.business_types.includes(t) ? "border-accent bg-accent-soft text-accent" : "border-[#EAEAEA] hover:border-accent/40"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
             {showEco && (
-              <label className="flex items-center justify-between rounded-md border border-border p-4 text-sm">
+              <label className="flex items-center justify-between rounded-[10px] border border-[#EEEEEE] px-4 py-3.5 text-sm">
                 <span>Eco-friendly / sustainable?</span>
-                <input
-                  type="checkbox"
-                  checked={draft.is_eco_friendly}
-                  onChange={(e) => onImmediateChange({ is_eco_friendly: e.target.checked })}
-                />
+                <Switch checked={draft.is_eco_friendly} onCheckedChange={(checked) => onImmediateChange({ is_eco_friendly: checked })} />
               </label>
             )}
           </BuilderSection>
@@ -514,145 +591,133 @@ function WebsiteBuilder() {
             title="Products & Services"
             subtitle={`${data?.items?.length ?? 0} product(s) · ${data?.services?.length ?? 0} service(s)`}
           >
-            <div className="flex items-center justify-between gap-3">
-              <Link
-                to="/business/dashboard/products"
-                className="inline-block rounded-md border border-accent px-4 py-2.5 text-sm"
-              >
-                Add / Edit Products →
-              </Link>
-              <label className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-                On website
-                <Switch checked={isSectionVisible("products")} onCheckedChange={() => toggleSectionVisible("products")} />
-              </label>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <Link
-                to="/business/dashboard/services"
-                className="inline-block rounded-md border border-accent px-4 py-2.5 text-sm"
-              >
-                Add / Edit Services →
-              </Link>
-              <label className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-                On website
-                <Switch checked={isSectionVisible("services")} onCheckedChange={() => toggleSectionVisible("services")} />
-              </label>
-            </div>
+            <ManageLinkRow
+              to="/business/dashboard/products"
+              label="Add / Edit Products"
+              count={`${data?.items?.length ?? 0} product${data?.items?.length === 1 ? "" : "s"}`}
+              visible={isSectionVisible("products")}
+              onToggle={() => toggleSectionVisible("products")}
+            />
+            <ManageLinkRow
+              to="/business/dashboard/services"
+              label="Add / Edit Services"
+              count={`${data?.services?.length ?? 0} service${data?.services?.length === 1 ? "" : "s"}`}
+              visible={isSectionVisible("services")}
+              onToggle={() => toggleSectionVisible("services")}
+            />
           </BuilderSection>
 
           {draft.business_types.includes("appointment") && (
             <BuilderSection title="Book Appointments" subtitle="Manage staff & availability there.">
-              <div className="flex items-center justify-between gap-3">
-                <Link
-                  to="/business/dashboard/staff"
-                  className="inline-block rounded-md border border-accent px-4 py-2.5 text-sm"
-                >
-                  Add / Edit Appointments →
-                </Link>
-                <label className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">
-                  On website
-                  <Switch checked={isSectionVisible("booking")} onCheckedChange={() => toggleSectionVisible("booking")} />
-                </label>
-              </div>
+              <ManageLinkRow
+                to="/business/dashboard/staff"
+                label="Add / Edit Appointments"
+                count={`${data?.staff?.length ?? 0} staff member${data?.staff?.length === 1 ? "" : "s"}`}
+                visible={isSectionVisible("booking")}
+                onToggle={() => toggleSectionVisible("booking")}
+              />
             </BuilderSection>
           )}
 
-          <BuilderSection title="Website Settings" subtitle="Colour, contact info, locations & delivery.">
-            <div>
-              <p className="text-sm font-medium">Brand accent colour</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {ACCENT_COLORS.map((c) => (
-                  <button
-                    type="button"
-                    key={c.value}
-                    onClick={() => onImmediateChange({ brand_accent_color: c.value })}
-                    title={c.name}
-                    className={`flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs ${
-                      draft.brand_accent_color === c.value ? "border-accent" : "border-border"
-                    }`}
-                  >
-                    <span className="size-4 rounded-full" style={{ backgroundColor: c.value }} />
-                    {c.name}
-                  </button>
-                ))}
+          <BuilderSection title="Website Settings" subtitle="Brand, contact, social, domain, locations & delivery.">
+            <SettingsGroup label="Brand">
+              <div>
+                <p className="text-[13px] font-medium text-foreground">Accent colour</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {ACCENT_COLORS.map((c) => (
+                    <button
+                      type="button"
+                      key={c.value}
+                      onClick={() => onImmediateChange({ brand_accent_color: c.value })}
+                      title={c.name}
+                      aria-label={c.name}
+                      aria-pressed={draft.brand_accent_color === c.value}
+                      className={`flex size-8 items-center justify-center rounded-full border-2 transition-all duration-150 ${
+                        draft.brand_accent_color === c.value ? "border-accent" : "border-transparent hover:border-[#EAEAEA]"
+                      }`}
+                    >
+                      <span className="size-5 rounded-full" style={{ backgroundColor: c.value }} />
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div>
-              <p className="text-sm font-medium">Page background colour</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                The default background behind every page. Leave unset to use the template's own background.
-              </p>
-              <div className="mt-2 flex items-center gap-2">
+              <ColorField
+                label="Page background"
+                value={draft.background_color}
+                defaultColor="#ffffff"
+                onChange={(hex) => onImmediateChange({ background_color: hex })}
+                onClear={() => onImmediateChange({ background_color: null })}
+                helpText="The default background behind every page. Leave unset to use the template's own background."
+              />
+            </SettingsGroup>
+
+            <SettingsGroup label="Contact">
+              <div>
+                <label className="text-[13px] font-medium text-foreground">WhatsApp number</label>
                 <input
-                  type="color"
-                  value={draft.background_color ?? "#ffffff"}
-                  onChange={(e) => onImmediateChange({ background_color: e.target.value })}
-                  aria-label="Page background colour"
-                  className="h-9 w-12 cursor-pointer rounded-md border border-border bg-transparent p-0.5"
+                  value={draft.whatsapp ?? ""}
+                  onChange={(e) => onTextChange("whatsapp", e.target.value, validatePhone(e.target.value))}
+                  placeholder="+91…"
+                  inputMode="tel"
+                  aria-invalid={!!fieldErrors.whatsapp}
+                  className={`mt-2 ${fieldClass(!!fieldErrors.whatsapp)}`}
                 />
-                {draft.background_color && (
-                  <button
-                    type="button"
-                    onClick={() => onImmediateChange({ background_color: null })}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Reset to default
-                  </button>
-                )}
+                <FieldError message={fieldErrors.whatsapp} />
               </div>
-            </div>
-            <input
-              value={draft.whatsapp ?? ""}
-              onChange={(e) => onTextChange("whatsapp", e.target.value, validatePhone(e.target.value))}
-              placeholder="WhatsApp number"
-              inputMode="tel"
-              aria-invalid={!!fieldErrors.whatsapp}
-              className={`w-full rounded-md border bg-background px-3 py-2 text-sm ${
-                fieldErrors.whatsapp ? "border-destructive" : "border-border"
-              }`}
-            />
-            <FieldError message={fieldErrors.whatsapp} />
-            <input
-              value={draft.contact_email ?? ""}
-              onChange={(e) => onTextChange("contact_email", e.target.value, validateEmail(e.target.value))}
-              placeholder="Contact email"
-              inputMode="email"
-              aria-invalid={!!fieldErrors.contact_email}
-              className={`w-full rounded-md border bg-background px-3 py-2 text-sm ${
-                fieldErrors.contact_email ? "border-destructive" : "border-border"
-              }`}
-            />
-            <FieldError message={fieldErrors.contact_email} />
-            <input
-              value={draft.instagram_url ?? ""}
-              onChange={(e) => onTextChange("instagram_url", e.target.value, validateUrl(e.target.value))}
-              placeholder="Instagram link"
-              inputMode="url"
-              aria-invalid={!!fieldErrors.instagram_url}
-              className={`w-full rounded-md border bg-background px-3 py-2 text-sm ${
-                fieldErrors.instagram_url ? "border-destructive" : "border-border"
-              }`}
-            />
-            <FieldError message={fieldErrors.instagram_url} />
-            <input
-              value={draft.custom_domain ?? ""}
-              onChange={(e) => onTextChange("custom_domain", e.target.value, validateUrl(e.target.value))}
-              placeholder="Official website link (optional)"
-              inputMode="url"
-              aria-invalid={!!fieldErrors.custom_domain}
-              className={`w-full rounded-md border bg-background px-3 py-2 text-sm ${
-                fieldErrors.custom_domain ? "border-destructive" : "border-border"
-              }`}
-            />
-            <FieldError message={fieldErrors.custom_domain} />
-            <LocationsEditor businessId={businessId} />
+              <div>
+                <label className="text-[13px] font-medium text-foreground">Contact email</label>
+                <input
+                  value={draft.contact_email ?? ""}
+                  onChange={(e) => onTextChange("contact_email", e.target.value, validateEmail(e.target.value))}
+                  placeholder="you@business.com"
+                  inputMode="email"
+                  aria-invalid={!!fieldErrors.contact_email}
+                  className={`mt-2 ${fieldClass(!!fieldErrors.contact_email)}`}
+                />
+                <FieldError message={fieldErrors.contact_email} />
+              </div>
+            </SettingsGroup>
+
+            <SettingsGroup label="Social">
+              <div>
+                <label className="text-[13px] font-medium text-foreground">Instagram link</label>
+                <input
+                  value={draft.instagram_url ?? ""}
+                  onChange={(e) => onTextChange("instagram_url", e.target.value, validateUrl(e.target.value))}
+                  placeholder="https://instagram.com/…"
+                  inputMode="url"
+                  aria-invalid={!!fieldErrors.instagram_url}
+                  className={`mt-2 ${fieldClass(!!fieldErrors.instagram_url)}`}
+                />
+                <FieldError message={fieldErrors.instagram_url} />
+              </div>
+            </SettingsGroup>
+
+            <SettingsGroup label="Domain">
+              <div>
+                <label className="text-[13px] font-medium text-foreground">Official website (optional)</label>
+                <input
+                  value={draft.custom_domain ?? ""}
+                  onChange={(e) => onTextChange("custom_domain", e.target.value, validateUrl(e.target.value))}
+                  placeholder="https://yourbusiness.com"
+                  inputMode="url"
+                  aria-invalid={!!fieldErrors.custom_domain}
+                  className={`mt-2 ${fieldClass(!!fieldErrors.custom_domain)}`}
+                />
+                <FieldError message={fieldErrors.custom_domain} />
+              </div>
+            </SettingsGroup>
+
+            <SettingsGroup label="Locations & delivery">
+              <LocationsEditor businessId={businessId} />
+            </SettingsGroup>
           </BuilderSection>
         </aside>
 
         {/* Live preview */}
-        <div className="flex min-w-0 flex-1 flex-col bg-secondary/30">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5">
-            <div className="flex items-center gap-1">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#FAFAFA]">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EEEEEE] bg-white px-5 py-2.5">
+            <div className="flex items-center gap-0.5 rounded-[10px] bg-[#F5F5F5] p-1">
               {VIEWPORTS.map((v) => (
                 <button
                   key={v.id}
@@ -660,8 +725,8 @@ function WebsiteBuilder() {
                   onClick={() => setViewport(v.id)}
                   aria-label={`${v.label} preview`}
                   aria-pressed={viewport === v.id}
-                  className={`rounded-md border px-2.5 py-1.5 text-xs ${
-                    viewport === v.id ? "border-accent bg-accent-soft" : "border-border"
+                  className={`rounded-[8px] px-2.5 py-1.5 text-xs transition-all duration-150 ${
+                    viewport === v.id ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {v.icon}
@@ -673,7 +738,7 @@ function WebsiteBuilder() {
                 href={`https://${slug}.luvlit.in/`}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-md border border-border px-3 py-1.5 text-xs hover:border-accent"
+                className="rounded-[8px] border border-[#EAEAEA] px-3 py-1.5 text-xs font-medium transition-colors duration-150 hover:border-accent hover:text-accent"
               >
                 Open live site ↗
               </a>
@@ -685,23 +750,23 @@ function WebsiteBuilder() {
           {/* Page switcher — exactly the pages this business's nav will show, from the same
               deriveSitePages() the public site uses, so previewing can't show a page visitors
               won't get (or miss one they will). */}
-          <div className="flex flex-wrap gap-1 border-b border-border bg-card px-4 py-2">
+          <div className="flex flex-wrap gap-1 border-b border-[#EEEEEE] bg-white px-5 py-2">
             {previewPages.map((p) => (
               <button
                 key={p.id}
                 type="button"
                 onClick={() => setPreviewPage(p.id)}
-                className={`rounded-md px-3 py-1.5 text-xs transition-colors ${
+                className={`rounded-[8px] px-3 py-1.5 text-xs transition-colors duration-150 ${
                   activePreviewPage === p.id
                     ? "bg-accent-soft font-medium text-accent"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    : "text-muted-foreground hover:bg-[#FAFAFA] hover:text-foreground"
                 }`}
               >
                 {p.label}
               </button>
             ))}
           </div>
-          <p className="border-b border-border bg-card px-4 py-2.5 text-xs text-muted-foreground">
+          <p className="border-b border-[#EEEEEE] bg-white px-5 py-2.5 text-xs text-muted-foreground">
             {isPubliclyLive
               ? "This preview matches your live site. Most edits here save straight to it as you make them — only section layout (Page Layout) stays staged until you press \"Save and Publish.\""
               : "Live preview — nothing here is public yet. Press \"Save and Publish\" to go live."}
@@ -709,7 +774,7 @@ function WebsiteBuilder() {
 
           <div className="flex-1 overflow-y-auto p-4 lg:p-8">
             <div
-              className={`mx-auto overflow-hidden rounded-lg border border-border bg-background shadow-sm transition-all ${VIEWPORT_WIDTH[viewport]}`}
+              className={`mx-auto overflow-hidden rounded-[14px] border border-[#EAEAEA] bg-background shadow-[0_8px_30px_-16px_rgba(23,42,30,0.18)] transition-all duration-200 ${VIEWPORT_WIDTH[viewport]}`}
             >
               <BusinessSitePage business={previewBusiness} page={activePreviewPage} preview />
             </div>

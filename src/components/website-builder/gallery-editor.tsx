@@ -6,16 +6,16 @@ import { GALLERY_MAX } from "@/lib/constants";
 function GalleryThumb({ path, onRemove }: { path: string; onRemove: () => void }) {
   const url = useMediaUrl(path);
   return (
-    <div className="relative overflow-hidden rounded-md border border-border">
+    <div className="group relative overflow-hidden rounded-[10px] border border-[#EEEEEE]">
       {url ? (
         <img src={url} alt="Gallery item" className="h-24 w-full object-cover" />
       ) : (
-        <div className="h-24 w-full bg-secondary" />
+        <div className="h-24 w-full bg-[#FAFAFA]" />
       )}
       <button
         type="button"
         onClick={onRemove}
-        className="absolute right-1 top-1 rounded-md bg-background/90 px-2.5 py-1 text-xs text-destructive"
+        className="absolute right-1.5 top-1.5 rounded-[6px] bg-white/95 px-2 py-1 text-[11px] font-medium text-destructive shadow-sm transition-colors duration-150 hover:bg-white"
       >
         Remove
       </button>
@@ -60,6 +60,7 @@ export function GalleryEditor({
           value={null}
           onChange={(path) => path && persist([...value, path])}
           label={`Add a photo (${value.length}/${GALLERY_MAX})`}
+          wrapperClassName="rounded-[10px] border border-[#EAEAEA] bg-white p-4"
         />
       ) : (
         <p className="text-xs text-muted-foreground">You've reached the {GALLERY_MAX}-photo limit.</p>

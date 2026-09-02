@@ -79,36 +79,38 @@ export function LocationsEditor({ businessId }: { businessId: string }) {
     qc.invalidateQueries({ queryKey: ["builder-delivery", businessId] });
   }
 
+  const input =
+    "w-full rounded-[10px] border border-[#EAEAEA] bg-white px-3 py-2.5 text-sm outline-none transition-colors duration-150 focus:border-accent";
+
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm font-medium">Locations</p>
-        <div className="mt-3 space-y-3">
+        <p className="text-[13px] font-medium text-foreground">Locations</p>
+        <div className="mt-2.5 space-y-2">
           {(locations ?? []).map((l) => (
-            <div key={l.id} className="flex items-center justify-between rounded-md border border-border p-4 text-xs">
+            <div key={l.id} className="flex items-center justify-between rounded-[10px] border border-[#EEEEEE] px-3.5 py-3 text-xs">
               <div>
-                <p className="text-sm font-medium">{l.city}{l.is_primary ? " · Main branch" : ""}</p>
+                <p className="text-sm font-medium">
+                  {l.city}
+                  {l.is_primary ? " · Main branch" : ""}
+                </p>
                 <p className="text-muted-foreground">{[l.address, l.state].filter(Boolean).join(", ")}</p>
               </div>
-              <button type="button" onClick={() => removeLocation(l.id)} className="text-destructive">
+              <button type="button" onClick={() => removeLocation(l.id)} className="text-xs text-destructive transition-colors hover:text-destructive/80">
                 Remove
               </button>
             </div>
           ))}
         </div>
-        <div className="mt-4 space-y-3">
+        <div className="mt-3 space-y-2.5">
           <input
             value={form.address}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
             placeholder="Address"
-            className="w-full rounded-md border border-border bg-card px-3 py-2.5 text-sm"
+            className={input}
           />
-          <div className="flex gap-3">
-            <select
-              value={form.city}
-              onChange={(e) => setForm({ ...form, city: e.target.value })}
-              className="w-full rounded-md border border-border bg-card px-3 py-2.5 text-sm"
-            >
+          <div className="flex gap-2.5">
+            <select value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className={input}>
               <option value="">City</option>
               {CITIES.map((c) => (
                 <option key={c}>{c}</option>
@@ -118,30 +120,34 @@ export function LocationsEditor({ businessId }: { businessId: string }) {
               value={form.state}
               onChange={(e) => setForm({ ...form, state: e.target.value })}
               placeholder="State"
-              className="w-full rounded-md border border-border bg-card px-3 py-2.5 text-sm"
+              className={input}
             />
           </div>
-          <button type="button" onClick={addLocation} className="rounded-md border border-accent px-4 py-2 text-sm">
+          <button
+            type="button"
+            onClick={addLocation}
+            className="rounded-[10px] border border-accent px-4 py-2 text-sm font-medium text-accent transition-colors duration-150 hover:bg-accent-soft"
+          >
             Add location
           </button>
         </div>
       </div>
 
       <div>
-        <p className="text-sm font-medium">Delivery areas</p>
-        <label className="mt-3 flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={panIndia} onChange={(e) => setPanIndia(e.target.checked)} />
+        <p className="text-[13px] font-medium text-foreground">Delivery areas</p>
+        <label className="mt-2.5 flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={panIndia} onChange={(e) => setPanIndia(e.target.checked)} className="accent-[color:var(--accent)]" />
           I deliver / serve all of India
         </label>
         {!panIndia && (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
             {CITIES.map((c) => (
               <button
                 type="button"
                 key={c}
                 onClick={() => toggleDeliveryCity(c)}
-                className={`rounded-full border px-3 py-1.5 text-xs ${
-                  deliveryCities.includes(c) ? "border-accent bg-accent-soft" : "border-border"
+                className={`rounded-full border px-3 py-1.5 text-xs transition-colors duration-150 ${
+                  deliveryCities.includes(c) ? "border-accent bg-accent-soft text-accent" : "border-[#EAEAEA] hover:border-accent/40"
                 }`}
               >
                 {c}
