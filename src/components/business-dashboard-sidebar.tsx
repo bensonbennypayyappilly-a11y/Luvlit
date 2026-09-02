@@ -90,7 +90,7 @@ export function BusinessDashboardSidebar({ businessName }: { businessName: strin
           </div>
         </div>
       )}
-      <aside className="hidden w-64 shrink-0 bg-primary px-4 py-6 md:flex md:h-full md:flex-col md:gap-6">
+      <aside className="hidden w-64 shrink-0 self-stretch bg-primary px-4 py-6 md:flex md:flex-col md:gap-6">
         <div className="px-3">
           <p className="text-[0.6875rem] font-medium uppercase tracking-[0.18em] text-white/50">Business</p>
           <p className="mt-1 truncate text-sm font-medium text-white">{businessName}</p>

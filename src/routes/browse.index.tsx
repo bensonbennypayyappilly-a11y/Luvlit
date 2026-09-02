@@ -8,6 +8,7 @@ import { Reveal } from "@/components/reveal";
 import { CategoryCard } from "@/components/category-card";
 import { getCategories, getBrowseResults } from "@/lib/public.functions";
 import type { CategoryRow } from "@/lib/public.types";
+import { useAccount } from "@/hooks/use-session";
 
 const PAGE_SIZE = 24;
 
@@ -54,6 +55,9 @@ function BrowseIndex() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const page = search.page ?? 1;
+  // A signed-in business must never see its own listing while discovering other businesses.
+  const { businessId } = useAccount();
+  const businesses = businessId ? results.businesses.filter((b) => b.id !== businessId) : results.businesses;
 
   function updateFilters(patch: Partial<Search>) {
     navigate({ search: { ...search, ...patch, page: "page" in patch ? patch.page : undefined } });
@@ -87,11 +91,11 @@ function BrowseIndex() {
         </div>
 
         <Reveal className="mt-10 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
-          {results.businesses.map((b) => (
+          {businesses.map((b) => (
             <BrowseResultCard key={b.id} business={b} />
           ))}
         </Reveal>
-        {results.businesses.length === 0 && (
+        {businesses.length === 0 && (
           <p className="mt-14 text-muted-foreground">No businesses match these filters yet.</p>
         )}
 
