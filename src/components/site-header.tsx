@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Compass } from "lucide-react";
 import { useAccount, useSession } from "@/hooks/use-session";
 import { AccountMenu } from "@/components/account-menu";
 import { LuvLitLogo } from "@/components/luvlit-logo";
+import { NotificationsPopover } from "@/components/notifications-popover";
 import { supabase } from "@/integrations/supabase/client";
 
 type NavItem = { label: string; to: string };
 
 // Business owners get every one of these destinations from the dashboard's own sidebar
 // (see BusinessDashboardSidebar) — the top bar stays deliberately empty for them rather than
-// repeating the same links in two places.
+// repeating the same links in two places. Explore/notifications are rendered separately below,
+// not as plain NavLinks, since they carry their own icon/popover UI.
 const businessItems: NavItem[] = [];
 
 const customerItems: NavItem[] = [
@@ -83,7 +86,7 @@ function useIsOrganizer(): boolean {
 }
 
 export function SiteHeader() {
-  const { loading, role, displayName, businessName } = useAccount();
+  const { loading, role, displayName, businessName, businessId } = useAccount();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isOrganizer = useIsOrganizer();
 
@@ -119,6 +122,15 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-9 lg:flex">
+          {role === "business" && (
+            <Link
+              to="/browse"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Compass className="size-4" strokeWidth={1.75} aria-hidden="true" />
+              Explore
+            </Link>
+          )}
           {items.map((item) => (
             <NavLink key={item.label} item={item} />
           ))}
@@ -126,6 +138,13 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-3">
           <div className="hidden items-center gap-3 lg:flex">
+            {role === "business" && (
+              <NotificationsPopover
+                recipientType="business"
+                recipientId={businessId}
+                viewAllHref="/business/dashboard/notifications"
+              />
+            )}
             {!loading && role && <AccountMenu label={accountLabel} role={role} />}
             {!loading && !role && (
               <>
@@ -159,9 +178,29 @@ export function SiteHeader() {
       {mobileOpen && (
         <div className="border-t border-border px-6 py-2 lg:hidden">
           <nav className="flex flex-col divide-y divide-border">
+            {role === "business" && (
+              <Link
+                to="/browse"
+                onClick={() => setMobileOpen(false)}
+                className="flex min-h-11 w-full items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Compass className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                Explore
+              </Link>
+            )}
             {items.map((item) => (
               <NavLink key={item.label} item={item} block />
             ))}
+            {role === "business" && (
+              <div className="flex min-h-11 w-full items-center justify-between">
+                <span className="text-sm text-muted-foreground">Notifications</span>
+                <NotificationsPopover
+                  recipientType="business"
+                  recipientId={businessId}
+                  viewAllHref="/business/dashboard/notifications"
+                />
+              </div>
+            )}
             {!loading && role && (
               <div className="flex min-h-11 w-full items-center">
                 <AccountMenu label={accountLabel} role={role} />

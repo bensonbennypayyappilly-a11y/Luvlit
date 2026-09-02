@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, Calendar, Eye, Handshake, MessageSquare, TrendingUp, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -159,45 +160,81 @@ function Overview() {
     ...checklist.filter((c) => !c.done).map((c) => ({ label: c.label, href: c.href })),
   ].filter((x): x is { label: string; href: string } => !!x);
 
-  const cards = [
-    { label: "New leads this week", value: stats?.newLeads ?? 0 },
-    { label: "Today's appointments", value: stats?.upcomingToday ?? 0 },
-    { label: "Active conversations", value: stats?.activeConversations ?? 0 },
-    { label: "Profile views (all-time)", value: business?.view_count ?? 0 },
+  const cards: { label: string; value: number; icon: LucideIcon }[] = [
+    { label: "New leads this week", value: stats?.newLeads ?? 0, icon: TrendingUp },
+    { label: "Today's appointments", value: stats?.upcomingToday ?? 0, icon: Calendar },
+    { label: "Active conversations", value: stats?.activeConversations ?? 0, icon: MessageSquare },
+    { label: "Profile views (all-time)", value: business?.view_count ?? 0, icon: Eye },
   ];
 
   return (
     <div>
       <p className="eyebrow">Overview</p>
-      <h1 className="mt-2 text-2xl font-medium">Welcome back{business ? `, ${business.name}` : ""}</h1>
-      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {cards.map((c) => (
-          <div key={c.label} className="surface-card p-5">
-            <p className="text-xs text-muted-foreground">{c.label}</p>
-            {isLoading ? (
-              <Skeleton className="mt-2 h-8 w-16" />
-            ) : (
-              <p className="mt-2 text-3xl font-medium">{c.value}</p>
-            )}
-          </div>
-        ))}
+      <h1 className="mt-2 text-[1.75rem] font-medium tracking-tight">
+        Welcome back{business ? `, ${business.name}` : ""}
+      </h1>
+
+      <div className="mt-7 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {cards.map((c) => {
+          const Icon = c.icon;
+          return (
+            <div
+              key={c.label}
+              className="surface-card p-5 transition-shadow duration-150 hover:shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-muted-foreground">{c.label}</p>
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                  <Icon className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                </span>
+              </div>
+              {isLoading ? (
+                <Skeleton className="mt-3 h-8 w-16" />
+              ) : (
+                <p className="mt-3 text-3xl font-medium tabular-nums">{c.value}</p>
+              )}
+            </div>
+          );
+        })}
       </div>
-      <p className="mt-6 text-xs text-muted-foreground">
+      <p className="mt-4 text-xs text-muted-foreground">
         "Profile views" is a running total since your page went live, not just this month.
       </p>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-2">
+      <Link
+        to="/post-requirement"
+        className="group mt-8 flex flex-col gap-5 rounded-lg border border-accent/25 bg-accent-soft p-6 transition-colors duration-150 hover:border-accent/40 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-start gap-4">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+            <Handshake className="size-5" strokeWidth={1.75} aria-hidden="true" />
+          </span>
+          <div>
+            <p className="text-sm font-medium text-foreground">Post a requirement</p>
+            <p className="mt-1 max-w-md text-sm text-muted-foreground">
+              Need a supplier, vendor or collaborator? Describe what you're looking for and get matched
+              with other businesses on LuvLit who can help.
+            </p>
+          </div>
+        </div>
+        <span className="flex min-h-11 shrink-0 items-center gap-1.5 self-start rounded-md bg-accent px-5 text-sm font-medium text-accent-foreground transition-transform duration-150 group-hover:translate-x-0.5 sm:self-auto">
+          Get started
+          <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />
+        </span>
+      </Link>
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="surface-card p-6">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">Profile completeness</p>
-            <p className="text-sm text-muted-foreground">{completePct}%</p>
+            <p className="text-sm font-medium text-muted-foreground tabular-nums">{completePct}%</p>
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
             <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${completePct}%` }} />
           </div>
-          <ul className="mt-4 space-y-2">
+          <ul className="mt-5 space-y-2.5">
             {checklist.map((c) => (
-              <li key={c.key} className="flex items-center gap-2 text-sm">
+              <li key={c.key} className="flex items-center gap-2.5 text-sm">
                 <span
                   className={`flex size-4 shrink-0 items-center justify-center rounded-full text-[0.625rem] ${
                     c.done ? "bg-accent text-accent-foreground" : "border border-border"
@@ -208,7 +245,7 @@ function Overview() {
                 {c.done ? (
                   <span className="text-muted-foreground line-through">{c.label}</span>
                 ) : (
-                  <Link to={c.href} className="hover:text-accent">
+                  <Link to={c.href} className="transition-colors hover:text-accent">
                     {c.label}
                   </Link>
                 )}
@@ -222,12 +259,12 @@ function Overview() {
           {attention.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">You're all caught up.</p>
           ) : (
-            <ul className="mt-4 space-y-1">
+            <ul className="mt-3 space-y-1">
               {attention.map((a) => (
                 <li key={a.label}>
                   <Link
                     to={a.href}
-                    className="flex min-h-11 items-center justify-between rounded-md px-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    className="flex min-h-11 items-center justify-between rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                   >
                     {a.label}
                     <span aria-hidden>→</span>

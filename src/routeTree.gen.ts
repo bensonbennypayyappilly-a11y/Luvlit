@@ -63,6 +63,7 @@ import { Route as AuthenticatedBusinessDashboardProductsRouteImport } from './ro
 import { Route as AuthenticatedBusinessDashboardProfileRouteImport } from './routes/_authenticated/business/dashboard/profile'
 import { Route as AuthenticatedBusinessDashboardRequirementsRouteImport } from './routes/_authenticated/business/dashboard/requirements'
 import { Route as AuthenticatedBusinessDashboardServicesRouteImport } from './routes/_authenticated/business/dashboard/services'
+import { Route as AuthenticatedBusinessDashboardSettingsRouteImport } from './routes/_authenticated/business/dashboard/settings'
 import { Route as AuthenticatedBusinessDashboardStaffRouteImport } from './routes/_authenticated/business/dashboard/staff'
 import { Route as AuthenticatedBusinessDashboardWebsiteRouteImport } from './routes/_authenticated/business/dashboard/website'
 
@@ -362,6 +363,12 @@ const AuthenticatedBusinessDashboardServicesRoute =
     path: '/services',
     getParentRoute: () => AuthenticatedBusinessDashboardRouteRoute,
   } as any)
+const AuthenticatedBusinessDashboardSettingsRoute =
+  AuthenticatedBusinessDashboardSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedBusinessDashboardRouteRoute,
+  } as any)
 const AuthenticatedBusinessDashboardStaffRoute =
   AuthenticatedBusinessDashboardStaffRouteImport.update({
     id: '/staff',
@@ -428,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/business/dashboard/profile': typeof AuthenticatedBusinessDashboardProfileRoute
   '/business/dashboard/requirements': typeof AuthenticatedBusinessDashboardRequirementsRoute
   '/business/dashboard/services': typeof AuthenticatedBusinessDashboardServicesRoute
+  '/business/dashboard/settings': typeof AuthenticatedBusinessDashboardSettingsRoute
   '/business/dashboard/staff': typeof AuthenticatedBusinessDashboardStaffRoute
   '/business/dashboard/website': typeof AuthenticatedBusinessDashboardWebsiteRoute
   '/business/dashboard/': typeof AuthenticatedBusinessDashboardIndexRoute
@@ -482,6 +490,7 @@ export interface FileRoutesByTo {
   '/business/dashboard/profile': typeof AuthenticatedBusinessDashboardProfileRoute
   '/business/dashboard/requirements': typeof AuthenticatedBusinessDashboardRequirementsRoute
   '/business/dashboard/services': typeof AuthenticatedBusinessDashboardServicesRoute
+  '/business/dashboard/settings': typeof AuthenticatedBusinessDashboardSettingsRoute
   '/business/dashboard/staff': typeof AuthenticatedBusinessDashboardStaffRoute
   '/business/dashboard/website': typeof AuthenticatedBusinessDashboardWebsiteRoute
   '/business/dashboard': typeof AuthenticatedBusinessDashboardIndexRoute
@@ -541,6 +550,7 @@ export interface FileRoutesById {
   '/_authenticated/business/dashboard/profile': typeof AuthenticatedBusinessDashboardProfileRoute
   '/_authenticated/business/dashboard/requirements': typeof AuthenticatedBusinessDashboardRequirementsRoute
   '/_authenticated/business/dashboard/services': typeof AuthenticatedBusinessDashboardServicesRoute
+  '/_authenticated/business/dashboard/settings': typeof AuthenticatedBusinessDashboardSettingsRoute
   '/_authenticated/business/dashboard/staff': typeof AuthenticatedBusinessDashboardStaffRoute
   '/_authenticated/business/dashboard/website': typeof AuthenticatedBusinessDashboardWebsiteRoute
   '/_authenticated/business/dashboard/': typeof AuthenticatedBusinessDashboardIndexRoute
@@ -600,6 +610,7 @@ export interface FileRouteTypes {
     | '/business/dashboard/profile'
     | '/business/dashboard/requirements'
     | '/business/dashboard/services'
+    | '/business/dashboard/settings'
     | '/business/dashboard/staff'
     | '/business/dashboard/website'
     | '/business/dashboard/'
@@ -654,6 +665,7 @@ export interface FileRouteTypes {
     | '/business/dashboard/profile'
     | '/business/dashboard/requirements'
     | '/business/dashboard/services'
+    | '/business/dashboard/settings'
     | '/business/dashboard/staff'
     | '/business/dashboard/website'
     | '/business/dashboard'
@@ -712,6 +724,7 @@ export interface FileRouteTypes {
     | '/_authenticated/business/dashboard/profile'
     | '/_authenticated/business/dashboard/requirements'
     | '/_authenticated/business/dashboard/services'
+    | '/_authenticated/business/dashboard/settings'
     | '/_authenticated/business/dashboard/staff'
     | '/_authenticated/business/dashboard/website'
     | '/_authenticated/business/dashboard/'
@@ -1125,6 +1138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessDashboardServicesRouteImport
       parentRoute: typeof AuthenticatedBusinessDashboardRouteRoute
     }
+    '/_authenticated/business/dashboard/settings': {
+      id: '/_authenticated/business/dashboard/settings'
+      path: '/settings'
+      fullPath: '/business/dashboard/settings'
+      preLoaderRoute: typeof AuthenticatedBusinessDashboardSettingsRouteImport
+      parentRoute: typeof AuthenticatedBusinessDashboardRouteRoute
+    }
     '/_authenticated/business/dashboard/staff': {
       id: '/_authenticated/business/dashboard/staff'
       path: '/staff'
@@ -1202,6 +1222,7 @@ interface AuthenticatedBusinessDashboardRouteRouteChildren {
   AuthenticatedBusinessDashboardProfileRoute: typeof AuthenticatedBusinessDashboardProfileRoute
   AuthenticatedBusinessDashboardRequirementsRoute: typeof AuthenticatedBusinessDashboardRequirementsRoute
   AuthenticatedBusinessDashboardServicesRoute: typeof AuthenticatedBusinessDashboardServicesRoute
+  AuthenticatedBusinessDashboardSettingsRoute: typeof AuthenticatedBusinessDashboardSettingsRoute
   AuthenticatedBusinessDashboardStaffRoute: typeof AuthenticatedBusinessDashboardStaffRoute
   AuthenticatedBusinessDashboardWebsiteRoute: typeof AuthenticatedBusinessDashboardWebsiteRoute
   AuthenticatedBusinessDashboardIndexRoute: typeof AuthenticatedBusinessDashboardIndexRoute
@@ -1229,6 +1250,8 @@ const AuthenticatedBusinessDashboardRouteRouteChildren: AuthenticatedBusinessDas
       AuthenticatedBusinessDashboardRequirementsRoute,
     AuthenticatedBusinessDashboardServicesRoute:
       AuthenticatedBusinessDashboardServicesRoute,
+    AuthenticatedBusinessDashboardSettingsRoute:
+      AuthenticatedBusinessDashboardSettingsRoute,
     AuthenticatedBusinessDashboardStaffRoute:
       AuthenticatedBusinessDashboardStaffRoute,
     AuthenticatedBusinessDashboardWebsiteRoute:

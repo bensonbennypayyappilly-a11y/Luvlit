@@ -10,6 +10,7 @@ import {
   Image,
   MessageSquare,
   Package,
+  Settings,
   Sparkles,
   Star,
   UserSearch,
@@ -17,7 +18,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-const NAV: { to: string; label: string; icon: LucideIcon; exact?: boolean }[] = [
+type NavItemDef = { to: string; label: string; icon: LucideIcon; exact?: boolean };
+
+const NAV: NavItemDef[] = [
   { to: "/business/dashboard", label: "Overview", icon: Home, exact: true },
   { to: "/business/dashboard/leads", label: "Leads & Chats", icon: MessageSquare },
   { to: "/business/dashboard/requirements", label: "Requirements", icon: ClipboardList },
@@ -33,28 +36,33 @@ const NAV: { to: string; label: string; icon: LucideIcon; exact?: boolean }[] = 
   { to: "/business/dashboard/website", label: "Website Builder", icon: Globe },
 ];
 
-/** Single shared list of nav rows — used for both the desktop rail and the mobile drawer, so
- * there's exactly one navigation system re-rendered at two widths, never two separate ones. */
+const SETTINGS_ITEM: NavItemDef = { to: "/business/dashboard/settings", label: "Settings", icon: Settings };
+
+function NavRow({ item, pathname, onNavigate }: { item: NavItemDef; pathname: string; onNavigate: () => void }) {
+  const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+  const Icon = item.icon;
+  return (
+    <Link
+      to={item.to}
+      onClick={onNavigate}
+      className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm transition-colors duration-150 ${
+        active ? "bg-white/15 font-medium text-white" : "text-white/70 hover:bg-white/8 hover:text-white"
+      }`}
+    >
+      <Icon className={`size-[18px] shrink-0 ${active ? "text-white" : "text-white/50"}`} strokeWidth={1.75} aria-hidden="true" />
+      {item.label}
+    </Link>
+  );
+}
+
+/** Single shared list of main-nav rows — used for both the desktop rail and the mobile drawer,
+ * so there's exactly one navigation system re-rendered at two widths, never two separate ones. */
 function NavList({ pathname, onNavigate }: { pathname: string; onNavigate: () => void }) {
   return (
     <nav className="flex flex-col gap-0.5">
-      {NAV.map((item) => {
-        const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
-        const Icon = item.icon;
-        return (
-          <Link
-            key={item.to}
-            to={item.to}
-            onClick={onNavigate}
-            className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm transition-colors duration-150 ${
-              active ? "bg-white/15 font-medium text-white" : "text-white/70 hover:bg-white/8 hover:text-white"
-            }`}
-          >
-            <Icon className={`size-[18px] shrink-0 ${active ? "text-white" : "text-white/50"}`} strokeWidth={1.75} aria-hidden="true" />
-            {item.label}
-          </Link>
-        );
-      })}
+      {NAV.map((item) => (
+        <NavRow key={item.to} item={item} pathname={pathname} onNavigate={onNavigate} />
+      ))}
     </nav>
   );
 }
@@ -75,16 +83,22 @@ export function BusinessDashboardSidebar({ businessName }: { businessName: strin
         </button>
       </div>
       {open && (
-        <div className="bg-primary px-4 py-3 md:hidden">
+        <div className="space-y-3 bg-primary px-4 py-3 md:hidden">
           <NavList pathname={pathname} onNavigate={() => setOpen(false)} />
+          <div className="border-t border-white/10 pt-3">
+            <NavRow item={SETTINGS_ITEM} pathname={pathname} onNavigate={() => setOpen(false)} />
+          </div>
         </div>
       )}
-      <aside className="hidden w-64 shrink-0 bg-primary px-4 py-6 md:flex md:flex-col md:gap-6">
+      <aside className="hidden w-64 shrink-0 bg-primary px-4 py-6 md:flex md:h-full md:flex-col md:gap-6">
         <div className="px-3">
           <p className="text-[0.6875rem] font-medium uppercase tracking-[0.18em] text-white/50">Business</p>
           <p className="mt-1 truncate text-sm font-medium text-white">{businessName}</p>
         </div>
         <NavList pathname={pathname} onNavigate={() => {}} />
+        <div className="mt-auto border-t border-white/10 pt-3">
+          <NavRow item={SETTINGS_ITEM} pathname={pathname} onNavigate={() => {}} />
+        </div>
       </aside>
     </>
   );
