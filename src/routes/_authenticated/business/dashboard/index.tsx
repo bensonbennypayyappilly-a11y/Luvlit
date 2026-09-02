@@ -1,9 +1,28 @@
+import type { CSSProperties } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Calendar, Eye, Handshake, MessageSquare, TrendingUp, type LucideIcon } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import {
+  ArrowDownRight,
+  ArrowRight,
+  ArrowUpRight,
+  Calendar,
+  Eye,
+  FileText,
+  Handshake,
+  Images,
+  MapPin,
+  MessageSquare,
+  Package,
+  Phone,
+  TrendingUp,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { localDateString } from "@/lib/utils";
 import type { Section, ServicesContent } from "@/lib/website-sections";
 
@@ -30,6 +49,15 @@ function hasVisibleServicesContent(sections: Section[] | null | undefined): bool
   });
 }
 
+const CHECKLIST_META: Record<string, { icon: LucideIcon; description: string }> = {
+  description: { icon: FileText, description: "A clear description helps customers know what you offer." },
+  hero: { icon: Images, description: "Businesses with a hero photo get more profile views." },
+  gallery: { icon: Images, description: "Show your work — photos build trust with new customers." },
+  contact: { icon: Phone, description: "Add a way to reach you so leads can get in touch." },
+  location: { icon: MapPin, description: "Help customers find you or know where you deliver." },
+  offering: { icon: Package, description: "List what you sell or offer so it shows on your page." },
+};
+
 export const Route = createFileRoute("/_authenticated/business/dashboard/")({
   head: () => ({
     meta: [
@@ -42,26 +70,45 @@ export const Route = createFileRoute("/_authenticated/business/dashboard/")({
   component: Overview,
 });
 
-function startOfWeekISO() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - d.getDay());
-  return d.toISOString();
+function startOfWeek(d: Date) {
+  const copy = new Date(d);
+  copy.setHours(0, 0, 0, 0);
+  copy.setDate(copy.getDate() - copy.getDay());
+  return copy;
 }
+
+function weekLabel(d: Date) {
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+const CHART_WEEKS = 8;
 
 function Overview() {
   const { data: business } = useDashboardBusiness();
   const businessId = business?.id ?? null;
+
+  // Fixed at render time — a plain date/time readout, not an interactive range picker.
+  const now = new Date();
+  const dateLabel = now.toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const timeLabel = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["dashboard-overview", businessId],
     enabled: !!businessId,
     queryFn: async () => {
       const todayDate = localDateString();
+      const yesterdayDate = localDateString(new Date(Date.now() - 24 * 60 * 60 * 1000));
+
+      // 8 weekly buckets (oldest -> newest), the newest being the current, still-in-progress week.
+      const weekStarts = Array.from({ length: CHART_WEEKS }, (_, i) => {
+        const start = startOfWeek(new Date());
+        start.setDate(start.getDate() - (CHART_WEEKS - 1 - i) * 7);
+        return start;
+      });
 
       const [
-        { count: newLeads },
         { count: uncontactedLeads },
+        { data: leadRows },
         { data: staffRows },
         { data: conversations },
         { count: locationsCount },
@@ -72,12 +119,12 @@ function Overview() {
           .from("leads")
           .select("id", { count: "exact", head: true })
           .eq("matched_business_id", businessId!)
-          .gte("created_at", startOfWeekISO()),
+          .eq("status", "new"),
         supabase
           .from("leads")
-          .select("id", { count: "exact", head: true })
+          .select("created_at")
           .eq("matched_business_id", businessId!)
-          .eq("status", "new"),
+          .gte("created_at", weekStarts[0].toISOString()),
         supabase.from("staff").select("id").eq("business_id", businessId!),
         supabase
           .from("conversations")
@@ -88,22 +135,43 @@ function Overview() {
         supabase.from("items").select("id", { count: "exact", head: true }).eq("business_id", businessId!),
       ]);
 
+      const weekCounts = weekStarts.map(() => 0);
+      (leadRows ?? []).forEach((r) => {
+        const created = new Date(r.created_at);
+        for (let i = weekStarts.length - 1; i >= 0; i--) {
+          if (created >= weekStarts[i]) {
+            weekCounts[i]++;
+            break;
+          }
+        }
+      });
+      const newLeads = weekCounts[CHART_WEEKS - 1];
+      const previousWeekLeads = weekCounts[CHART_WEEKS - 2];
+      const requirementsTrend = weekStarts.map((start, i) => ({ label: weekLabel(start), count: weekCounts[i] }));
+
       const staffIds = (staffRows ?? []).map((s) => s.id);
       let upcomingToday = 0;
+      let upcomingYesterday = 0;
       if (staffIds.length) {
         const { data: slots } = await supabase
           .from("slots")
-          .select("id")
+          .select("id,date")
           .in("staff_id", staffIds)
-          .eq("date", todayDate);
-        const slotIds = (slots ?? []).map((s) => s.id);
-        if (slotIds.length) {
-          const { count } = await supabase
+          .in("date", [todayDate, yesterdayDate]);
+        const todaySlotIds = (slots ?? []).filter((s) => s.date === todayDate).map((s) => s.id);
+        const yesterdaySlotIds = (slots ?? []).filter((s) => s.date === yesterdayDate).map((s) => s.id);
+        const allSlotIds = [...todaySlotIds, ...yesterdaySlotIds];
+        if (allSlotIds.length) {
+          const { data: bookingRows } = await supabase
             .from("bookings")
-            .select("id", { count: "exact", head: true })
-            .in("slot_id", slotIds)
+            .select("id,slot_id")
+            .in("slot_id", allSlotIds)
             .neq("status", "cancelled");
-          upcomingToday = count ?? 0;
+          const todaySet = new Set(todaySlotIds);
+          (bookingRows ?? []).forEach((b) => {
+            if (todaySet.has(b.slot_id)) upcomingToday++;
+            else upcomingYesterday++;
+          });
         }
       }
 
@@ -119,9 +187,12 @@ function Overview() {
       }
 
       return {
-        newLeads: newLeads ?? 0,
+        newLeads,
+        previousWeekLeads,
+        requirementsTrend,
         uncontactedLeads: uncontactedLeads ?? 0,
         upcomingToday,
+        upcomingYesterday,
         activeConversations: conversationIds.length,
         unreadCount,
         hasLocation: (locationsCount ?? 0) > 0 || (deliveryAreasCount ?? 0) > 0,
@@ -152,60 +223,120 @@ function Overview() {
 
   const attention = [
     stats?.uncontactedLeads
-      ? { label: `${stats.uncontactedLeads} lead${stats.uncontactedLeads === 1 ? "" : "s"} awaiting a response`, href: "/business/dashboard/leads" }
+      ? {
+          icon: Users,
+          label: `${stats.uncontactedLeads} lead${stats.uncontactedLeads === 1 ? "" : "s"} awaiting a response`,
+          description: "Quick replies win more business — most customers message more than one place.",
+          href: "/business/dashboard/leads",
+        }
       : null,
     stats?.unreadCount
-      ? { label: `${stats.unreadCount} unread message${stats.unreadCount === 1 ? "" : "s"}`, href: "/business/dashboard/leads" }
+      ? {
+          icon: MessageSquare,
+          label: `${stats.unreadCount} unread message${stats.unreadCount === 1 ? "" : "s"}`,
+          description: "Catch up on conversations with customers and other businesses.",
+          href: "/business/dashboard/leads",
+        }
       : null,
-    ...checklist.filter((c) => !c.done).map((c) => ({ label: c.label, href: c.href })),
-  ].filter((x): x is { label: string; href: string } => !!x);
+    ...checklist
+      .filter((c) => !c.done)
+      .map((c) => ({ icon: CHECKLIST_META[c.key].icon, label: c.label, description: CHECKLIST_META[c.key].description, href: c.href })),
+  ].filter((x): x is { icon: LucideIcon; label: string; description: string; href: string } => !!x);
 
-  const cards: { label: string; value: number; icon: LucideIcon }[] = [
-    { label: "New leads this week", value: stats?.newLeads ?? 0, icon: TrendingUp },
-    { label: "Today's appointments", value: stats?.upcomingToday ?? 0, icon: Calendar },
-    { label: "Active conversations", value: stats?.activeConversations ?? 0, icon: MessageSquare },
-    { label: "Profile views (all-time)", value: business?.view_count ?? 0, icon: Eye },
+  const cards: {
+    label: string;
+    value: number;
+    icon: LucideIcon;
+    badgeClassName?: string;
+    badgeStyle?: CSSProperties;
+    trend?: { current: number; previous: number; periodLabel: string };
+    caption?: string;
+  }[] = [
+    {
+      label: "New leads this week",
+      value: stats?.newLeads ?? 0,
+      icon: TrendingUp,
+      badgeClassName: "bg-accent-soft text-accent",
+      trend: { current: stats?.newLeads ?? 0, previous: stats?.previousWeekLeads ?? 0, periodLabel: "from last week" },
+    },
+    {
+      label: "Today's appointments",
+      value: stats?.upcomingToday ?? 0,
+      icon: Calendar,
+      badgeStyle: { backgroundColor: "#c1613f1f", color: "#c1613f" },
+      trend: { current: stats?.upcomingToday ?? 0, previous: stats?.upcomingYesterday ?? 0, periodLabel: "from yesterday" },
+    },
+    {
+      label: "Active conversations",
+      value: stats?.activeConversations ?? 0,
+      icon: MessageSquare,
+      badgeClassName: "bg-primary-soft text-primary",
+      caption: stats?.unreadCount ? `${stats.unreadCount} unread` : "All caught up",
+    },
+    {
+      label: "Profile views (all-time)",
+      value: business?.view_count ?? 0,
+      icon: Eye,
+      badgeStyle: { backgroundColor: "#63705f1a", color: "#63705f" },
+      caption: "Since your page went live",
+    },
   ];
+
+  const chartConfig: ChartConfig = {
+    count: { label: "Requirements received", color: "var(--chart-1)" },
+  };
 
   return (
     <div>
-      <p className="eyebrow">Overview</p>
-      <h1 className="mt-2 text-[1.75rem] font-medium tracking-tight">
-        Welcome back{business ? `, ${business.name}` : ""}
-      </h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="eyebrow">Overview</p>
+          <h1 className="mt-1.5 text-2xl font-medium tracking-tight">
+            Welcome back{business ? `, ${business.name}` : ""} <span aria-hidden>👋</span>
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">Here's what's happening with your business today.</p>
+        </div>
+        <div className="flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
+          <Calendar className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+          {dateLabel} · {timeLabel}
+        </div>
+      </div>
 
-      <div className="mt-7 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {cards.map((c) => {
           const Icon = c.icon;
           return (
-            <div
-              key={c.label}
-              className="surface-card p-5 transition-shadow duration-150 hover:shadow-sm"
-            >
+            <div key={c.label} className="surface-card p-4 transition-shadow duration-150 hover:shadow-sm">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium text-muted-foreground">{c.label}</p>
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                <span
+                  className={`flex size-8 shrink-0 items-center justify-center rounded-full ${c.badgeClassName ?? ""}`}
+                  style={c.badgeStyle}
+                >
                   <Icon className="size-4" strokeWidth={1.75} aria-hidden="true" />
                 </span>
               </div>
               {isLoading ? (
                 <Skeleton className="mt-3 h-8 w-16" />
               ) : (
-                <p className="mt-3 text-3xl font-medium tabular-nums">{c.value}</p>
+                <p className="mt-2 text-3xl font-medium tabular-nums">{c.value}</p>
               )}
+              {c.trend ? <TrendCaption {...c.trend} /> : <p className="mt-2 text-xs text-muted-foreground">{c.caption}</p>}
             </div>
           );
         })}
       </div>
-      <p className="mt-4 text-xs text-muted-foreground">
-        "Profile views" is a running total since your page went live, not just this month.
-      </p>
 
       <Link
         to="/post-requirement"
-        className="group mt-8 flex flex-col gap-5 rounded-lg border border-accent/25 bg-accent-soft p-6 transition-colors duration-150 hover:border-accent/40 sm:flex-row sm:items-center sm:justify-between"
+        className="group relative mt-6 flex flex-col gap-5 overflow-hidden rounded-lg border border-accent/25 bg-accent-soft p-5 transition-colors duration-150 hover:border-accent/40 sm:flex-row sm:items-center sm:justify-between"
       >
-        <div className="flex items-start gap-4">
+        <Handshake
+          className="pointer-events-none absolute -right-4 -top-4 size-28 text-accent/10"
+          strokeWidth={1}
+          aria-hidden="true"
+        />
+        <div className="relative flex items-start gap-4">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
             <Handshake className="size-5" strokeWidth={1.75} aria-hidden="true" />
           </span>
@@ -217,14 +348,14 @@ function Overview() {
             </p>
           </div>
         </div>
-        <span className="flex min-h-11 shrink-0 items-center gap-1.5 self-start rounded-md bg-accent px-5 text-sm font-medium text-accent-foreground transition-transform duration-150 group-hover:translate-x-0.5 sm:self-auto">
-          Get started
+        <span className="relative flex min-h-11 shrink-0 items-center gap-1.5 self-start rounded-md bg-accent px-5 text-sm font-medium text-accent-foreground transition-transform duration-150 group-hover:translate-x-0.5 sm:self-auto">
+          Post a requirement
           <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />
         </span>
       </Link>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <div className="surface-card p-6">
+      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+        <div className="surface-card p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">Profile completeness</p>
             <p className="text-sm font-medium text-muted-foreground tabular-nums">{completePct}%</p>
@@ -232,7 +363,7 @@ function Overview() {
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
             <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${completePct}%` }} />
           </div>
-          <ul className="mt-5 space-y-2.5">
+          <ul className="mt-4 space-y-2">
             {checklist.map((c) => (
               <li key={c.key} className="flex items-center gap-2.5 text-sm">
                 <span
@@ -254,27 +385,89 @@ function Overview() {
           </ul>
         </div>
 
-        <div className="surface-card p-6">
-          <p className="text-sm font-medium">Needs attention</p>
+        <div className="surface-card p-5">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium">Needs attention</p>
+            {attention.length > 0 && (
+              <span className="flex size-5 items-center justify-center rounded-full bg-destructive/10 text-[0.6875rem] font-semibold text-destructive">
+                {attention.length}
+              </span>
+            )}
+          </div>
           {attention.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">You're all caught up.</p>
           ) : (
             <ul className="mt-3 space-y-1">
-              {attention.map((a) => (
-                <li key={a.label}>
-                  <Link
-                    to={a.href}
-                    className="flex min-h-11 items-center justify-between rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                  >
-                    {a.label}
-                    <span aria-hidden>→</span>
-                  </Link>
-                </li>
-              ))}
+              {attention.slice(0, 4).map((a) => {
+                const AttentionIcon = a.icon;
+                return (
+                  <li key={a.label}>
+                    <Link
+                      to={a.href}
+                      className="flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors hover:bg-secondary"
+                    >
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                        <AttentionIcon className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium text-foreground">{a.label}</span>
+                        <span className="block truncate text-xs text-muted-foreground">{a.description}</span>
+                      </span>
+                      <ArrowRight className="size-4 shrink-0 text-muted-foreground" strokeWidth={1.75} aria-hidden="true" />
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
       </div>
+
+      <div className="mt-5 surface-card flex flex-col gap-6 p-5 sm:flex-row sm:items-stretch">
+        <div className="flex-1">
+          <p className="text-sm font-medium">Requirements received</p>
+          <p className="text-xs text-muted-foreground">Last {CHART_WEEKS} weeks</p>
+          <ChartContainer config={chartConfig} className="mt-3 aspect-auto h-36 w-full">
+            <BarChart data={stats?.requirementsTrend ?? []} margin={{ left: -20, right: 4, top: 4, bottom: 0 }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} interval={1} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} maxBarSize={22} />
+            </BarChart>
+          </ChartContainer>
+        </div>
+        <div className="flex shrink-0 flex-col justify-center border-t border-border pt-4 sm:w-48 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
+          <span className="flex size-9 items-center justify-center rounded-full" style={{ backgroundColor: "#63705f1a", color: "#63705f" }}>
+            <Eye className="size-4" strokeWidth={1.75} aria-hidden="true" />
+          </span>
+          <p className="mt-2 text-2xl font-medium tabular-nums">{business?.view_count ?? 0}</p>
+          <p className="text-xs text-muted-foreground">Total page visitors, all-time</p>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function TrendCaption({ current, previous, periodLabel }: { current: number; previous: number; periodLabel: string }) {
+  if (previous === 0) {
+    if (current === 0) {
+      return <p className="mt-2 text-xs text-muted-foreground">No activity {periodLabel}</p>;
+    }
+    return (
+      <p className="mt-2 flex items-center gap-1 text-xs font-medium text-accent">
+        <ArrowUpRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+        New {periodLabel}
+      </p>
+    );
+  }
+  const pct = Math.round(((current - previous) / previous) * 100);
+  const up = pct >= 0;
+  const Icon = up ? ArrowUpRight : ArrowDownRight;
+  return (
+    <p className={`mt-2 flex items-center gap-1 text-xs font-medium ${up ? "text-accent" : "text-destructive"}`}>
+      <Icon className="size-3.5" strokeWidth={2} aria-hidden="true" />
+      {up ? "+" : ""}
+      {pct}% {periodLabel}
+    </p>
   );
 }

@@ -133,14 +133,14 @@ export function SiteHeader() {
               <>
                 <Link
                   to="/business/dashboard"
-                  className="flex min-h-11 items-center gap-2 rounded-md border border-border px-4 text-sm font-medium text-foreground transition-colors hover:border-accent hover:bg-accent-soft"
+                  className="flex min-h-11 items-center gap-2 rounded-md bg-accent-soft px-4 text-sm font-medium text-accent transition-colors hover:bg-accent-soft/70"
                 >
                   <LayoutDashboard className="size-4" strokeWidth={1.75} aria-hidden="true" />
                   Dashboard
                 </Link>
                 <Link
                   to="/browse"
-                  className="flex min-h-11 items-center gap-2 rounded-md border border-border px-4 text-sm font-medium text-foreground transition-colors hover:border-accent hover:bg-accent-soft"
+                  className="flex min-h-11 items-center gap-2 rounded-md border border-border px-4 text-sm font-medium text-foreground transition-colors hover:border-accent hover:bg-secondary"
                 >
                   <Compass className="size-4" strokeWidth={1.75} aria-hidden="true" />
                   Explore other businesses
@@ -190,7 +190,7 @@ export function SiteHeader() {
                 <Link
                   to="/business/dashboard"
                   onClick={() => setMobileOpen(false)}
-                  className="flex min-h-11 items-center gap-2 rounded-md border border-border px-4 text-sm font-medium text-foreground transition-colors hover:border-accent hover:bg-accent-soft"
+                  className="flex min-h-11 items-center gap-2 rounded-md bg-accent-soft px-4 text-sm font-medium text-accent transition-colors hover:bg-accent-soft/70"
                 >
                   <LayoutDashboard className="size-4" strokeWidth={1.75} aria-hidden="true" />
                   Dashboard

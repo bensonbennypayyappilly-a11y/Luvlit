@@ -52,9 +52,15 @@ export function AccountMenu({ label, role }: { label: string; role: AppRole }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex min-h-11 items-center gap-1.5 rounded-md border border-border px-4 text-sm font-medium text-foreground transition-colors hover:border-accent"
+        className="flex min-h-11 items-center gap-2 rounded-full border border-border py-1 pl-1 pr-3 text-sm font-medium text-foreground transition-colors hover:border-accent"
       >
-        {label} <span aria-hidden>▾</span>
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold uppercase text-primary-foreground">
+          {label.trim().charAt(0) || "?"}
+        </span>
+        <span className="max-w-32 truncate">{label}</span>
+        <span aria-hidden className="text-muted-foreground">
+          ▾
+        </span>
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-md border border-border bg-card py-1 text-sm surface-card">
