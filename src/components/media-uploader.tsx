@@ -14,7 +14,13 @@ export const MEDIA_LIMITS = {
     maxBytes: 20 * 1024 * 1024,
     maxSeconds: 0,
     accept: "image/*",
-    label: "Listing thumbnail & page hero",
+    label: "Page hero photo",
+  },
+  thumbnail: {
+    maxBytes: 8 * 1024 * 1024,
+    maxSeconds: 0,
+    accept: "image/*",
+    label: "Listing thumbnail",
   },
   gallery: {
     maxBytes: 10 * 1024 * 1024,
@@ -94,7 +100,7 @@ function readDuration(file: File) {
   });
 }
 
-const IMAGE_KINDS: MediaKind[] = ["logo", "hero", "gallery", "about", "poster", "product"];
+const IMAGE_KINDS: MediaKind[] = ["logo", "hero", "thumbnail", "gallery", "about", "poster", "product"];
 
 /** Downscale + re-encode large images in the browser so we never upload raw 20MB JPEGs. */
 async function compressImage(file: File, maxEdge: number, quality = 0.82): Promise<File> {

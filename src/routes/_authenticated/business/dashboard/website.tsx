@@ -241,12 +241,6 @@ function WebsiteBuilder() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.business]);
 
-  const { data: categories } = useQuery({
-    queryKey: ["categories"],
-    queryFn: async () =>
-      (await supabase.from("categories").select("id,name").eq("is_approved", true).order("name")).data ?? [],
-  });
-
   if (!businessId || isLoading || !draft || !draftSections) {
     return (
       <div className="flex flex-1 flex-col gap-4 p-6 lg:flex-row">
@@ -309,8 +303,6 @@ function WebsiteBuilder() {
     );
   }
 
-  const toggle = (list: string[], value: string) =>
-    list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
   const showEco = draft.categories.some((c) => ECO_CATEGORIES.includes(c));
   const status = data?.business?.status ?? "draft";
   const slug = data?.business?.slug ?? null;
@@ -466,20 +458,16 @@ function WebsiteBuilder() {
             <SectionListEditor sections={draftSections} onChange={onSectionsChange} items={(data?.items ?? []).map((i) => ({ id: i.id, name: i.name }))} />
           </BuilderSection>
 
-          <BuilderSection title="Hero" subtitle="One photo or video, and a short tagline for the top of your page — a video autoplays on loop.">
+          <BuilderSection title="Hero" subtitle="One photo or video for the top of your page — a video autoplays on loop.">
             <HeroMediaUploader
               businessId={businessId}
               value={{ image: draft.hero_image_url, video: draft.main_video_url }}
               onChange={({ image, video }) => onImmediateChange({ hero_image_url: image, main_video_url: video })}
               wrapperClassName={uploaderWrapper}
             />
-            <textarea
-              rows={3}
-              value={draft.description ?? ""}
-              onChange={(e) => onTextChange("description", e.target.value)}
-              placeholder="A short tagline — a couple of sentences shown under your name."
-              className={fieldClass()}
-            />
+            <p className="text-xs text-muted-foreground">
+              Want a tagline under your name here? Set it in Page Layout → Hero → Edit.
+            </p>
           </BuilderSection>
 
           <BuilderSection title="Short Videos" subtitle="Up to 3 short clips (max 60s each) shown on your website.">
@@ -513,7 +501,7 @@ function WebsiteBuilder() {
             />
           </BuilderSection>
 
-          <BuilderSection title="About Your Business" subtitle="Your business's own content — name, story, photo, categories and type.">
+          <BuilderSection title="About Your Business" subtitle="Your business's own content — name, story and photo.">
             <div>
               <label className="text-[13px] font-medium text-foreground">Business name</label>
               <input
@@ -545,46 +533,13 @@ function WebsiteBuilder() {
               onChange={(path) => onImmediateChange({ about_image_url: path })}
               wrapperClassName={uploaderWrapper}
             />
-            <div>
-              <label className="text-[13px] font-medium text-foreground">Categories</label>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {(categories ?? []).map((c) => (
-                  <button
-                    type="button"
-                    key={c.id}
-                    onClick={() => onImmediateChange({ categories: toggle(draft.categories, c.name) })}
-                    className={`rounded-full border px-3 py-1.5 text-xs transition-colors duration-150 ${
-                      draft.categories.includes(c.name) ? "border-accent bg-accent-soft text-accent" : "border-[#EAEAEA] hover:border-accent/40"
-                    }`}
-                  >
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="text-[13px] font-medium text-foreground">Business type</label>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {["product", "appointment", "custom"].map((t) => (
-                  <button
-                    type="button"
-                    key={t}
-                    onClick={() => onImmediateChange({ business_types: toggle(draft.business_types, t) })}
-                    className={`rounded-full border px-3 py-1.5 text-xs capitalize transition-colors duration-150 ${
-                      draft.business_types.includes(t) ? "border-accent bg-accent-soft text-accent" : "border-[#EAEAEA] hover:border-accent/40"
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {showEco && (
-              <label className="flex items-center justify-between rounded-[10px] border border-[#EEEEEE] px-4 py-3.5 text-sm">
-                <span>Eco-friendly / sustainable?</span>
-                <Switch checked={draft.is_eco_friendly} onCheckedChange={(checked) => onImmediateChange({ is_eco_friendly: checked })} />
-              </label>
-            )}
+            <p className="text-xs text-muted-foreground">
+              Description, categories, business type and eco-friendly status are set in{" "}
+              <Link to="/business/dashboard/profile" className="text-accent hover:underline">
+                Profile &amp; Media
+              </Link>
+              .
+            </p>
           </BuilderSection>
 
           <BuilderSection

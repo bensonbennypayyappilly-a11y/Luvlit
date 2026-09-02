@@ -36,17 +36,17 @@ export const CITIES = [
 export const BUSINESS_TYPES = [
   {
     value: "product",
-    label: "Product / catalog",
+    label: "Products",
     hint: "You sell items customers can browse and enquire about.",
   },
   {
     value: "appointment",
-    label: "Appointment-based",
-    hint: "Customers book time with you or your staff.",
+    label: "Services / Appointments",
+    hint: "Customers book time with you or your staff for a service.",
   },
   {
     value: "custom",
-    label: "Custom order / portfolio",
+    label: "Customised service / product",
     hint: "You make bespoke work and quote per project.",
   },
 ];

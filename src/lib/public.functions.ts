@@ -125,7 +125,7 @@ export const getBusinesses = createServerFn({ method: "GET" })
     const { data, error } = await publicClient()
       .from("businesses")
       .select(
-        "id,name,description,hero_image_url,logo_url,categories,business_types,is_eco_friendly,brand_accent_color,locations(city,state,is_primary),delivery_areas(city,is_pan_india),featured_placements(scope,city,end_date)",
+        "id,name,description,hero_image_url,logo_url,thumbnail_url,categories,business_types,is_eco_friendly,brand_accent_color,locations(city,state,is_primary),delivery_areas(city,is_pan_india),featured_placements(scope,city,end_date)",
       )
       .eq("is_live", true)
       .order("created_at", { ascending: false });
@@ -152,6 +152,7 @@ export const getBusinesses = createServerFn({ method: "GET" })
     const thumbPaths = [
       ...rows.map((b) => b.hero_image_url),
       ...rows.map((b) => b.logo_url),
+      ...rows.map((b) => b.thumbnail_url),
     ].filter(isPath);
     const signedMap = new Map<string, string>();
     if (thumbPaths.length) {
@@ -175,6 +176,7 @@ export const getBusinesses = createServerFn({ method: "GET" })
         ...b,
         hero_image_url: resolve(b.hero_image_url),
         logo_url: resolve(b.logo_url),
+        thumbnail_url: resolve(b.thumbnail_url),
         featured: (b.featured_placements ?? []).some(
           (f) => f.end_date >= today && (f.scope === "all_india" || (!!city && f.city === city)),
         ),
@@ -202,7 +204,7 @@ export type BrowseResultBusiness = Omit<PublicBusiness, "featured"> & {
 export type BrowseResultsResponse = { businesses: BrowseResultBusiness[]; total: number };
 
 const BROWSE_SELECT =
-  "id,name,description,hero_image_url,logo_url,categories,business_types,is_eco_friendly,brand_accent_color,operating_hours,review_count,review_avg,owner_email_verified,locations(city,state,is_primary),delivery_areas(city,is_pan_india),featured_placements(scope,city,end_date)";
+  "id,name,description,hero_image_url,logo_url,thumbnail_url,categories,business_types,is_eco_friendly,brand_accent_color,operating_hours,review_count,review_avg,owner_email_verified,locations(city,state,is_primary),delivery_areas(city,is_pan_india),featured_placements(scope,city,end_date)";
 
 /**
  * Real server-side filtering + pagination for /browse and /browse/$category — kept separate
@@ -310,7 +312,11 @@ export const getBrowseResults = createServerFn({ method: "GET" })
 
     const isPath = (v: unknown): v is string =>
       typeof v === "string" && v.length > 0 && !/^https?:\/\//i.test(v);
-    const thumbPaths = [...rows.map((b) => b.hero_image_url), ...rows.map((b) => b.logo_url)].filter(isPath);
+    const thumbPaths = [
+      ...rows.map((b) => b.hero_image_url),
+      ...rows.map((b) => b.logo_url),
+      ...rows.map((b) => b.thumbnail_url),
+    ].filter(isPath);
     const signedMap = new Map<string, string>();
     if (thumbPaths.length) {
       // See resolveBusinessMedia's comment: signing needs the service-role client, not the
@@ -331,6 +337,7 @@ export const getBrowseResults = createServerFn({ method: "GET" })
       ...b,
       hero_image_url: resolve(b.hero_image_url),
       logo_url: resolve(b.logo_url),
+      thumbnail_url: resolve(b.thumbnail_url),
       featured: (b.featured_placements ?? []).some(
         (f) => f.end_date >= today && (f.scope === "all_india" || (!!city && f.city === city)),
       ),

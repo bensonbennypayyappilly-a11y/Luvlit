@@ -128,6 +128,7 @@ export type Database = {
           slug: string
           status: string
           template: string
+          thumbnail_url: string | null
           view_count: number
           whatsapp: string | null
         }
@@ -165,6 +166,7 @@ export type Database = {
           slug: string
           status?: string
           template?: string
+          thumbnail_url?: string | null
           view_count?: number
           whatsapp?: string | null
         }
@@ -202,6 +204,7 @@ export type Database = {
           slug?: string
           status?: string
           template?: string
+          thumbnail_url?: string | null
           view_count?: number
           whatsapp?: string | null
         }

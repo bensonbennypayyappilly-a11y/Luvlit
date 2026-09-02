@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Star } from "lucide-react";
 import { EcoBadge } from "@/components/eco-badge";
@@ -18,7 +19,7 @@ export type BrowseResultData = {
   description: string | null;
   categories: string[] | null;
   is_eco_friendly: boolean | null;
-  hero_image_url?: string | null;
+  thumbnail_url?: string | null;
   logo_url?: string | null;
   operating_hours?: OperatingHours;
   locations?: { city: string | null }[] | null;
@@ -43,7 +44,10 @@ export function BrowseResultCard({ business }: { business: BrowseResultData }) {
   );
   const city = cities[0];
   const moreCities = cities.length - 1;
-  const hasHero = !!business.hero_image_url;
+  // A broken/invalid thumbnail URL (deleted storage object, expired signed URL, etc.) falls
+  // through to the logo, then initials — the card must never show a broken-image icon.
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const hasThumbnail = !!business.thumbnail_url && !thumbnailFailed;
   const hasLogo = !!business.logo_url;
   const openNow = isOpenNow(business.operating_hours ?? null);
 
@@ -54,11 +58,12 @@ export function BrowseResultCard({ business }: { business: BrowseResultData }) {
       className="surface-card group flex flex-col overflow-hidden rounded-3xl transition-all duration-500 hover:-translate-y-1 hover:border-accent hover:shadow-[0_18px_50px_-24px_oklch(0.221_0.006_56/0.45)] active:scale-[0.98] active:duration-150"
     >
       <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-secondary">
-        {hasHero ? (
+        {hasThumbnail ? (
           <img
-            src={business.hero_image_url!}
+            src={business.thumbnail_url!}
             alt={business.name}
             loading="lazy"
+            onError={() => setThumbnailFailed(true)}
             className="h-full w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.06]"
           />
         ) : hasLogo ? (
@@ -85,7 +90,7 @@ export function BrowseResultCard({ business }: { business: BrowseResultData }) {
             Featured
           </span>
         )}
-        {hasHero && hasLogo && (
+        {hasThumbnail && hasLogo && (
           <div className="absolute bottom-3 left-3 flex size-11 items-center justify-center overflow-hidden rounded-xl border border-border bg-card p-1.5 shadow-sm">
             <img src={business.logo_url!} alt="" className="h-full w-full object-contain" />
           </div>
