@@ -677,6 +677,7 @@ export type Database = {
           city: string
           id: string
           is_primary: boolean
+          pincode: string | null
           state: string | null
         }
         Insert: {
@@ -685,6 +686,7 @@ export type Database = {
           city: string
           id?: string
           is_primary?: boolean
+          pincode?: string | null
           state?: string | null
         }
         Update: {
@@ -693,6 +695,7 @@ export type Database = {
           city?: string
           id?: string
           is_primary?: boolean
+          pincode?: string | null
           state?: string | null
         }
         Relationships: [

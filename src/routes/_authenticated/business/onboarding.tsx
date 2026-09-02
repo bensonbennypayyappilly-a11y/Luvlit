@@ -1,14 +1,28 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
+import { LuvLitLogo } from "@/components/luvlit-logo";
 import { HeroMediaUploader, MediaUploader } from "@/components/media-uploader";
+import { GalleryEditor } from "@/components/website-builder/gallery-editor";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { ACCENT_COLORS, BUSINESS_TYPES, CITIES, ECO_CATEGORIES } from "@/lib/constants";
 import { slugify } from "@/lib/slugify";
 import { isReservedSlug } from "@/lib/reserved-slugs";
+import { StepProgress } from "@/components/onboarding/step-progress";
+import {
+  CategoriesStepArt,
+  ColorStepArt,
+  ContactStepArt,
+  DeliveryStepArt,
+  DomainStepArt,
+  LocationStepArt,
+  MediaStepArt,
+  NameStepArt,
+  TypeStepArt,
+} from "@/components/onboarding/onboarding-illustrations";
 
 export const Route = createFileRoute("/_authenticated/business/onboarding")({
   head: () => ({
@@ -25,6 +39,27 @@ export const Route = createFileRoute("/_authenticated/business/onboarding")({
   }),
   component: Onboarding,
 });
+
+// The business row has to exist before uploads (hero, thumbnail, gallery, shorts) have
+// somewhere to point — created right before this step, same as before the visual redesign.
+const MEDIA_STEP_INDEX = 6;
+
+const inputClass =
+  "w-full rounded-xl border border-border bg-white px-4 py-3.5 text-[0.9375rem] text-foreground outline-none transition-colors duration-150 placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-primary/15";
+const labelClass = "block text-sm font-medium text-foreground";
+const chipClass = (active: boolean) =>
+  `rounded-full border px-4 py-2 text-sm font-medium transition-colors duration-150 ${
+    active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-white text-foreground hover:border-primary/40"
+  }`;
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="block space-y-2">
+      <span className={labelClass}>{label}</span>
+      {children}
+    </label>
+  );
+}
 
 function Onboarding() {
   const navigate = useNavigate();
@@ -45,6 +80,7 @@ function Onboarding() {
   });
 
   const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [businessId, setBusinessId] = useState<string | null>(null);
@@ -58,6 +94,7 @@ function Onboarding() {
     address: "",
     city: "",
     state: "",
+    pincode: "",
     delivery: [] as string[],
     panIndia: false,
     whatsapp: "",
@@ -66,9 +103,12 @@ function Onboarding() {
     custom_domain: "",
     hero_image_url: null as string | null,
     main_video_url: null as string | null,
+    thumbnail_url: null as string | null,
+    gallery_urls: [] as string[],
     shorts: [] as (string | null)[],
     accent: ACCENT_COLORS[0].value,
   });
+  const reducedMotion = useReducedMotion();
 
   const showEco = form.categories.some((c) => ECO_CATEGORIES.includes(c));
   const set = (patch: Partial<typeof form>) => setForm({ ...form, ...patch });
@@ -112,13 +152,19 @@ function Onboarding() {
     setError(null);
     if (step === steps.length - 1) return finish();
     // Create the business row right before the media step so uploads have a valid folder.
-    if (step === steps.length - 2 && !businessId) {
+    if (step === MEDIA_STEP_INDEX - 1 && !businessId) {
       setSaving(true);
       const id = await ensureBusiness();
       setSaving(false);
       if (!id) return;
     }
+    setDirection(1);
     setStep(step + 1);
+  }
+
+  function goBack() {
+    setDirection(-1);
+    setStep(step - 1);
   }
 
   /** Generates a slug from `name`, retrying with -2/-3/... until it's neither reserved nor taken.
@@ -163,6 +209,8 @@ function Onboarding() {
         custom_domain: form.custom_domain || null,
         hero_image_url: form.hero_image_url,
         main_video_url: form.main_video_url,
+        thumbnail_url: form.thumbnail_url,
+        gallery_urls: form.gallery_urls,
         short_video_urls: form.shorts.filter((s): s is string => !!s).slice(0, 3),
         brand_accent_color: form.accent,
       })
@@ -184,7 +232,14 @@ function Onboarding() {
     if (form.city) {
       const { error: locationError } = await supabase
         .from("locations")
-        .insert({ business_id: id, address: form.address, city: form.city, state: form.state, is_primary: true });
+        .insert({
+          business_id: id,
+          address: form.address,
+          city: form.city,
+          state: form.state,
+          pincode: form.pincode || null,
+          is_primary: true,
+        });
       if (locationError) {
         setSaving(false);
         return setError(locationError.message);
@@ -215,14 +270,10 @@ function Onboarding() {
 
   if (checkingExisting || existingBusiness) {
     return (
-      <div className="flex min-h-screen flex-col bg-background">
-        <SiteHeader />
-        <main className="mx-auto flex w-full max-w-lg flex-1 items-center justify-center px-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            {existingBusiness ? "Redirecting to your website builder…" : "Loading…"}
-          </p>
-        </main>
-        <SiteFooter />
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#fbfaf6]">
+        <p className="text-sm text-muted-foreground">
+          {existingBusiness ? "Redirecting to your website builder…" : "Loading…"}
+        </p>
       </div>
     );
   }
@@ -230,55 +281,67 @@ function Onboarding() {
   const steps = [
     {
       title: "What's your business called?",
+      subtitle: "Let's start with the basics.",
+      art: <NameStepArt />,
       body: (
-        <div className="space-y-4">
-          <input
-            value={form.name}
-            onChange={(e) => set({ name: e.target.value })}
-            placeholder="Business name"
-            className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
-          />
-          <textarea
-            rows={4}
-            value={form.description}
-            onChange={(e) => set({ description: e.target.value })}
-            placeholder="Describe what you do, in a couple of sentences."
-            className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
-          />
+        <div className="space-y-5">
+          <Field label="Business name">
+            <input
+              value={form.name}
+              onChange={(e) => set({ name: e.target.value })}
+              placeholder="e.g. Alora Gifts"
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Describe what you do">
+            <textarea
+              rows={4}
+              value={form.description}
+              onChange={(e) => set({ description: e.target.value })}
+              placeholder="e.g. We create and curate beautiful gift hampers, return gifts, and personalised creations for every occasion."
+              className={inputClass}
+            />
+          </Field>
         </div>
       ),
     },
     {
       title: "What do you do?",
+      subtitle: "Select categories that best describe your business.",
+      art: <CategoriesStepArt />,
       body: (
         <div className="space-y-5">
-          <div className="flex flex-wrap gap-2">
-            {(categories ?? []).map((c) => (
-              <button
-                type="button"
-                key={c.id}
-                onClick={() => set({ categories: toggle(form.categories, c.name) })}
-                className={`rounded-full border px-4 py-2 text-sm ${
-                  form.categories.includes(c.name) ? "border-accent bg-accent-soft" : "border-border"
-                }`}
-              >
-                {c.name}
-              </button>
-            ))}
+          <div>
+            <p className={labelClass}>Categories</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {(categories ?? []).map((c) => (
+                <button
+                  type="button"
+                  key={c.id}
+                  onClick={() => set({ categories: toggle(form.categories, c.name) })}
+                  className={chipClass(form.categories.includes(c.name))}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
           </div>
-          <input
-            value={form.newCategory}
-            onChange={(e) => set({ newCategory: e.target.value })}
-            placeholder="Category not listed? Add your own"
-            className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
-          />
+          <Field label="Category not listed? Add your own">
+            <input
+              value={form.newCategory}
+              onChange={(e) => set({ newCategory: e.target.value })}
+              placeholder="Type your category"
+              className={inputClass}
+            />
+          </Field>
           {showEco && (
-            <label className="surface-card flex items-center justify-between gap-4 p-5 text-sm">
+            <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-white p-5 text-sm">
               <span>Is your business eco-friendly / sustainable?</span>
               <input
                 type="checkbox"
                 checked={form.is_eco_friendly}
                 onChange={(e) => set({ is_eco_friendly: e.target.checked })}
+                className="size-5 accent-primary"
               />
             </label>
           )}
@@ -287,79 +350,112 @@ function Onboarding() {
     },
     {
       title: "How do customers buy from you?",
+      subtitle: "Select all that apply.",
+      art: <TypeStepArt />,
       body: (
         <div className="space-y-3">
-          {BUSINESS_TYPES.map((t) => (
-            <button
-              type="button"
-              key={t.value}
-              onClick={() => set({ business_types: toggle(form.business_types, t.value) })}
-              className={`w-full rounded-md border p-5 text-left ${
-                form.business_types.includes(t.value) ? "border-accent bg-accent-soft" : "border-border"
-              }`}
-            >
-              <p>{t.label}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{t.hint}</p>
-            </button>
-          ))}
+          {BUSINESS_TYPES.map((t) => {
+            const active = form.business_types.includes(t.value);
+            return (
+              <button
+                type="button"
+                key={t.value}
+                onClick={() => set({ business_types: toggle(form.business_types, t.value) })}
+                className={`flex w-full items-start justify-between gap-4 rounded-xl border p-5 text-left transition-colors duration-150 ${
+                  active ? "border-primary bg-accent-soft" : "border-border bg-white hover:border-primary/30"
+                }`}
+              >
+                <div>
+                  <p className="font-medium text-foreground">{t.label}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t.hint}</p>
+                </div>
+                <span
+                  className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border-2 text-[0.625rem] ${
+                    active ? "border-primary bg-primary text-primary-foreground" : "border-border"
+                  }`}
+                >
+                  {active ? "✓" : ""}
+                </span>
+              </button>
+            );
+          })}
         </div>
       ),
     },
     {
       title: "Where are you based?",
+      subtitle: "Add your business location.",
+      art: <LocationStepArt />,
       body: (
-        <div className="space-y-4">
-          <input
-            value={form.address}
-            onChange={(e) => set({ address: e.target.value })}
-            placeholder="Address"
-            className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
-          />
-          <select
-            value={form.city}
-            onChange={(e) => set({ city: e.target.value })}
-            className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
-          >
-            <option value="">City</option>
-            {CITIES.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
-          <input
-            value={form.state}
-            onChange={(e) => set({ state: e.target.value })}
-            placeholder="State"
-            className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
-          />
+        <div className="space-y-5">
+          <Field label="Address">
+            <input
+              value={form.address}
+              onChange={(e) => set({ address: e.target.value })}
+              placeholder="e.g. 123, MG Road, Near City Centre"
+              className={inputClass}
+            />
+          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="City">
+              <select value={form.city} onChange={(e) => set({ city: e.target.value })} className={inputClass}>
+                <option value="">Select city</option>
+                {CITIES.map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="State">
+              <input
+                value={form.state}
+                onChange={(e) => set({ state: e.target.value })}
+                placeholder="e.g. Kerala"
+                className={inputClass}
+              />
+            </Field>
+          </div>
+          <Field label="PIN code">
+            <input
+              value={form.pincode}
+              onChange={(e) => set({ pincode: e.target.value })}
+              placeholder="e.g. 682001"
+              inputMode="numeric"
+              className={inputClass}
+            />
+          </Field>
         </div>
       ),
     },
     {
       title: "Where do you deliver or serve?",
+      subtitle: "Choose the areas you deliver or serve.",
+      art: <DeliveryStepArt />,
       body: (
-        <div className="space-y-4">
-          <label className="flex items-center gap-3 text-sm">
+        <div className="space-y-5">
+          <label className="flex items-center gap-3 rounded-xl border border-border bg-white p-4 text-sm">
             <input
               type="checkbox"
               checked={form.panIndia}
               onChange={(e) => set({ panIndia: e.target.checked })}
+              className="size-5 accent-primary"
             />
             I deliver / serve all of India
           </label>
           {!form.panIndia && (
-            <div className="flex flex-wrap gap-2">
-              {CITIES.map((c) => (
-                <button
-                  type="button"
-                  key={c}
-                  onClick={() => set({ delivery: toggle(form.delivery, c) })}
-                  className={`rounded-full border px-4 py-2 text-sm ${
-                    form.delivery.includes(c) ? "border-accent bg-accent-soft" : "border-border"
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
+            <div>
+              <p className={labelClass}>Or select cities</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {CITIES.map((c) => (
+                  <button
+                    type="button"
+                    key={c}
+                    onClick={() => set({ delivery: toggle(form.delivery, c) })}
+                    className={chipClass(form.delivery.includes(c))}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -367,55 +463,91 @@ function Onboarding() {
     },
     {
       title: "How can people reach you?",
+      subtitle: "Add your contact details.",
+      art: <ContactStepArt />,
       body: (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {(
             [
-              ["whatsapp", "WhatsApp number"],
-              ["contact_email", "Email"],
-              ["instagram_url", "Instagram link"],
-              ["custom_domain", "Official website link (optional)"],
+              ["whatsapp", "WhatsApp number", "+91 98765 43210"],
+              ["contact_email", "Email address", "hello@yourbusiness.com"],
+              ["instagram_url", "Instagram link", "instagram.com/yourbusiness"],
             ] as const
-          ).map(([key, label]) => (
-            <input
-              key={key}
-              value={form[key]}
-              onChange={(e) => set({ [key]: e.target.value } as Partial<typeof form>)}
-              placeholder={label}
-              className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
-            />
+          ).map(([key, label, placeholder]) => (
+            <Field key={key} label={label}>
+              <input
+                value={form[key]}
+                onChange={(e) => set({ [key]: e.target.value } as Partial<typeof form>)}
+                placeholder={placeholder}
+                className={inputClass}
+              />
+            </Field>
           ))}
         </div>
       ),
     },
     {
-      title: "Add your photo & videos",
+      title: "Add your photos & videos",
+      subtitle: "Showcase your business with photos and videos.",
+      art: <MediaStepArt />,
       body: businessId ? (
         <div className="space-y-6">
-          <p className="text-sm text-muted-foreground">
-            Upload one hero photo or video (a video autoplays on loop) and up to 3 short clips
-            (max 60s / 15MB each). These play directly on your page.
-          </p>
-          <HeroMediaUploader
-            businessId={businessId}
-            value={{ image: form.hero_image_url, video: form.main_video_url }}
-            onChange={({ image, video }) => set({ hero_image_url: image, main_video_url: video })}
-          />
-          <div className="space-y-4">
-            <p className="text-sm font-medium">Short videos (up to 3)</p>
-            {[0, 1, 2].map((i) => (
-              <MediaUploader
-                key={i}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <p className={labelClass}>Business thumbnail</p>
+              <p className="mt-1 text-xs text-muted-foreground">This will appear on LuvLit cards and search results.</p>
+              <div className="mt-3">
+                <MediaUploader
+                  businessId={businessId}
+                  kind="thumbnail"
+                  value={form.thumbnail_url}
+                  onChange={(path) => set({ thumbnail_url: path })}
+                  wrapperClassName="rounded-xl border border-border bg-white p-4"
+                />
+              </div>
+            </div>
+            <div>
+              <p className={labelClass}>Website hero (image or video)</p>
+              <p className="mt-1 text-xs text-muted-foreground">This appears on your website only.</p>
+              <div className="mt-3">
+                <HeroMediaUploader
+                  businessId={businessId}
+                  value={{ image: form.hero_image_url, video: form.main_video_url }}
+                  onChange={({ image, video }) => set({ hero_image_url: image, main_video_url: video })}
+                  wrapperClassName="rounded-xl border border-border bg-white p-4"
+                />
+              </div>
+            </div>
+          </div>
+          <div>
+            <p className={labelClass}>Gallery (up to 6 images)</p>
+            <div className="mt-3 rounded-xl border border-border bg-white p-4">
+              <GalleryEditor
                 businessId={businessId}
-                kind="short"
-                value={form.shorts[i] ?? null}
-                onChange={(path) => {
-                  const shorts = [...form.shorts];
-                  shorts[i] = path;
-                  set({ shorts });
-                }}
+                value={form.gallery_urls}
+                onSaved={(urls) => set({ gallery_urls: urls })}
               />
-            ))}
+            </div>
+          </div>
+          <div>
+            <p className={labelClass}>Short videos (up to 3)</p>
+            <p className="mt-1 text-xs text-muted-foreground">Max 60s / 15MB each.</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              {[0, 1, 2].map((i) => (
+                <MediaUploader
+                  key={i}
+                  businessId={businessId}
+                  kind="short"
+                  value={form.shorts[i] ?? null}
+                  onChange={(path) => {
+                    const shorts = [...form.shorts];
+                    shorts[i] = path;
+                    set({ shorts });
+                  }}
+                  wrapperClassName="rounded-xl border border-border bg-white p-4"
+                />
+              ))}
+            </div>
           </div>
         </div>
       ) : (
@@ -423,64 +555,160 @@ function Onboarding() {
       ),
     },
     {
-      title: "Pick a colour for your page",
+      title: "Make your page yours",
+      subtitle: "Choose an accent colour for your business page.",
+      art: <ColorStepArt />,
       body: (
         <div className="flex flex-wrap gap-3">
-          {ACCENT_COLORS.map((c) => (
-            <button
-              type="button"
-              key={c.value}
-              onClick={() => set({ accent: c.value })}
-              className={`flex items-center gap-3 rounded-md border px-4 py-3 text-sm ${
-                form.accent === c.value ? "border-accent" : "border-border"
-              }`}
-            >
-              <span className="size-5 rounded-full" style={{ backgroundColor: c.value }} />
-              {c.name}
-            </button>
-          ))}
+          {ACCENT_COLORS.map((c) => {
+            const active = form.accent === c.value;
+            return (
+              <button
+                type="button"
+                key={c.value}
+                onClick={() => set({ accent: c.value })}
+                className={`flex flex-col items-center gap-2 rounded-xl border p-3 text-xs transition-colors duration-150 ${
+                  active ? "border-primary bg-accent-soft" : "border-border bg-white hover:border-primary/30"
+                }`}
+              >
+                <span
+                  className={`relative flex size-9 items-center justify-center rounded-full ${active ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                  style={{ backgroundColor: c.value }}
+                >
+                  {active && <span className="size-1.5 rounded-full bg-white" />}
+                </span>
+                <span className="font-medium text-foreground">{c.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      ),
+    },
+    {
+      title: "Connect your domain",
+      subtitleNode: (
+        <>
+          Use your own domain for your business website. <span className="text-muted-foreground/70">(optional)</span>
+        </>
+      ),
+      art: <DomainStepArt />,
+      body: (
+        <div className="space-y-4">
+          <Field label="Your domain">
+            <input
+              value={form.custom_domain}
+              onChange={(e) => set({ custom_domain: e.target.value })}
+              placeholder="yourdomain.com"
+              className={inputClass}
+            />
+          </Field>
+          <ul className="space-y-1.5 text-sm text-muted-foreground">
+            <li className="flex items-center gap-2">
+              <span className="size-1 rounded-full bg-primary" />
+              You can always connect your domain later from settings.
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="size-1 rounded-full bg-primary" />
+              We'll help you with the setup.
+            </li>
+          </ul>
         </div>
       ),
     },
   ];
 
   const current = steps[step];
+  const isLastStep = step === steps.length - 1;
+  const slideOffset = reducedMotion ? 0 : 28;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-20">
-        <Link
-          to="/business/dashboard"
-          className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          ← Save & exit
+    <div className="flex min-h-screen flex-col bg-[#fbfaf6]">
+      <header className="px-6 py-6 sm:px-10">
+        <Link to="/" className="inline-flex items-center gap-2 text-primary">
+          <LuvLitLogo className="h-7 w-7" />
+          <span className="text-lg font-semibold tracking-editorial">LuvLit</span>
         </Link>
-        <p className="eyebrow">
-          Setup · step {step + 1} of {steps.length}
-        </p>
-        <h1 className="mt-4 text-4xl">{current.title}</h1>
-        <div className="mt-10">{current.body}</div>
-        {error && <p className="mt-6 text-sm text-destructive">{error}</p>}
-        <div className="mt-10 flex gap-3">
-          {step > 0 && (
-            <button
-              onClick={() => setStep(step - 1)}
-              className="rounded-md border border-border px-6 py-3 text-sm"
-            >
-              Back
-            </button>
-          )}
-          <button
-            onClick={goNext}
-            disabled={saving}
-            className="rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
-          >
-            {saving ? "Saving…" : step === steps.length - 1 ? "Finish setup" : "Continue"}
-          </button>
+      </header>
+
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-4 pb-10 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-[2rem] border border-border/60 bg-white shadow-[0_40px_100px_-48px_rgba(31,60,47,0.25)] lg:grid lg:grid-cols-2">
+          <div className="hidden items-center justify-center bg-[#fbfaf6] p-10 lg:flex">
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={step}
+                custom={direction}
+                initial={{ opacity: 0, x: direction * slideOffset }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -direction * slideOffset }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="w-full"
+              >
+                {current.art}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <div className="flex flex-col p-6 sm:p-10 lg:p-12">
+            <StepProgress step={step} total={steps.length} />
+            <p className="mt-5 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              Step {step + 1} of {steps.length}
+            </p>
+
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={step}
+                custom={direction}
+                initial={{ opacity: 0, x: direction * slideOffset }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -direction * slideOffset }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <h1 className="mt-2 text-2xl font-medium tracking-tight text-foreground sm:text-[1.75rem]">
+                  {current.title}
+                </h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {"subtitleNode" in current ? current.subtitleNode : current.subtitle}
+                </p>
+                <div className="mt-7">{current.body}</div>
+              </motion.div>
+            </AnimatePresence>
+
+            {error && <p className="mt-5 text-sm text-destructive">{error}</p>}
+
+            <div className="mt-8 flex items-center gap-2 sm:gap-3">
+              {step > 0 && (
+                <button
+                  onClick={goBack}
+                  className="flex min-h-11 items-center gap-1.5 rounded-xl border border-border px-3.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary sm:px-5"
+                >
+                  <ArrowLeft className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                  Back
+                </button>
+              )}
+              <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
+                {isLastStep && (
+                  <button
+                    onClick={finish}
+                    disabled={saving}
+                    className="flex min-h-11 items-center whitespace-nowrap px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-60 sm:px-5"
+                  >
+                    Skip for now
+                  </button>
+                )}
+                <button
+                  onClick={goNext}
+                  disabled={saving}
+                  className="flex min-h-11 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60 sm:px-6"
+                >
+                  {saving ? "Saving…" : isLastStep ? "Finish" : "Next"}
+                  {!saving && <ArrowRight className="size-4" strokeWidth={1.75} aria-hidden="true" />}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+        <p className="mt-6 text-center text-xs text-muted-foreground">You can always update these details later from your dashboard.</p>
       </main>
-      <SiteFooter />
     </div>
   );
 }
