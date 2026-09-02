@@ -8,14 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 type NavItem = { label: string; to: string };
 
-const businessItems: NavItem[] = [
-  { label: "Dashboard", to: "/business/dashboard" },
-  { label: "Appointments", to: "/business/dashboard/appointments" },
-  { label: "Leads", to: "/business/dashboard/leads" },
-  { label: "Post a Requirement", to: "/post-requirement" },
-  { label: "Find an Influencer", to: "/dashboard/find-influencer" },
-  { label: "Events", to: "/events" },
-];
+// Business owners get every one of these destinations from the dashboard's own sidebar
+// (see BusinessDashboardSidebar) — the top bar stays deliberately empty for them rather than
+// repeating the same links in two places.
+const businessItems: NavItem[] = [];
 
 const customerItems: NavItem[] = [
   { label: "Browse", to: "/browse" },
@@ -46,9 +42,6 @@ const KNOWN_ROUTES = new Set([
   "/influencer/requests",
   "/events",
   "/organizer/dashboard",
-  "/business/dashboard",
-  "/business/dashboard/appointments",
-  "/business/dashboard/leads",
 ]);
 
 function NavLink({ item, block = false }: { item: NavItem; block?: boolean }) {
