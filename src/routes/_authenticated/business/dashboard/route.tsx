@@ -67,7 +67,7 @@ function DashboardLayout() {
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
       <div className="flex flex-1 flex-col md:flex-row">
-        <BusinessDashboardSidebar businessName={data.name} />
+        <BusinessDashboardSidebar businessName={data.name} businessTypes={data.business_types ?? []} />
         <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
           <Outlet />
         </main>

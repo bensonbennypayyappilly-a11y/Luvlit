@@ -16,6 +16,16 @@ import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { MEDIA_LIMITS, useMediaUpload, useMediaUrl } from "@/components/media-uploader";
 import { GalleryEditor } from "@/components/website-builder/gallery-editor";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { WhatsAppIcon } from "@/components/brand-icons";
 import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
@@ -223,6 +233,25 @@ function ProfilePage() {
       (await supabase.from("categories").select("id,name").eq("is_approved", true).order("name")).data ?? [],
   });
 
+  // Whether unchecking "Products" or "Services / Appointments" would hide a dashboard section
+  // that actually has data behind it — drives the warning in saveTypes below, so a business
+  // never silently loses sight of products/services/staff they already set up.
+  const { data: typeUsage } = useQuery({
+    queryKey: ["dashboard-profile-type-usage", businessId],
+    enabled: !!businessId,
+    queryFn: async () => {
+      const [{ count: itemsCount }, { count: servicesCount }, { count: staffCount }] = await Promise.all([
+        supabase.from("items").select("id", { count: "exact", head: true }).eq("business_id", businessId!),
+        supabase.from("services").select("id", { count: "exact", head: true }).eq("business_id", businessId!),
+        supabase.from("staff").select("id", { count: "exact", head: true }).eq("business_id", businessId!),
+      ]);
+      return {
+        hasProducts: (itemsCount ?? 0) > 0,
+        hasAppointmentData: (servicesCount ?? 0) > 0 || (staffCount ?? 0) > 0,
+      };
+    },
+  });
+
   // Direct-action media (no Save/Cancel — upload/remove apply immediately, per spec).
   const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [thumbnailStatus, setThumbnailStatus] = useState<string | null>(null);
@@ -243,6 +272,7 @@ function ProfilePage() {
   const [businessTypesDraft, setBusinessTypesDraft] = useState<string[]>([]);
   const [ecoDraft, setEcoDraft] = useState(false);
   const [savingTypes, setSavingTypes] = useState(false);
+  const [typeWarning, setTypeWarning] = useState<{ losingProduct: boolean; losingAppointment: boolean } | null>(null);
 
   const [editingContact, setEditingContact] = useState(false);
   const [whatsappDraft, setWhatsappDraft] = useState("");
@@ -364,7 +394,7 @@ function ProfilePage() {
   function cancelEditingTypes() {
     setEditingTypes(false);
   }
-  async function saveTypes() {
+  async function performSaveTypes() {
     setSavingTypes(true);
     const stillEco = categoriesDraft.some((c) => ECO_CATEGORIES.includes(c));
     const error = await commit({
@@ -373,7 +403,26 @@ function ProfilePage() {
       is_eco_friendly: stillEco ? ecoDraft : false,
     });
     setSavingTypes(false);
-    if (!error) setEditingTypes(false);
+    if (!error) {
+      setEditingTypes(false);
+      setTypeWarning(null);
+    }
+  }
+  /** Business type strictly controls what shows in the dashboard sidebar (see
+   * business-dashboard-sidebar.tsx) — so unchecking a type that has real data behind it doesn't
+   * delete anything, but does hide that section from the nav. Warn before that happens, rather
+   * than let it be a surprise; "Go back" leaves the draft as-is so the owner can add the other
+   * type instead of removing this one. */
+  function saveTypes() {
+    const losingProduct =
+      businessTypes.includes("product") && !businessTypesDraft.includes("product") && !!typeUsage?.hasProducts;
+    const losingAppointment =
+      businessTypes.includes("appointment") && !businessTypesDraft.includes("appointment") && !!typeUsage?.hasAppointmentData;
+    if (losingProduct || losingAppointment) {
+      setTypeWarning({ losingProduct, losingAppointment });
+      return;
+    }
+    void performSaveTypes();
   }
 
   function startEditingContact() {
@@ -618,6 +667,25 @@ function ProfilePage() {
                 )}
               </div>
             </SectionCard>
+
+            <AlertDialog open={!!typeWarning} onOpenChange={(open) => !open && setTypeWarning(null)}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>This will hide part of your dashboard</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {typeWarning?.losingProduct &&
+                      "You have products saved. Turning off \"Products\" hides the Products page from your sidebar — your product data stays safe and comes back the moment you turn it back on. "}
+                    {typeWarning?.losingAppointment &&
+                      "You have staff or services saved. Turning off \"Services / Appointments\" hides Services, Staff & Availability and Appointments from your sidebar — your data stays safe and comes back the moment you turn it back on. "}
+                    If you'd rather keep using both, leave this type checked and just add the other one instead of removing it.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setTypeWarning(null)}>Go back</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => void performSaveTypes()}>Save anyway</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
 
           <div className="dashboard-card h-fit p-5 lg:sticky lg:top-6">

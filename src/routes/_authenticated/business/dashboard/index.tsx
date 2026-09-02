@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Package,
   Phone,
+  Tags,
   TrendingUp,
   Users,
   type LucideIcon,
@@ -54,6 +55,7 @@ function hasVisibleServicesContent(sections: Section[] | null | undefined): bool
 }
 
 const CHECKLIST_META: Record<string, { icon: LucideIcon; description: string }> = {
+  type: { icon: Tags, description: "This decides which dashboard sections (Appointments, Products…) show up for you." },
   description: { icon: FileText, description: "A clear description helps customers know what you offer." },
   hero: { icon: Images, description: "Businesses with a hero photo get more profile views." },
   gallery: { icon: Images, description: "Show your work — photos build trust with new customers." },
@@ -208,19 +210,35 @@ function Overview() {
     },
   });
 
+  // What the checklist (and the sidebar — see business-dashboard-sidebar.tsx) treats as
+  // relevant: a pure "custom order" business has no dedicated catalog page, so it gets neither
+  // the products nor the services nudge, same as the sidebar shows neither Products nor
+  // Appointments for it.
+  const businessTypes = business?.business_types ?? [];
+  const wantsProducts = businessTypes.includes("product");
+  const wantsServices = businessTypes.includes("appointment");
+  const offeringLabel =
+    wantsProducts && wantsServices ? "Add your products or services" : wantsServices ? "Add your services" : "Add your products";
+  const offeringHref = wantsServices && !wantsProducts ? "/business/dashboard/services" : "/business/dashboard/products";
+
   const checklist: ChecklistItem[] = business
     ? [
+        { key: "type", label: "Choose your business type", done: businessTypes.length > 0, href: "/business/dashboard/profile" },
         { key: "description", label: "Add a business description", done: !!business.description, href: "/business/dashboard/profile" },
         { key: "hero", label: "Add a hero photo", done: !!business.hero_image_url, href: "/business/dashboard/website" },
         { key: "gallery", label: "Add photos to your gallery", done: (business.gallery_urls ?? []).length > 0, href: "/business/dashboard/website" },
         { key: "contact", label: "Add a way to contact you", done: !!(business.whatsapp || business.contact_email || business.instagram_url), href: "/business/dashboard/website" },
         { key: "location", label: "Add a location or delivery area", done: stats?.hasLocation ?? false, href: "/business/dashboard/website" },
-        {
-          key: "offering",
-          label: "Add your products or services",
-          done: (stats?.hasItemsOffering ?? false) || hasVisibleServicesContent(business.sections),
-          href: "/business/dashboard/products",
-        },
+        ...(wantsProducts || wantsServices
+          ? [
+              {
+                key: "offering",
+                label: offeringLabel,
+                done: (stats?.hasItemsOffering ?? false) || hasVisibleServicesContent(business.sections),
+                href: offeringHref,
+              },
+            ]
+          : []),
       ]
     : [];
   const completePct = checklist.length ? Math.round((checklist.filter((c) => c.done).length / checklist.length) * 100) : 0;
