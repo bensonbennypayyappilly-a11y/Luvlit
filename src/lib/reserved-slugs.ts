@@ -1,9 +1,11 @@
 /**
  * Subdomains/slugs a business can never claim — either because they'd shadow an
- * existing top-level route on luvlit.in, or because they're standard infra names.
- * Kept in sync by hand with the identical list in the slug-backfill migration
- * (supabase/migrations/20260827140000_fdec847b-9feb-4535-982f-ba441d780112.sql),
- * since SQL and TS can't share a literal array.
+ * existing top-level route on luvlit.in, or because they're standard infra/system names.
+ * The one-time slug-backfill migration
+ * (supabase/migrations/20260827140000_fdec847b-9feb-4535-982f-ba441d780112.sql) carries a
+ * snapshot of this list as it stood when it ran — additions here since then (e.g. "login",
+ * "signup") only need to affect new/edited usernames going forward, not retroactively rename
+ * anything that backfill already assigned.
  */
 export const RESERVED_SLUGS = [
   // explicitly called out
@@ -34,6 +36,12 @@ export const RESERVED_SLUGS = [
   "robots",
   "favicon",
   "verify-email",
+  // common platform/system names that aren't literal routes today, but read as system
+  // pages to any visitor and could become real routes later
+  "login",
+  "signup",
+  "explore",
+  "settings",
   // standard infra subdomains
   "ftp",
   "ns1",

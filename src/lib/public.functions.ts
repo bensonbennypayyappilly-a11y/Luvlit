@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isReservedSlug } from "@/lib/reserved-slugs";
+import { getUsernameLocalError, normalizeUsername } from "@/lib/username";
 import { istDateString } from "@/lib/utils";
 import { isOpenNow, matchCategoriesForQuery } from "@/lib/search-helpers";
 import type {
@@ -420,6 +421,30 @@ export const getSubdomainBusiness = createServerFn({ method: "GET" }).handler(
     return resolveBusinessMedia(business as unknown as Record<string, unknown> | null);
   },
 );
+
+/**
+ * Live availability check for a business's `slug` — the username that becomes
+ * `{username}.luvlit.in` — used by both onboarding and the website builder's settings while the
+ * owner is still typing. Runs against the service-role client (not `publicClient()`) because
+ * this must see every business regardless of `status`/`is_live`: a slug claimed by another
+ * owner's still-draft business is exactly as unavailable as a published one's.
+ *
+ * `excludeBusinessId` lets a business's own current slug read as available to itself when
+ * editing (otherwise it would collide with its own row).
+ */
+export const checkUsernameAvailability = createServerFn({ method: "POST" })
+  .validator((input: { username: string; excludeBusinessId?: string }) => input)
+  .handler(async ({ data }): Promise<{ available: boolean; normalized: string }> => {
+    const normalized = normalizeUsername(data.username);
+    if (getUsernameLocalError(data.username)) return { available: false, normalized };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let query = supabaseAdmin.from("businesses").select("id").eq("slug", normalized);
+    if (data.excludeBusinessId) query = query.neq("id", data.excludeBusinessId);
+    const { data: existing, error } = await query.maybeSingle();
+    if (error) throw new Error(error.message);
+    return { available: !existing, normalized };
+  });
 
 export const getInfluencers = createServerFn({ method: "GET" })
   .validator(

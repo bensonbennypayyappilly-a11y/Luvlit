@@ -9,8 +9,9 @@ import { HeroMediaUploader, MediaUploader } from "@/components/media-uploader";
 import { GalleryEditor } from "@/components/website-builder/gallery-editor";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { ACCENT_COLORS, BUSINESS_TYPES, CITIES, ECO_CATEGORIES } from "@/lib/constants";
-import { slugify } from "@/lib/slugify";
-import { isReservedSlug } from "@/lib/reserved-slugs";
+import { normalizeUsername, USERNAME_FORMAT_HINT } from "@/lib/username";
+import { useUsernameAvailability } from "@/hooks/use-username-availability";
+import { UsernameStatusLine } from "@/components/username-status";
 import { StepProgress } from "@/components/onboarding/step-progress";
 import {
   CategoriesStepArt,
@@ -85,6 +86,7 @@ function Onboarding() {
   const [saving, setSaving] = useState(false);
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [form, setForm] = useState({
+    username: "",
     name: "",
     description: "",
     categories: [] as string[],
@@ -109,6 +111,10 @@ function Onboarding() {
     accent: ACCENT_COLORS[0].value,
   });
   const reducedMotion = useReducedMotion();
+  // Excludes the business's own row once it exists, so re-checking an unchanged username (e.g.
+  // after navigating Back to step 1 post-creation) doesn't report itself as taken.
+  const usernameAvailability = useUsernameAvailability(form.username, businessId ?? undefined);
+  const usernameReady = usernameAvailability.status === "available";
 
   const showEco = form.categories.some((c) => ECO_CATEGORIES.includes(c));
   const set = (patch: Partial<typeof form>) => setForm({ ...form, ...patch });
@@ -125,13 +131,12 @@ function Onboarding() {
       setError("You need to be signed in to continue.");
       return null;
     }
-    const initialSlug = await generateUniqueSlug(form.name || "Untitled business");
     const { data: business, error: businessError } = await supabase
       .from("businesses")
       .insert({
         owner_id: ownerId,
         name: form.name || "Untitled business",
-        slug: initialSlug,
+        slug: normalizeUsername(form.username),
         description: form.description,
         categories: form.categories,
         business_types: form.business_types,
@@ -141,7 +146,13 @@ function Onboarding() {
       .select("id")
       .single();
     if (businessError || !business) {
-      setError(businessError?.message ?? "Could not save.");
+      // Postgres unique-violation: someone else claimed this exact username between the last
+      // live availability check and this submit — a genuine race, not a bug.
+      setError(
+        businessError?.code === "23505"
+          ? "That username was just taken by someone else. Go back to step 1 and choose another."
+          : (businessError?.message ?? "Could not save."),
+      );
       return null;
     }
     setBusinessId(business.id);
@@ -167,38 +178,17 @@ function Onboarding() {
     setStep(step - 1);
   }
 
-  /** Generates a slug from `name`, retrying with -2/-3/... until it's neither reserved nor taken.
-   * `ownId` excludes the business's own (already-inserted) row from the collision check —
-   * omit it when generating a slug for a row that doesn't exist yet. */
-  async function generateUniqueSlug(name: string, ownId?: string): Promise<string> {
-    const base = slugify(name);
-    let candidate = base;
-    let suffix = 1;
-    for (;;) {
-      if (!isReservedSlug(candidate)) {
-        let query = supabase.from("businesses").select("id").eq("slug", candidate);
-        if (ownId) query = query.neq("id", ownId);
-        const { data: taken } = await query.maybeSingle();
-        if (!taken) return candidate;
-      }
-      suffix += 1;
-      candidate = `${base}-${suffix}`;
-    }
-  }
-
   async function finish() {
     setError(null);
     const id = await ensureBusiness();
     if (!id) return;
     setSaving(true);
 
-    const slug = await generateUniqueSlug(form.name || "Untitled business", id);
-
     const { error: businessError } = await supabase
       .from("businesses")
       .update({
         name: form.name,
-        slug,
+        slug: normalizeUsername(form.username),
         description: form.description,
         categories: form.categories,
         business_types: form.business_types,
@@ -217,7 +207,11 @@ function Onboarding() {
       .eq("id", id);
     if (businessError) {
       setSaving(false);
-      return setError(businessError.message);
+      return setError(
+        businessError.code === "23505"
+          ? "That username was just taken by someone else. Go back to step 1 and choose another."
+          : businessError.message,
+      );
     }
 
     if (form.newCategory.trim()) {
@@ -285,6 +279,32 @@ function Onboarding() {
       art: <NameStepArt />,
       body: (
         <div className="space-y-5">
+          <div className="space-y-2">
+            <span className={labelClass}>Username</span>
+            <div
+              className={`flex items-stretch overflow-hidden rounded-xl border bg-white transition-colors duration-150 ${
+                usernameAvailability.status === "invalid" || usernameAvailability.status === "taken"
+                  ? "border-destructive"
+                  : "border-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15"
+              }`}
+            >
+              <input
+                value={form.username}
+                onChange={(e) => set({ username: e.target.value })}
+                placeholder="alora"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                aria-invalid={usernameAvailability.status === "invalid" || usernameAvailability.status === "taken"}
+                className="min-w-0 flex-1 bg-transparent px-4 py-3.5 text-[0.9375rem] text-foreground outline-none placeholder:text-muted-foreground/60"
+              />
+              <span className="flex items-center border-l border-border bg-secondary/60 px-3.5 text-[0.9375rem] text-muted-foreground">
+                .luvlit.in
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">{USERNAME_FORMAT_HINT}</p>
+            <UsernameStatusLine state={usernameAvailability} username={normalizeUsername(form.username)} />
+          </div>
           <Field label="Business name">
             <input
               value={form.name}
@@ -697,7 +717,7 @@ function Onboarding() {
                 )}
                 <button
                   onClick={goNext}
-                  disabled={saving}
+                  disabled={saving || (step === 0 && !usernameReady)}
                   className="flex min-h-11 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60 sm:px-6"
                 >
                   {saving ? "Saving…" : isLastStep ? "Finish" : "Next"}

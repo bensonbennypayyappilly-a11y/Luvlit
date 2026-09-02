@@ -13,6 +13,9 @@ import { GalleryEditor } from "@/components/website-builder/gallery-editor";
 import { LocationsEditor } from "@/components/website-builder/locations-editor";
 import { SectionListEditor } from "@/components/website-builder/section-list-editor";
 import { ACCENT_COLORS, ECO_CATEGORIES } from "@/lib/constants";
+import { normalizeUsername, USERNAME_FORMAT_HINT } from "@/lib/username";
+import { useUsernameAvailability } from "@/hooks/use-username-availability";
+import { UsernameStatusLine } from "@/components/username-status";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FieldError } from "@/components/field-error";
 import { buildDefaultSections, newSection, type Section } from "@/lib/website-sections";
@@ -43,6 +46,7 @@ export const Route = createFileRoute("/_authenticated/business/dashboard/website
 });
 
 type Draft = {
+  slug: string;
   name: string;
   description: string | null;
   categories: string[];
@@ -214,11 +218,17 @@ function WebsiteBuilder() {
   const [publishState, setPublishState] = useState<SaveState>("idle");
   const [publishError, setPublishError] = useState<string | null>(null);
   const sectionsSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Only starts checking once the owner actually types — without this, an existing business
+  // whose slug predates the current format rules (shorter than 3 characters, say) would show a
+  // false "invalid" error the moment this page loads, for a value nobody is trying to change.
+  const [usernameEdited, setUsernameEdited] = useState(false);
+  const usernameAvailability = useUsernameAvailability(usernameEdited ? (draft?.slug ?? "") : "", businessId);
 
   useEffect(() => {
     if (data?.business && !draft) {
       const b = data.business;
       setDraft({
+        slug: b.slug,
         name: b.name,
         description: b.description,
         categories: b.categories ?? [],
@@ -249,6 +259,16 @@ function WebsiteBuilder() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.business]);
 
+  // Saves the username the moment it's confirmed available — not debounced like the other text
+  // fields, since a half-typed, not-yet-checked username should never be written.
+  useEffect(() => {
+    if (!usernameEdited || usernameAvailability.status !== "available" || !draft) return;
+    const normalized = normalizeUsername(draft.slug);
+    if (normalized === (data?.business?.slug ?? "")) return;
+    saveImmediate({ slug: normalized });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usernameAvailability.status, draft?.slug]);
+
   if (!businessId || isLoading || !draft || !draftSections) {
     return (
       <div className="flex flex-1 flex-col gap-4 p-6 lg:flex-row">
@@ -278,6 +298,13 @@ function WebsiteBuilder() {
   function onImmediateChange(fields: Partial<Draft>) {
     patch(fields);
     saveImmediate(fields);
+  }
+
+  /** Only local state here — the actual save is triggered by the availability effect once the
+   * new username is confirmed available, not on every keystroke. */
+  function onUsernameChange(value: string) {
+    setUsernameEdited(true);
+    patch({ slug: value });
   }
 
   /** Fixed 3-slot short-video editor: setting a slot writes/replaces it, clearing one removes it. */
@@ -657,6 +684,40 @@ function WebsiteBuilder() {
             </SettingsGroup>
 
             <SettingsGroup label="Domain">
+              <div>
+                <label className="text-[13px] font-medium text-foreground">LuvLit address</label>
+                <div
+                  className={`mt-2 flex items-stretch overflow-hidden rounded-[10px] border bg-white transition-colors duration-150 ${
+                    usernameAvailability.status === "invalid" || usernameAvailability.status === "taken"
+                      ? "border-destructive"
+                      : "border-[#EAEAEA] focus-within:border-accent"
+                  }`}
+                >
+                  <input
+                    value={draft.slug}
+                    onChange={(e) => onUsernameChange(e.target.value)}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    aria-invalid={usernameAvailability.status === "invalid" || usernameAvailability.status === "taken"}
+                    className="min-w-0 flex-1 bg-transparent px-3.5 py-2.5 text-sm text-foreground outline-none"
+                  />
+                  <span className="flex items-center border-l border-[#EAEAEA] bg-[#FAFAFA] px-3 text-sm text-muted-foreground">
+                    .luvlit.in
+                  </span>
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">{USERNAME_FORMAT_HINT}</p>
+                {usernameEdited && <UsernameStatusLine state={usernameAvailability} username={normalizeUsername(draft.slug)} />}
+                {usernameEdited &&
+                  usernameAvailability.status === "available" &&
+                  normalizeUsername(draft.slug) !== (slug ?? "") && (
+                    <p className="mt-1.5 text-xs text-amber-700">
+                      {isPubliclyLive
+                        ? `Changing this moves your published site to ${normalizeUsername(draft.slug)}.luvlit.in — the current address (${slug}.luvlit.in) will stop working.`
+                        : `Your site will be published at ${normalizeUsername(draft.slug)}.luvlit.in.`}
+                    </p>
+                  )}
+              </div>
               <div>
                 <label className="text-[13px] font-medium text-foreground">Official website (optional)</label>
                 <input
