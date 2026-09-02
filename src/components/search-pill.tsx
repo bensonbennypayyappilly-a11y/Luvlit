@@ -46,7 +46,6 @@ export function SearchPill({
   };
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
-  const [openNow, setOpenNow] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const placeholderIndex = useCyclingIndex(REQUIREMENT_EXAMPLES.length, 3000);
 
@@ -138,7 +137,7 @@ export function SearchPill({
             className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-accent hover:text-foreground xl:h-12 xl:w-12"
           >
             <SlidersHorizontal className="h-3.5 w-3.5 xl:h-4 xl:w-4" aria-hidden="true" />
-            {(category || openNow) && (
+            {category && (
               <span
                 className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-accent"
                 aria-hidden="true"
@@ -191,27 +190,16 @@ export function SearchPill({
             </select>
           </div>
 
-          <div className="flex flex-col justify-between">
-            <label className="flex items-center gap-2 text-sm text-foreground">
-              <input
-                type="checkbox"
-                checked={openNow}
-                onChange={(e) => setOpenNow(e.target.checked)}
-                className="h-4 w-4 rounded border-border accent-primary"
-              />
-              Open now
-            </label>
-            <div>
-              <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
-                Price range
-              </p>
-              <select
-                disabled
-                className="mt-2 w-full cursor-not-allowed rounded-md border border-border bg-secondary/50 px-3 py-2.5 text-sm text-muted-foreground"
-              >
-                <option>Coming soon</option>
-              </select>
-            </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              Price range
+            </p>
+            <select
+              disabled
+              className="mt-2 w-full cursor-not-allowed rounded-md border border-border bg-secondary/50 px-3 py-2.5 text-sm text-muted-foreground"
+            >
+              <option>Coming soon</option>
+            </select>
           </div>
 
           <div className="sm:col-span-3 flex justify-end gap-3 border-t border-border pt-4">
@@ -219,7 +207,6 @@ export function SearchPill({
               type="button"
               onClick={() => {
                 setCategory("");
-                setOpenNow(false);
                 setFiltersOpen(false);
               }}
               className="text-sm text-muted-foreground hover:text-foreground"

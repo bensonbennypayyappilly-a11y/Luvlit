@@ -33,9 +33,9 @@ export function BuilderSection({
 }
 
 /** Small inline status indicator for autosave feedback ("Saving…" / "Saved" / error). */
-export function SaveStatus({ state }: { state: "idle" | "saving" | "saved" | "error"; error?: string }) {
+export function SaveStatus({ state, error }: { state: "idle" | "saving" | "saved" | "error"; error?: string | null }) {
   if (state === "idle") return null;
   if (state === "saving") return <p className="text-xs text-muted-foreground">Saving…</p>;
-  if (state === "error") return <p className="text-xs text-destructive">Couldn't save</p>;
+  if (state === "error") return <p className="text-xs text-destructive">{error || "Couldn't save"}</p>;
   return <p className="text-xs text-muted-foreground">Saved</p>;
 }

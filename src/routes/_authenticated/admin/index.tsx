@@ -30,7 +30,7 @@ function AdminIndex() {
         await supabase
           .from("businesses")
           .select("id,name,created_at")
-          .eq("is_live", true)
+          .eq("status", "live")
           .order("created_at", { ascending: false })
           .limit(20)
       ).data ?? [],
@@ -126,12 +126,18 @@ function AdminIndex() {
       <p className="eyebrow">Admin</p>
       <h1 className="mt-4 text-4xl">Overview</h1>
 
-      <div className="mt-8">
+      <div className="mt-8 flex flex-wrap gap-3">
         <Link
           to="/admin/influencer-approvals"
           className="rounded-md border border-accent px-6 py-3 text-sm font-medium text-accent hover:bg-accent-soft"
         >
           Influencer approvals →
+        </Link>
+        <Link
+          to="/admin/business-approvals"
+          className="rounded-md border border-accent px-6 py-3 text-sm font-medium text-accent hover:bg-accent-soft"
+        >
+          Business moderation →
         </Link>
       </div>
 

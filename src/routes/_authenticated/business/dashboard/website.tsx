@@ -85,13 +85,15 @@ type BusinessPatch = Partial<Draft> | { draft_sections: Section[] };
 
 function useAutosaveField(businessId: string | undefined) {
   const [state, setState] = useState<SaveState>("idle");
+  const [error, setError] = useState<string | null>(null);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   async function commit(patch: BusinessPatch) {
     if (!businessId) return;
     setState("saving");
-    const { error } = await supabase.from("businesses").update(patch).eq("id", businessId!);
-    setState(error ? "error" : "saved");
+    const { error: saveError } = await supabase.from("businesses").update(patch).eq("id", businessId!);
+    setError(saveError?.message ?? null);
+    setState(saveError ? "error" : "saved");
   }
 
   function saveImmediate(patch: BusinessPatch) {
@@ -103,7 +105,7 @@ function useAutosaveField(businessId: string | undefined) {
     timers.current[key] = setTimeout(() => commit(patch), 600);
   }
 
-  return { state, saveImmediate, saveDebounced };
+  return { state, error, saveImmediate, saveDebounced };
 }
 
 function useBusinessDraft(businessId: string | undefined) {
@@ -145,7 +147,7 @@ function WebsiteBuilder() {
   const businessId = dashboardBusiness?.id;
   const { data, isLoading } = useBusinessDraft(businessId);
   const queryClient = useQueryClient();
-  const { state: saveState, saveImmediate, saveDebounced } = useAutosaveField(businessId);
+  const { state: saveState, error: saveError, saveImmediate, saveDebounced } = useAutosaveField(businessId);
 
   const [draft, setDraft] = useState<Draft | null>(null);
   // Section layout is a separate save cycle from the flat fields above: it's staged in
@@ -346,7 +348,7 @@ function WebsiteBuilder() {
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-4">
         <DashboardBackLink className="" />
         <div className="flex items-center gap-3">
-          <SaveStatus state={saveState} />
+          <SaveStatus state={saveState} error={saveError} />
           <button
             type="button"
             onClick={publish}
@@ -393,7 +395,7 @@ function WebsiteBuilder() {
             </div>
           </BuilderSection>
 
-          <BuilderSection title="Page Layout" subtitle="Add, hide, reorder or edit the sections of your website.">
+          <BuilderSection title="Page Layout" subtitle="Add, hide, reorder or edit sections — goes live when you press Save and Publish.">
             <SectionListEditor sections={draftSections} onChange={onSectionsChange} items={(data?.items ?? []).map((i) => ({ id: i.id, name: i.name }))} />
           </BuilderSection>
 
@@ -700,8 +702,9 @@ function WebsiteBuilder() {
             ))}
           </div>
           <p className="border-b border-border bg-card px-4 py-2.5 text-xs text-muted-foreground">
-            Live preview of your unsaved changes — press "Save and Publish" to apply them to your
-            real site.
+            {isPubliclyLive
+              ? "This preview matches your live site. Most edits here save straight to it as you make them — only section layout (Page Layout) stays staged until you press \"Save and Publish.\""
+              : "Live preview — nothing here is public yet. Press \"Save and Publish\" to go live."}
           </p>
 
           <div className="flex-1 overflow-y-auto p-4 lg:p-8">

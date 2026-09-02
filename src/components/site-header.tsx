@@ -38,11 +38,17 @@ const KNOWN_ROUTES = new Set([
   "/influencer",
   "/post-requirement",
   "/dashboard/find-influencer",
+  "/dashboard/requirements",
+  "/dashboard/saved",
+  "/dashboard/chats",
   "/influencer/status",
   "/influencer/onboarding",
   "/influencer/requests",
   "/events",
   "/organizer/dashboard",
+  "/business/dashboard",
+  "/business/dashboard/appointments",
+  "/business/dashboard/leads",
 ]);
 
 function NavLink({ item, block = false }: { item: NavItem; block?: boolean }) {

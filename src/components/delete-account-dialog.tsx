@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,35 @@ export function DeleteAccountDialog({
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        if (!busy) onClose();
+        return;
+      }
+      if (e.key !== "Tab" || !panelRef.current) return;
+      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [busy, onClose]);
 
   async function confirm() {
     setBusy(true);
@@ -39,9 +68,22 @@ export function DeleteAccountDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 px-6">
-      <div className="w-full max-w-md rounded-lg border border-border bg-card p-8">
-        <h2 className="text-2xl">Delete your account</h2>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 px-6"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !busy) onClose();
+      }}
+    >
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-account-title"
+        className="w-full max-w-md rounded-lg border border-border bg-card p-8"
+      >
+        <h2 id="delete-account-title" className="text-2xl">
+          Delete your account
+        </h2>
         <p className="mt-4 text-sm text-muted-foreground">
           {CONSEQUENCES[role ?? "customer"] ?? CONSEQUENCES.customer}
         </p>
@@ -52,6 +94,7 @@ export function DeleteAccountDialog({
         <label className="mt-6 block text-sm">
           Type <span className="font-medium">DELETE</span> to confirm
           <input
+            ref={inputRef}
             value={phrase}
             onChange={(e) => setPhrase(e.target.value)}
             className="mt-2 w-full rounded-md border border-border bg-background px-4 py-2.5 text-sm"

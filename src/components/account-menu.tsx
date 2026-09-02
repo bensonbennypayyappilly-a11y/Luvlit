@@ -5,9 +5,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { DeleteAccountDialog } from "@/components/delete-account-dialog";
 import type { AppRole } from "@/hooks/use-session";
 
+/** Where "Profile" in the account menu goes — there's no single /profile route, each role has
+ * its own home for account details. */
+const PROFILE_PATH: Record<NonNullable<AppRole>, string> = {
+  business: "/business/dashboard/profile",
+  customer: "/dashboard/settings",
+  influencer: "/influencer/onboarding",
+};
+
 export function AccountMenu({ label, role }: { label: string; role: AppRole }) {
   const [open, setOpen] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -28,9 +37,14 @@ export function AccountMenu({ label, role }: { label: string; role: AppRole }) {
   }, []);
 
   async function signOut() {
+    setSignOutError(null);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setSignOutError(error.message);
+      return;
+    }
     await queryClient.cancelQueries();
     queryClient.clear();
-    await supabase.auth.signOut();
     navigate({ to: "/", replace: true });
   }
 
@@ -44,19 +58,21 @@ export function AccountMenu({ label, role }: { label: string; role: AppRole }) {
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-md border border-border bg-card py-1 text-sm surface-card">
-          <a
-            href="/profile"
-            className="flex min-h-11 items-center px-4 text-foreground transition-colors hover:bg-accent-soft"
-          >
-            Profile
-          </a>
+          {role && (
+            <Link
+              to={PROFILE_PATH[role]}
+              className="flex min-h-11 items-center px-4 text-foreground transition-colors hover:bg-accent-soft"
+            >
+              Profile
+            </Link>
+          )}
           {role === "business" && (
-            <a
-              href="/business/dashboard/billing"
+            <Link
+              to="/business/dashboard/billing"
               className="flex min-h-11 items-center px-4 text-foreground transition-colors hover:bg-accent-soft"
             >
               Billing
-            </a>
+            </Link>
           )}
           <button
             onClick={signOut}
@@ -64,6 +80,7 @@ export function AccountMenu({ label, role }: { label: string; role: AppRole }) {
           >
             Sign out
           </button>
+          {signOutError && <p className="px-4 pb-2 text-xs text-destructive">{signOutError}</p>}
           <button
             onClick={() => {
               setShowDelete(true);

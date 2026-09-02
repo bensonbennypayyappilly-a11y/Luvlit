@@ -28,6 +28,7 @@ function Settings() {
   const [form, setForm] = useState({ name: "", phone: "", email: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [showDelete, setShowDelete] = useState(false);
 
   const { data: profile } = useQuery({
@@ -47,11 +48,16 @@ function Settings() {
     if (!userId) return;
     setSaving(true);
     setSaved(false);
-    await supabase
+    setSaveError(null);
+    const { error } = await supabase
       .from("profiles")
       .update({ name: form.name || null, phone: form.phone || null, email: form.email || null })
       .eq("id", userId);
     setSaving(false);
+    if (error) {
+      setSaveError(error.message);
+      return;
+    }
     setSaved(true);
     queryClient.invalidateQueries({ queryKey: ["my-profile", userId] });
   }
@@ -81,12 +87,15 @@ function Settings() {
             />
           </label>
           <label className="block text-sm">
-            Email
+            Contact email
             <input
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               className="mt-2 w-full rounded-md border border-border bg-background px-4 py-2.5 text-sm"
             />
+            <span className="mt-1.5 block text-xs text-muted-foreground">
+              Used to reach you — this doesn't change the email you sign in with.
+            </span>
           </label>
           <div className="flex items-center gap-4">
             <button
@@ -97,6 +106,7 @@ function Settings() {
               {saving ? "Saving…" : "Save changes"}
             </button>
             {saved && <p className="text-sm text-muted-foreground">Saved.</p>}
+            {saveError && <p className="text-sm text-destructive">{saveError}</p>}
           </div>
         </div>
 

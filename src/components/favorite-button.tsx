@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Heart } from "lucide-react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +29,7 @@ export function FavoriteButton({ businessId, className }: { businessId: string; 
   const navigate = useNavigate();
   const href = useRouterState({ select: (s) => s.location.href });
   const queryClient = useQueryClient();
+  const [failed, setFailed] = useState(false);
 
   const queryKey = ["favorite-business-ids", userId] as const;
   const { data: favoriteIds } = useQuery({
@@ -76,6 +78,8 @@ export function FavoriteButton({ businessId, className }: { businessId: string; 
 
     if (error) {
       queryClient.setQueryData(queryKey, previous);
+      setFailed(true);
+      setTimeout(() => setFailed(false), 2500);
       return;
     }
     queryClient.invalidateQueries({ queryKey });
@@ -85,15 +89,16 @@ export function FavoriteButton({ businessId, className }: { businessId: string; 
     <button
       type="button"
       onClick={toggle}
-      aria-label={saved ? "Remove from saved businesses" : "Save this business"}
+      title={failed ? "Couldn't save — try again" : undefined}
+      aria-label={failed ? "Couldn't save — try again" : saved ? "Remove from saved businesses" : "Save this business"}
       aria-pressed={saved}
       className={cn(
         "flex size-11 shrink-0 items-center justify-center rounded-full transition-colors active:scale-90",
-        saved ? "text-accent" : "text-muted-foreground hover:text-accent",
+        failed ? "text-destructive" : saved ? "text-accent" : "text-muted-foreground hover:text-accent",
         className,
       )}
     >
-      <Heart size={18} fill={saved ? "currentColor" : "none"} strokeWidth={1.75} />
+      <Heart size={18} fill={saved && !failed ? "currentColor" : "none"} strokeWidth={1.75} />
     </button>
   );
 }
