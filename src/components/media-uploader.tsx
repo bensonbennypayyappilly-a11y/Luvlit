@@ -125,31 +125,23 @@ async function compressImage(file: File, maxEdge: number, quality = 0.82): Promi
 
 const DEFAULT_WRAPPER = "rounded-lg border border-border bg-card p-5";
 
-type Props = {
-  businessId: string;
-  kind: MediaKind;
-  value: string | null;
-  onChange: (path: string | null) => void;
-  label?: string;
-  /** Storage bucket override; defaults to business-media. */
-  bucket?: string;
-  /** Overrides the default bordered-card wrapper look — used by the website builder, which
-   * wants a flatter style, without changing the default everywhere else this is used
-   * (onboarding, the dashboard profile page). */
-  wrapperClassName?: string;
-};
-
-export function MediaUploader({
+/** The upload half of MediaUploader, extracted so a caller that wants its own bespoke UI (see
+ * the Profile & Media thumbnail/video panels) can drive the same validated-compress-upload
+ * pipeline without reimplementing it. MediaUploader itself is just this hook plus its default
+ * markup — behaviour for every existing caller (onboarding, website builder, products/services)
+ * is unchanged. */
+export function useMediaUpload({
   businessId,
   kind,
-  value,
-  onChange,
-  label,
   bucket = MEDIA_BUCKET,
-  wrapperClassName = DEFAULT_WRAPPER,
-}: Props) {
+  onUploaded,
+}: {
+  businessId: string;
+  kind: MediaKind;
+  bucket?: string;
+  onUploaded: (path: string) => void;
+}) {
   const limits = MEDIA_LIMITS[kind];
-  const previewUrl = useMediaUrl(value, bucket);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
 
@@ -188,11 +180,40 @@ export function MediaUploader({
         return setError(uploadError.message);
       }
       setProgress(100);
-      onChange(path);
+      onUploaded(path);
       setTimeout(() => setProgress(null), 600);
     },
-    [businessId, kind, limits, onChange, bucket],
+    [businessId, kind, limits, onUploaded, bucket],
   );
+
+  return { upload, error, setError, progress, limits };
+}
+
+type Props = {
+  businessId: string;
+  kind: MediaKind;
+  value: string | null;
+  onChange: (path: string | null) => void;
+  label?: string;
+  /** Storage bucket override; defaults to business-media. */
+  bucket?: string;
+  /** Overrides the default bordered-card wrapper look — used by the website builder, which
+   * wants a flatter style, without changing the default everywhere else this is used
+   * (onboarding, the dashboard profile page). */
+  wrapperClassName?: string;
+};
+
+export function MediaUploader({
+  businessId,
+  kind,
+  value,
+  onChange,
+  label,
+  bucket = MEDIA_BUCKET,
+  wrapperClassName = DEFAULT_WRAPPER,
+}: Props) {
+  const previewUrl = useMediaUrl(value, bucket);
+  const { upload, error, progress, limits } = useMediaUpload({ businessId, kind, bucket, onUploaded: onChange });
 
   return (
     <div className={wrapperClassName}>

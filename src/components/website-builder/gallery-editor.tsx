@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaUploader, useMediaUrl } from "@/components/media-uploader";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { GALLERY_MAX } from "@/lib/constants";
 
 function GalleryThumb({ path, onRemove }: { path: string; onRemove: () => void }) {
   const url = useMediaUrl(path);
+  const [confirming, setConfirming] = useState(false);
   return (
     <div className="group relative overflow-hidden rounded-[10px] border border-[#EEEEEE]">
       {url ? (
@@ -14,11 +16,18 @@ function GalleryThumb({ path, onRemove }: { path: string; onRemove: () => void }
       )}
       <button
         type="button"
-        onClick={onRemove}
+        onClick={() => setConfirming(true)}
         className="absolute right-1.5 top-1.5 rounded-[6px] bg-white/95 px-2 py-1 text-[11px] font-medium text-destructive shadow-sm transition-colors duration-150 hover:bg-white"
       >
         Remove
       </button>
+      <ConfirmDeleteDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        onConfirm={onRemove}
+        title="Remove this photo?"
+        description="This photo will be removed from your gallery. This can't be undone."
+      />
     </div>
   );
 }

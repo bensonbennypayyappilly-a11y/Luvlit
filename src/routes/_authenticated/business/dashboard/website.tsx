@@ -88,6 +88,7 @@ function useAutosaveField(businessId: string | undefined) {
   const [state, setState] = useState<SaveState>("idle");
   const [error, setError] = useState<string | null>(null);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const queryClient = useQueryClient();
 
   async function commit(patch: BusinessPatch) {
     if (!businessId) return;
@@ -95,6 +96,13 @@ function useAutosaveField(businessId: string | undefined) {
     const { error: saveError } = await supabase.from("businesses").update(patch).eq("id", businessId!);
     setError(saveError?.message ?? null);
     setState(saveError ? "error" : "saved");
+    // Profile & Media (and the dashboard sidebar/Overview) read several of the same fields this
+    // saves — gallery, short videos, contact links — so they'd otherwise show stale data until a
+    // hard refresh, same bug this mirrors the fix for on the Profile & Media side.
+    if (!saveError) {
+      queryClient.invalidateQueries({ queryKey: ["dashboard-profile-full", businessId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-business"] });
+    }
   }
 
   function saveImmediate(patch: BusinessPatch) {
