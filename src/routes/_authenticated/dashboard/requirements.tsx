@@ -65,12 +65,41 @@ function Requirements() {
         .select("id,requirement_id")
         .in("requirement_id", reqIds);
       if (convsError) throw new Error(convsError.message);
-      const countByReq = new Map<string, number>();
+
+      const matchedByReq = new Map<string, number>();
+      const reqIdByConvId = new Map<string, string>();
       for (const c of convs ?? []) {
         if (!c.requirement_id) continue;
-        countByReq.set(c.requirement_id, (countByReq.get(c.requirement_id) ?? 0) + 1);
+        matchedByReq.set(c.requirement_id, (matchedByReq.get(c.requirement_id) ?? 0) + 1);
+        reqIdByConvId.set(c.id, c.requirement_id);
       }
-      return (requirements ?? []).map((r) => ({ ...r, quoteCount: countByReq.get(r.id) ?? 0 }));
+
+      // A matched conversation isn't a quote until the business has actually sent something —
+      // being matched just means the business was notified, same as a lead. Count only
+      // conversations with at least one message from the business side as an actual quote, so
+      // this can never claim "1 quote" on a thread nobody has replied to yet.
+      const quotedByReq = new Map<string, number>();
+      const convIds = [...reqIdByConvId.keys()];
+      if (convIds.length) {
+        const { data: businessMessages, error: messagesError } = await supabase
+          .from("messages")
+          .select("conversation_id")
+          .eq("sender_type", "business")
+          .in("conversation_id", convIds);
+        if (messagesError) throw new Error(messagesError.message);
+        const repliedConvIds = new Set((businessMessages ?? []).map((m) => m.conversation_id));
+        for (const convId of repliedConvIds) {
+          const reqId = reqIdByConvId.get(convId);
+          if (!reqId) continue;
+          quotedByReq.set(reqId, (quotedByReq.get(reqId) ?? 0) + 1);
+        }
+      }
+
+      return (requirements ?? []).map((r) => ({
+        ...r,
+        matchedCount: matchedByReq.get(r.id) ?? 0,
+        quoteCount: quotedByReq.get(r.id) ?? 0,
+      }));
     },
   });
 
@@ -133,14 +162,24 @@ function Requirements() {
                   <p className="mt-2 text-sm text-muted-foreground">
                     {r.city} {r.budget ? `· ₹${r.budget}` : ""}
                   </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {r.matchedCount === 0
+                      ? "No matching businesses yet"
+                      : `Matched with ${r.matchedCount} ${r.matchedCount === 1 ? "business" : "businesses"}`}
+                  </p>
                   <RequirementThumbs imageUrls={(r as any).image_urls} />
                 </div>
-                <button
-                  onClick={() => setOpenId(openId === r.id ? null : r.id)}
-                  className="rounded-md border border-accent px-5 py-2.5 text-sm font-medium text-accent hover:bg-accent-soft"
-                >
-                  {r.quoteCount} {r.quoteCount === 1 ? "quote" : "quotes"} →
-                </button>
+                {r.matchedCount > 0 && (
+                  <button
+                    onClick={() => setOpenId(openId === r.id ? null : r.id)}
+                    className="rounded-md border border-accent px-5 py-2.5 text-sm font-medium text-accent hover:bg-accent-soft"
+                  >
+                    {r.quoteCount > 0
+                      ? `${r.quoteCount} ${r.quoteCount === 1 ? "quote" : "quotes"}`
+                      : "Awaiting reply"}{" "}
+                    →
+                  </button>
+                )}
               </div>
 
               {openId === r.id && (
