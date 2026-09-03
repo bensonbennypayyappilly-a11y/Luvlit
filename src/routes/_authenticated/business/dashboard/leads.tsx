@@ -27,7 +27,26 @@ type InboxRow = {
   subtitle: string;
   unread: boolean;
   imageUrls?: string[] | null;
+  leadStatus?: string | null;
 };
+
+function LeadStatusPill({ status }: { status: string | null | undefined }) {
+  if (!status) return null;
+  const label = status === "closed" ? "Closed" : status === "quoted" ? "Quoted" : "New";
+  return (
+    <span
+      className={`shrink-0 rounded-full px-2 py-0.5 text-[0.625rem] font-medium ${
+        status === "closed"
+          ? "bg-secondary text-muted-foreground"
+          : status === "quoted"
+            ? "bg-accent-soft text-accent"
+            : "bg-primary/10 text-primary"
+      }`}
+    >
+      {label}
+    </span>
+  );
+}
 
 function LeadThumbs({ imageUrls }: { imageUrls: string[] | null | undefined }) {
   if (!imageUrls || imageUrls.length === 0) return null;
@@ -135,6 +154,17 @@ function LeadsPage() {
     return map;
   }, [leads]);
 
+  // new -> quoted happens automatically (a DB trigger flips it the instant this business sends
+  // its first message) -> closed cascades automatically when the poster marks their requirement
+  // fulfilled — nothing here writes lead status directly, it's read-only state.
+  const leadStatusByReqId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const l of leads ?? []) {
+      if (l.requirement_id) map.set(l.requirement_id, l.status);
+    }
+    return map;
+  }, [leads]);
+
   const rows: InboxRow[] = useMemo(() => {
     const conv = (conversations ?? []).map((c) => {
       const req = c.requirement_id ? requirementByReqId.get(c.requirement_id) : undefined;
@@ -147,6 +177,7 @@ function LeadsPage() {
           : new Date(c.created_at).toLocaleDateString(),
         unread: unreadMap?.has(c.id) ?? false,
         imageUrls: req?.image_urls ?? null,
+        leadStatus: c.requirement_id ? (leadStatusByReqId.get(c.requirement_id) ?? null) : null,
       };
     });
     // Kept as a fallback for the (currently unreachable in practice) case of a lead whose
@@ -160,14 +191,21 @@ function LeadsPage() {
         subtitle: (l as any).requirements?.description ?? l.status,
         unread: false,
         imageUrls: (l as any).requirements?.image_urls ?? null,
+        leadStatus: l.status,
       }));
     return [...conv, ...leadRows];
-  }, [leads, conversations, unreadMap, requirementByReqId]);
+  }, [leads, conversations, unreadMap, requirementByReqId, leadStatusByReqId]);
 
-  const activeRequirement = useMemo(() => {
-    const conv = conversations?.find((c) => c.id === activeConversationId);
-    return conv?.requirement_id ? requirementByReqId.get(conv.requirement_id) : undefined;
-  }, [conversations, activeConversationId, requirementByReqId]);
+  const activeConversation = useMemo(
+    () => conversations?.find((c) => c.id === activeConversationId),
+    [conversations, activeConversationId],
+  );
+  const activeRequirement = activeConversation?.requirement_id
+    ? requirementByReqId.get(activeConversation.requirement_id)
+    : undefined;
+  const activeLeadStatus = activeConversation?.requirement_id
+    ? (leadStatusByReqId.get(activeConversation.requirement_id) ?? null)
+    : null;
 
   async function openConversation(conversationId: string | null) {
     setActiveConversationId(conversationId);
@@ -214,7 +252,10 @@ function LeadsPage() {
               }`}
             >
               <div className="min-w-0">
-                <p className="truncate font-medium">{row.title}</p>
+                <div className="flex items-center gap-2">
+                  <p className="truncate font-medium">{row.title}</p>
+                  <LeadStatusPill status={row.leadStatus} />
+                </div>
                 <p className="truncate text-xs text-muted-foreground">{row.subtitle}</p>
                 <LeadThumbs imageUrls={row.imageUrls} />
               </div>
@@ -228,7 +269,10 @@ function LeadsPage() {
             <div className="flex h-full flex-col gap-3">
               {activeRequirement && (
                 <div className="dashboard-card space-y-2 p-4">
-                  <p className="eyebrow">{activeRequirement.category ?? "Requirement"}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="eyebrow">{activeRequirement.category ?? "Requirement"}</p>
+                    <LeadStatusPill status={activeLeadStatus} />
+                  </div>
                   {activeRequirement.description && (
                     <p className="text-sm text-foreground">{activeRequirement.description}</p>
                   )}

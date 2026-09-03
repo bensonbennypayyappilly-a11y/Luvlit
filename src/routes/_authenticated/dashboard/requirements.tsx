@@ -103,6 +103,21 @@ function Requirements() {
     },
   });
 
+  const [closingId, setClosingId] = useState<string | null>(null);
+  const [closeError, setCloseError] = useState<{ id: string; message: string } | null>(null);
+
+  async function closeRequirement(id: string) {
+    setClosingId(id);
+    setCloseError(null);
+    const { error } = await supabase.from("requirements").update({ status: "closed" }).eq("id", id);
+    setClosingId(null);
+    if (error) {
+      setCloseError({ id, message: error.message });
+      return;
+    }
+    refetch();
+  }
+
   const {
     data: conversations,
     error: conversationsError,
@@ -157,7 +172,16 @@ function Requirements() {
             <div key={r.id} className="surface-card p-7">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="eyebrow">{r.category}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="eyebrow">{r.category}</p>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[0.6875rem] font-medium ${
+                        r.status === "closed" ? "bg-secondary text-muted-foreground" : "bg-accent-soft text-accent"
+                      }`}
+                    >
+                      {r.status === "closed" ? "Closed" : "Open"}
+                    </span>
+                  </div>
                   <p className="mt-2 text-lg">{r.description}</p>
                   <p className="mt-2 text-sm text-muted-foreground">
                     {r.city} {r.budget ? `· ₹${r.budget}` : ""}
@@ -169,18 +193,32 @@ function Requirements() {
                   </p>
                   <RequirementThumbs imageUrls={(r as any).image_urls} />
                 </div>
-                {r.matchedCount > 0 && (
-                  <button
-                    onClick={() => setOpenId(openId === r.id ? null : r.id)}
-                    className="rounded-md border border-accent px-5 py-2.5 text-sm font-medium text-accent hover:bg-accent-soft"
-                  >
-                    {r.quoteCount > 0
-                      ? `${r.quoteCount} ${r.quoteCount === 1 ? "quote" : "quotes"}`
-                      : "Awaiting reply"}{" "}
-                    →
-                  </button>
-                )}
+                <div className="flex shrink-0 flex-col items-end gap-2">
+                  {r.matchedCount > 0 && (
+                    <button
+                      onClick={() => setOpenId(openId === r.id ? null : r.id)}
+                      className="rounded-md border border-accent px-5 py-2.5 text-sm font-medium text-accent hover:bg-accent-soft"
+                    >
+                      {r.quoteCount > 0
+                        ? `${r.quoteCount} ${r.quoteCount === 1 ? "quote" : "quotes"}`
+                        : "Awaiting reply"}{" "}
+                      →
+                    </button>
+                  )}
+                  {r.status === "open" && (
+                    <button
+                      onClick={() => closeRequirement(r.id)}
+                      disabled={closingId === r.id}
+                      className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline disabled:opacity-60"
+                    >
+                      {closingId === r.id ? "Marking as fulfilled…" : "Mark as fulfilled"}
+                    </button>
+                  )}
+                </div>
               </div>
+              {closeError?.id === r.id && (
+                <p className="mt-2 text-xs text-destructive">{closeError.message}</p>
+              )}
 
               {openId === r.id && (
                 <div className="mt-6 space-y-4">

@@ -867,6 +867,7 @@ export type Database = {
           posted_by_business_id: string | null
           posted_by_type: string
           posted_by_user_id: string | null
+          status: string
         }
         Insert: {
           budget?: number | null
@@ -880,6 +881,7 @@ export type Database = {
           posted_by_business_id?: string | null
           posted_by_type: string
           posted_by_user_id?: string | null
+          status?: string
         }
         Update: {
           budget?: number | null
@@ -893,6 +895,7 @@ export type Database = {
           posted_by_business_id?: string | null
           posted_by_type?: string
           posted_by_user_id?: string | null
+          status?: string
         }
         Relationships: [
           {

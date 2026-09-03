@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
@@ -39,6 +40,20 @@ function RequirementThumb({ path }: { path: string }) {
 function RequirementsPage() {
   const { data: business } = useDashboardBusiness();
   const businessId = business?.id ?? null;
+  const [closingId, setClosingId] = useState<string | null>(null);
+  const [closeError, setCloseError] = useState<{ id: string; message: string } | null>(null);
+
+  async function closeRequirement(id: string) {
+    setClosingId(id);
+    setCloseError(null);
+    const { error } = await supabase.from("requirements").update({ status: "closed" }).eq("id", id);
+    setClosingId(null);
+    if (error) {
+      setCloseError({ id, message: error.message });
+      return;
+    }
+    refetch();
+  }
 
   const {
     data: requirements,
@@ -51,7 +66,7 @@ function RequirementsPage() {
     queryFn: async () => {
       const { data: reqs, error: reqsError } = await supabase
         .from("requirements")
-        .select("id,category,description,city,budget,created_at,image_urls")
+        .select("id,category,description,city,budget,created_at,image_urls,status")
         .eq("posted_by_business_id", businessId!)
         .order("created_at", { ascending: false });
       if (reqsError) throw new Error(reqsError.message);
@@ -118,7 +133,16 @@ function RequirementsPage() {
         {!error && (requirements ?? []).map((r) => (
           <div key={r.id} className="dashboard-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-medium">{r.category}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-medium">{r.category}</p>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[0.6875rem] font-medium ${
+                    (r as any).status === "closed" ? "bg-secondary text-muted-foreground" : "bg-accent-soft text-accent"
+                  }`}
+                >
+                  {(r as any).status === "closed" ? "Closed" : "Open"}
+                </span>
+              </div>
               <p className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">{r.description}</p>
@@ -136,6 +160,16 @@ function RequirementsPage() {
                 </div>
               ))}
             </div>
+            {(r as any).status === "open" && (
+              <button
+                onClick={() => closeRequirement(r.id)}
+                disabled={closingId === r.id}
+                className="mt-3 text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline disabled:opacity-60"
+              >
+                {closingId === r.id ? "Marking as fulfilled…" : "Mark as fulfilled"}
+              </button>
+            )}
+            {closeError?.id === r.id && <p className="mt-2 text-xs text-destructive">{closeError.message}</p>}
           </div>
         ))}
       </div>
