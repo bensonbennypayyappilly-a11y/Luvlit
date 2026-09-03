@@ -68,10 +68,15 @@ function AuthPage() {
     setBusy(true);
     setError(null);
     if (mode === "signup") {
+      // The DB's account_role type only has 'business'/'customer' — organizer status lives
+      // entirely in organizer_profiles, not profiles.role — so an organizer signs up as a plain
+      // customer account. The post-verify redirect below still sends them to organizer
+      // onboarding via the `role` URL param, independent of what's stored in the DB.
+      const accountRole = role === "organizer" ? "customer" : role;
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: window.location.origin, data: { role, name } },
+        options: { emailRedirectTo: window.location.origin, data: { role: accountRole, name } },
       });
       setBusy(false);
       if (error) return setError(error.message);
