@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PageSlugRouteImport } from './routes/$pageSlug'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AppointmentsRouteImport } from './routes/appointments'
@@ -73,6 +74,11 @@ import { Route as AuthenticatedBusinessDashboardWebsiteRouteImport } from './rou
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PageSlugRoute = PageSlugRouteImport.update({
+  id: '/$pageSlug',
+  path: '/$pageSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -402,6 +408,7 @@ const AuthenticatedBusinessDashboardWebsiteRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$pageSlug': typeof PageSlugRoute
   '/about': typeof AboutRoute
   '/appointments': typeof AppointmentsRoute
   '/auth': typeof AuthRoute
@@ -463,6 +470,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$pageSlug': typeof PageSlugRoute
   '/about': typeof AboutRoute
   '/appointments': typeof AppointmentsRoute
   '/auth': typeof AuthRoute
@@ -523,6 +531,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/$pageSlug': typeof PageSlugRoute
   '/about': typeof AboutRoute
   '/appointments': typeof AppointmentsRoute
   '/auth': typeof AuthRoute
@@ -586,6 +595,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$pageSlug'
     | '/about'
     | '/appointments'
     | '/auth'
@@ -647,6 +657,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$pageSlug'
     | '/about'
     | '/appointments'
     | '/auth'
@@ -706,6 +717,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/$pageSlug'
     | '/about'
     | '/appointments'
     | '/auth'
@@ -769,6 +781,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  PageSlugRoute: typeof PageSlugRoute
   AboutRoute: typeof AboutRoute
   AppointmentsRoute: typeof AppointmentsRoute
   AuthRoute: typeof AuthRoute
@@ -804,6 +817,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$pageSlug': {
+      id: '/$pageSlug'
+      path: '/$pageSlug'
+      fullPath: '/$pageSlug'
+      preLoaderRoute: typeof PageSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -1355,6 +1375,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  PageSlugRoute: PageSlugRoute,
   AboutRoute: AboutRoute,
   AppointmentsRoute: AppointmentsRoute,
   AuthRoute: AuthRoute,

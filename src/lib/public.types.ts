@@ -65,6 +65,9 @@ export type SitePageRecord = {
   type: SitePageType;
   visible: boolean;
   showInNav: boolean;
+  /** `type: 'custom'` pages only — a plain heading + text body, the simplest genuinely useful
+   * page an owner can add beyond the 6 built-in ones (Policies, Our Story, FAQs, etc.). */
+  content?: { heading?: string; body?: string };
 };
 
 export type BusinessDetail = {
@@ -101,6 +104,7 @@ export type BusinessDetail = {
   template: string | null;
   corner_style: string | null;
   density: string | null;
+  image_treatment: string | null;
   review_count: number;
   review_avg: number | null;
   reviews: { id: string; rating: number; comment: string | null; created_at: string }[];

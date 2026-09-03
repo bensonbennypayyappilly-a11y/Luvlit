@@ -91,6 +91,43 @@ export const SIGNATURE_TEMPLATE: Partial<Record<SectionType, string>> = {
   "atmospheric-cta": "story",
 };
 
+/** Which small preview illustration the "Add Section" picker shows for each type (§12) — a
+ * shape family, not a full mockup per type, so an owner gets a real sense of a section's
+ * composition (full-bleed banner vs. a grid vs. a list of links) without needing 29 bespoke
+ * illustrations. */
+export type SectionPreviewShape = "hero" | "split" | "grid" | "text" | "list" | "cta" | "media" | "cards" | "spotlight" | "collage" | "timeline";
+export const SECTION_PREVIEW_SHAPE: Record<SectionType, SectionPreviewShape> = {
+  hero: "hero",
+  about: "split",
+  services: "grid",
+  products: "grid",
+  gallery: "grid",
+  contact: "list",
+  location: "list",
+  quote: "cta",
+  reviews: "cards",
+  faq: "text",
+  team: "cards",
+  hours: "list",
+  "delivery-areas": "list",
+  video: "media",
+  social: "list",
+  "featured-products": "grid",
+  booking: "cta",
+  "promo-banner": "cta",
+  "custom-text": "text",
+  "editorial-spread": "split",
+  "collection-spotlight": "grid",
+  "process-timeline": "timeline",
+  "capability-grid": "cards",
+  "product-story": "spotlight",
+  "benefits-strip": "cards",
+  "visual-strip": "grid",
+  "featured-work": "spotlight",
+  "story-collage": "collage",
+  "atmospheric-cta": "cta",
+};
+
 export const CORE_SECTION_TYPES: SectionType[] = [
   "hero",
   "about",

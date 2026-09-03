@@ -69,6 +69,68 @@ export function ctaClass(style: TemplateStyle, override?: string | null) {
   return `inline-flex items-center gap-2 px-6 py-3 text-sm font-medium transition-transform hover:scale-[1.02] ${corners(style, "sm", override)}`;
 }
 
+/** A CSS filter for content images driven by the Design panel's "Image treatment" curated
+ * control (§18) — null/unset (or 'none') leaves images untouched. */
+export function imageFilterClass(imageTreatment: string | null | undefined) {
+  if (imageTreatment === "mono") return "grayscale";
+  if (imageTreatment === "warm") return "saturate-[1.15] sepia-[0.12]";
+  return "";
+}
+
+/**
+ * The primary call-to-action, everywhere one appears — respects the business's own curated
+ * `button_style` (solid/outline/pill, §18) and corner override on top of the template's own
+ * defaults. Not every small badge-style button in the renderer goes through this (that would be
+ * hundreds of call sites for no real visual gain); this is specifically the "act now" moments —
+ * nav, hero, contact, product/service detail CTAs.
+ */
+export function CtaButton({
+  href,
+  accent,
+  style,
+  cornerOverride,
+  buttonStyle,
+  className = "",
+  children,
+}: {
+  href: string;
+  accent: string;
+  style: TemplateStyle;
+  cornerOverride?: string | null;
+  buttonStyle?: string | null;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const mode = buttonStyle || "solid";
+  if (mode === "outline") {
+    return (
+      <a
+        href={href}
+        className={`inline-flex items-center gap-2 border-2 px-[1.375rem] py-[9px] text-sm font-medium transition-transform hover:scale-[1.02] ${corners(style, "sm", cornerOverride)} ${className}`}
+        style={{ borderColor: accent, color: accent }}
+      >
+        {children}
+      </a>
+    );
+  }
+  if (mode === "pill") {
+    return (
+      <a
+        href={href}
+        className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-transform hover:scale-[1.02] ${className}`}
+        style={{ backgroundColor: accent, color: "#fff" }}
+      >
+        {children}
+      </a>
+    );
+  }
+  return (
+    <a href={href} className={`${ctaClass(style, cornerOverride)} ${className}`} style={{ backgroundColor: accent, color: "#fff" }}>
+      {children}
+    </a>
+  );
+}
+
 /** One section-type -> visual-block map, template-aware via spacing/corners/cardStyle/typography.
  * Used by every page (home + about/products/services/gallery/appointments/contact) so a section
  * always looks the same wherever it appears. `sections` should already be filtered to the types

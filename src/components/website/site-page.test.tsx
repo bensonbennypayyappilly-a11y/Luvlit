@@ -56,6 +56,7 @@ function makeBusiness(overrides: Partial<SiteBusiness> = {}): SiteBusiness {
     template: "editorial",
     corner_style: null,
     density: null,
+    image_treatment: null,
     review_count: 2,
     review_avg: 4.5,
     reviews: [

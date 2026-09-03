@@ -39,6 +39,7 @@ export type SiteBusiness = {
   template: string | null;
   corner_style: string | null;
   density: string | null;
+  image_treatment: string | null;
   review_count: number;
   review_avg: number | null;
   reviews: { id: string; rating: number; comment: string | null; created_at: string }[];

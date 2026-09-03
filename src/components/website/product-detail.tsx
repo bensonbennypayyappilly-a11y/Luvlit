@@ -3,7 +3,7 @@ import { EcoBadge } from "@/components/eco-badge";
 import { FavoriteButton } from "@/components/favorite-button";
 import { Reveal } from "@/components/reveal";
 import { SectionEyebrow } from "@/components/website/media";
-import { corners, ctaClass, heading, ItemImage, pad } from "@/components/website/section-renderer";
+import { corners, CtaButton, heading, imageFilterClass, ItemImage, pad } from "@/components/website/section-renderer";
 import type { TemplateStyle } from "@/lib/website-templates";
 import type { SiteBusiness } from "@/lib/website-site-types";
 
@@ -18,8 +18,21 @@ function relatedItems(all: Item[], current: Item): Item[] {
   return [...sameCategory, ...rest].slice(0, 4);
 }
 
-function RelatedGrid({ items, style, accent, corner }: { items: Item[]; style: TemplateStyle; accent: string; corner?: string | null }) {
+function RelatedGrid({
+  items,
+  style,
+  accent,
+  corner,
+  imageTreatment,
+}: {
+  items: Item[];
+  style: TemplateStyle;
+  accent: string;
+  corner?: string | null;
+  imageTreatment?: string | null;
+}) {
   if (items.length === 0) return null;
+  const filter = imageFilterClass(imageTreatment);
   return (
     <div className="mx-auto mt-20 max-w-6xl px-6">
       <SectionEyebrow accent={accent} show={style.showEyebrows}>
@@ -33,7 +46,7 @@ function RelatedGrid({ items, style, accent, corner }: { items: Item[]; style: T
                 <ItemImage
                   path={item.image_url}
                   alt={item.name}
-                  className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className={`aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105 ${filter}`}
                 />
               ) : (
                 <div className="aspect-square w-full" />
@@ -48,11 +61,23 @@ function RelatedGrid({ items, style, accent, corner }: { items: Item[]; style: T
   );
 }
 
-function EnquireCta({ style, accent, corner, label }: { style: TemplateStyle; accent: string; corner?: string | null; label: string }) {
+function EnquireCta({
+  style,
+  accent,
+  corner,
+  buttonStyle,
+  label,
+}: {
+  style: TemplateStyle;
+  accent: string;
+  corner?: string | null;
+  buttonStyle?: string | null;
+  label: string;
+}) {
   return (
-    <Link to="/contact" className={ctaClass(style, corner)} style={{ backgroundColor: accent, color: "#fff" }}>
+    <CtaButton href="/contact" accent={accent} style={style} cornerOverride={corner} buttonStyle={buttonStyle}>
       {label} →
-    </Link>
+    </CtaButton>
   );
 }
 
@@ -75,6 +100,8 @@ export function ProductDetail({
 }) {
   const related = relatedItems(business.items, item);
   const corner = business.corner_style;
+  const buttonStyle = business.button_style;
+  const filter = imageFilterClass(business.image_treatment);
   const gallery = business.gallery_urls.slice(0, 3);
 
   if (style.id === "editorial") {
@@ -83,7 +110,7 @@ export function ProductDetail({
         <section className="mx-auto grid max-w-6xl gap-14 px-6 pb-8 pt-16 md:grid-cols-[1.2fr_1fr] md:gap-20 md:pt-24">
           <div className={`overflow-hidden ${corners(style, "lg", corner)}`} style={{ backgroundColor: `${accent}10` }}>
             {item.image_url ? (
-              <ItemImage path={item.image_url} alt={item.name} className="aspect-[4/5] w-full object-cover" />
+              <ItemImage path={item.image_url} alt={item.name} className={`aspect-[4/5] w-full object-cover ${filter}`} />
             ) : (
               <div className="aspect-[4/5] w-full" />
             )}
@@ -102,12 +129,12 @@ export function ProductDetail({
             )}
             {item.description && <p className={`mt-6 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{item.description}</p>}
             <div className="mt-9 flex items-center gap-3">
-              <EnquireCta style={style} accent={accent} corner={corner} label="Enquire" />
+              <EnquireCta style={style} accent={accent} corner={corner} buttonStyle={buttonStyle} label="Enquire" />
               <FavoriteButton businessId={business.id} />
             </div>
           </div>
         </section>
-        <RelatedGrid items={related} style={style} accent={accent} corner={corner} />
+        <RelatedGrid items={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
       </Reveal>
     );
   }
@@ -118,7 +145,7 @@ export function ProductDetail({
         <section className={`mx-auto max-w-6xl px-6 ${pad(style)}`}>
           <div className="grid gap-10 md:grid-cols-2 md:items-start">
             {item.image_url ? (
-              <ItemImage path={item.image_url} alt={item.name} className={`aspect-[4/3] w-full object-cover ${corners(style, "lg", corner)}`} />
+              <ItemImage path={item.image_url} alt={item.name} className={`aspect-[4/3] w-full object-cover ${corners(style, "lg", corner)} ${filter}`} />
             ) : (
               <div className={`aspect-[4/3] w-full ${corners(style, "lg", corner)}`} style={{ backgroundColor: `${accent}14` }} />
             )}
@@ -128,13 +155,13 @@ export function ProductDetail({
               {item.price != null && <p className="mt-3 text-xl font-semibold" style={{ color: accent }}>₹{item.price}</p>}
               {item.description && <p className={`mt-5 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{item.description}</p>}
               <div className="mt-8 flex flex-wrap items-center gap-3">
-                <EnquireCta style={style} accent={accent} corner={corner} label="Request a quote" />
+                <EnquireCta style={style} accent={accent} corner={corner} buttonStyle={buttonStyle} label="Request a quote" />
                 <FavoriteButton businessId={business.id} />
               </div>
             </div>
           </div>
         </section>
-        <RelatedGrid items={related} style={style} accent={accent} corner={corner} />
+        <RelatedGrid items={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
       </Reveal>
     );
   }
@@ -153,7 +180,7 @@ export function ProductDetail({
           </div>
           <div className={`mx-auto mt-10 max-w-3xl overflow-hidden ${corners(style, "lg", corner)}`} style={{ backgroundColor: `${accent}10` }}>
             {item.image_url ? (
-              <ItemImage path={item.image_url} alt={item.name} className="aspect-[4/3] w-full object-cover" />
+              <ItemImage path={item.image_url} alt={item.name} className={`aspect-[4/3] w-full object-cover ${filter}`} />
             ) : (
               <div className="aspect-[4/3] w-full" />
             )}
@@ -166,12 +193,12 @@ export function ProductDetail({
             )}
             {item.description && <p className={`mt-4 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{item.description}</p>}
             <div className="mt-8 flex items-center justify-center gap-3">
-              <EnquireCta style={style} accent={accent} corner={corner} label="Ask about this" />
+              <EnquireCta style={style} accent={accent} corner={corner} buttonStyle={buttonStyle} label="Ask about this" />
               <FavoriteButton businessId={business.id} />
             </div>
           </div>
         </section>
-        <RelatedGrid items={related} style={style} accent={accent} corner={corner} />
+        <RelatedGrid items={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
       </Reveal>
     );
   }
@@ -181,7 +208,7 @@ export function ProductDetail({
       <Reveal>
         <section className="relative flex min-h-[55vh] items-end overflow-hidden">
           {item.image_url ? (
-            <ItemImage path={item.image_url} alt={item.name} className="absolute inset-0 h-full w-full object-cover" />
+            <ItemImage path={item.image_url} alt={item.name} className={`absolute inset-0 h-full w-full object-cover ${filter}`} />
           ) : (
             <div className="absolute inset-0" style={{ backgroundColor: `${accent}22` }} />
           )}
@@ -199,18 +226,18 @@ export function ProductDetail({
           )}
           {item.description && <p className={`mx-auto mt-4 max-w-xl whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{item.description}</p>}
           <div className="mt-8 flex items-center justify-center gap-3">
-            <EnquireCta style={style} accent={accent} corner={corner} label="Enquire" />
+            <EnquireCta style={style} accent={accent} corner={corner} buttonStyle={buttonStyle} label="Enquire" />
             <FavoriteButton businessId={business.id} />
           </div>
         </div>
         {gallery.length > 0 && (
           <div className="mx-auto grid max-w-5xl grid-cols-3 gap-3 px-6 pb-16">
             {gallery.map((g, i) => (
-              <ItemImage key={i} path={g} alt="" className={`aspect-square w-full object-cover ${corners(style, "lg", corner)}`} />
+              <ItemImage key={i} path={g} alt="" className={`aspect-square w-full object-cover ${corners(style, "lg", corner)} ${filter}`} />
             ))}
           </div>
         )}
-        <RelatedGrid items={related} style={style} accent={accent} corner={corner} />
+        <RelatedGrid items={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
       </Reveal>
     );
   }
@@ -225,7 +252,7 @@ export function ProductDetail({
       </section>
       <div className="mx-auto mt-4 max-w-3xl px-6">
         {item.image_url ? (
-          <ItemImage path={item.image_url} alt={item.name} className={`aspect-[16/10] w-full object-cover ${corners(style, "lg", corner)}`} />
+          <ItemImage path={item.image_url} alt={item.name} className={`aspect-[16/10] w-full object-cover ${corners(style, "lg", corner)} ${filter}`} />
         ) : (
           <div className={`aspect-[16/10] w-full border ${corners(style, "lg", corner)}`} />
         )}
@@ -234,10 +261,10 @@ export function ProductDetail({
         <p className={`mx-auto mt-10 max-w-xl whitespace-pre-line text-center text-muted-foreground ${style.bodyClass}`}>{item.description}</p>
       )}
       <div className="mt-9 flex items-center justify-center gap-3">
-        <EnquireCta style={style} accent={accent} corner={corner} label="Get in touch" />
+        <EnquireCta style={style} accent={accent} corner={corner} buttonStyle={buttonStyle} label="Get in touch" />
         <FavoriteButton businessId={business.id} />
       </div>
-      <RelatedGrid items={related} style={style} accent={accent} corner={corner} />
+      <RelatedGrid items={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
     </Reveal>
   );
 }

@@ -54,6 +54,7 @@ function makeBusiness(overrides: Partial<Business> = {}): Business {
     template: null,
     corner_style: null,
     density: null,
+    image_treatment: null,
     review_count: 0,
     review_avg: null,
     reviews: [],

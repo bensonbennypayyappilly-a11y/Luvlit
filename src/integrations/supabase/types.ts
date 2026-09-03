@@ -118,6 +118,7 @@ export type Database = {
           gallery_urls: string[]
           hero_image_url: string | null
           id: string
+          image_treatment: string | null
           instagram_url: string | null
           is_eco_friendly: boolean
           is_live: boolean
@@ -171,6 +172,7 @@ export type Database = {
           gallery_urls?: string[]
           hero_image_url?: string | null
           id?: string
+          image_treatment?: string | null
           instagram_url?: string | null
           is_eco_friendly?: boolean
           is_live?: boolean
@@ -224,6 +226,7 @@ export type Database = {
           gallery_urls?: string[]
           hero_image_url?: string | null
           id?: string
+          image_treatment?: string | null
           instagram_url?: string | null
           is_eco_friendly?: boolean
           is_live?: boolean

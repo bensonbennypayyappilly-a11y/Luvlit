@@ -70,9 +70,29 @@ type Draft = {
   template: TemplateId;
   corner_style: string | null;
   density: string | null;
+  image_treatment: string | null;
+  button_style: string;
 };
 
 type SaveState = "idle" | "saving" | "saved" | "error";
+
+const KNOWN_PAGE_IDS = new Set<PageId>(["home", "about", "products", "services", "gallery", "appointments", "contact"]);
+
+/** Top-level editor sections (§14) — replaces one long flat accordion with a grouped nav so a
+ * non-technical owner can find "how do I add a page" vs. "how do I change my colours" without
+ * scanning ten unrelated headings. */
+type EditorTab = "website" | "pages" | "sections" | "design" | "content" | "products" | "services" | "media" | "settings";
+const TABS: { id: EditorTab; label: string }[] = [
+  { id: "website", label: "Website" },
+  { id: "pages", label: "Pages" },
+  { id: "sections", label: "Sections" },
+  { id: "design", label: "Design" },
+  { id: "content", label: "Content" },
+  { id: "products", label: "Products" },
+  { id: "services", label: "Services" },
+  { id: "media", label: "Media" },
+  { id: "settings", label: "Settings" },
+];
 
 type ViewportId = "desktop" | "tablet" | "mobile";
 
@@ -226,6 +246,7 @@ function WebsiteBuilder() {
   const [previewPage, setPreviewPage] = useState<PageId>("home");
   const [publishState, setPublishState] = useState<SaveState>("idle");
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<EditorTab>("website");
   const sectionsSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   // Only starts checking once the owner actually types — without this, an existing business
   // whose slug predates the current format rules (shorter than 3 characters, say) would show a
@@ -259,6 +280,8 @@ function WebsiteBuilder() {
         template: (b.template as TemplateId) ?? "editorial",
         corner_style: b.corner_style,
         density: b.density,
+        image_treatment: b.image_treatment,
+        button_style: b.button_style ?? "solid",
       });
       const existing = (b.draft_sections as Section[] | null)?.length
         ? (b.draft_sections as Section[])
@@ -407,7 +430,6 @@ function WebsiteBuilder() {
     brand_accent_color: draft.brand_accent_color,
     background_color: draft.background_color,
     brand_secondary_color: data?.business?.brand_secondary_color ?? null,
-    button_style: data?.business?.button_style ?? null,
     is_eco_friendly: showEco ? draft.is_eco_friendly : false,
     operating_hours: (data?.business?.operating_hours as ProfileBusiness["operating_hours"]) ?? null,
     sections: draftSections,
@@ -415,6 +437,8 @@ function WebsiteBuilder() {
     template: draft.template,
     corner_style: draft.corner_style,
     density: draft.density,
+    image_treatment: draft.image_treatment,
+    button_style: draft.button_style,
     review_count: data?.business?.review_count ?? 0,
     review_avg: data?.business?.review_avg ?? null,
     reviews: [],
@@ -497,103 +521,124 @@ function WebsiteBuilder() {
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* Editor */}
         <aside className="w-full shrink-0 border-b border-[#EEEEEE] bg-white lg:w-[320px] lg:min-h-0 lg:border-b-0 lg:border-r lg:overflow-y-auto">
-          <BuilderSection title="Template" subtitle="Pick a look for your website. Your content stays the same either way." defaultOpen>
-            <div className="grid grid-cols-2 gap-2.5">
-              {TEMPLATE_LIST.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => onImmediateChange({ template: t.id })}
-                  className={`group rounded-[12px] border p-2.5 text-left transition-all duration-150 ${
-                    draft.template === t.id
-                      ? "border-accent bg-accent-soft shadow-[0_0_0_1px_var(--accent)]"
-                      : "border-[#EAEAEA] hover:border-accent/40 hover:shadow-sm"
-                  }`}
-                >
-                  <span
-                    className="relative block h-11 w-full overflow-hidden rounded-[8px]"
-                    style={{ background: `linear-gradient(135deg, ${t.previewSurface}, ${t.previewAccent})` }}
-                  >
-                    {draft.template === t.id && (
-                      <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-accent text-white">
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M20 6 9 17l-5-5" />
-                        </svg>
-                      </span>
-                    )}
-                  </span>
-                  <span className={`mt-2 block text-xs font-medium ${draft.template === t.id ? "text-accent" : "text-foreground"}`}>{t.label}</span>
-                  <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">{t.suitedFor}</span>
-                </button>
-              ))}
-            </div>
-          </BuilderSection>
-
-          <BuilderSection title="Pages" subtitle="Reorder, rename or hide pages — goes live when you press Save and Publish.">
-            <PagesEditor pages={editingPages} onChange={onPagesChange} />
-          </BuilderSection>
-
-          <BuilderSection title="Page Layout" subtitle="Add, hide, reorder or edit sections — goes live when you press Save and Publish.">
-            <SectionListEditor
-              sections={draftSections}
-              onChange={onSectionsChange}
-              items={(data?.items ?? []).map((i) => ({ id: i.id, name: i.name }))}
-              templateId={draft.template}
-              signals={{
-                hasProducts: (data?.items ?? []).some((i) => i.is_active),
-                hasServices: (data?.services ?? []).some((s) => s.is_active),
-                hasGallery: draft.gallery_urls.length > 0,
-                hasReviews: (data?.business?.review_count ?? 0) > 0,
-                hasAppointments: draft.business_types.includes("appointment"),
-                hasDeliveryAreas: (data?.deliveryAreas ?? []).length > 0,
-              }}
-            />
-          </BuilderSection>
-
-          <BuilderSection title="Hero" subtitle="One photo or video for the top of your page — a video autoplays on loop.">
-            <HeroMediaUploader
-              businessId={businessId}
-              value={{ image: draft.hero_image_url, video: draft.main_video_url }}
-              onChange={({ image, video }) => onImmediateChange({ hero_image_url: image, main_video_url: video })}
-              wrapperClassName={uploaderWrapper}
-            />
-            <p className="text-xs text-muted-foreground">
-              Want a tagline under your name here? Set it in Page Layout → Hero → Edit.
-            </p>
-          </BuilderSection>
-
-          <BuilderSection title="Short Videos" subtitle="Up to 3 short clips (max 60s each) shown on your website.">
-            {[0, 1, 2].map((i) => (
-              <MediaUploader
-                key={i}
-                businessId={businessId}
-                kind="short"
-                value={draft.short_video_urls[i] ?? null}
-                onChange={(path) => setShortVideo(i, path)}
-                wrapperClassName={uploaderWrapper}
-              />
+          <div className="flex flex-wrap gap-1 border-b border-[#EEEEEE] bg-white px-3 py-2.5">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setActiveTab(t.id)}
+                aria-pressed={activeTab === t.id}
+                className={`rounded-[8px] px-2.5 py-1.5 text-xs font-medium transition-colors duration-150 ${
+                  activeTab === t.id ? "bg-accent-soft text-accent" : "text-muted-foreground hover:bg-[#FAFAFA] hover:text-foreground"
+                }`}
+              >
+                {t.label}
+              </button>
             ))}
-          </BuilderSection>
+          </div>
 
-          <BuilderSection title="Logo" subtitle="Shown in your site's navigation bar.">
-            <MediaUploader
-              businessId={businessId}
-              kind="logo"
-              value={draft.logo_url}
-              onChange={(path) => onImmediateChange({ logo_url: path })}
-              wrapperClassName={uploaderWrapper}
-            />
-          </BuilderSection>
+          {activeTab === "website" && (
+            <BuilderSection title="Template" subtitle="Pick a look for your website. Your content stays the same either way." defaultOpen>
+              <div className="grid grid-cols-2 gap-2.5">
+                {TEMPLATE_LIST.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => onImmediateChange({ template: t.id })}
+                    className={`group rounded-[12px] border p-2.5 text-left transition-all duration-150 ${
+                      draft.template === t.id
+                        ? "border-accent bg-accent-soft shadow-[0_0_0_1px_var(--accent)]"
+                        : "border-[#EAEAEA] hover:border-accent/40 hover:shadow-sm"
+                    }`}
+                  >
+                    <span
+                      className="relative block h-11 w-full overflow-hidden rounded-[8px]"
+                      style={{ background: `linear-gradient(135deg, ${t.previewSurface}, ${t.previewAccent})` }}
+                    >
+                      {draft.template === t.id && (
+                        <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-accent text-white">
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                        </span>
+                      )}
+                    </span>
+                    <span className={`mt-2 block text-xs font-medium ${draft.template === t.id ? "text-accent" : "text-foreground"}`}>{t.label}</span>
+                    <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">{t.suitedFor}</span>
+                  </button>
+                ))}
+              </div>
+            </BuilderSection>
+          )}
 
-          <BuilderSection title="Gallery" subtitle="Up to 6 photos showcasing your work.">
-            <GalleryEditor
-              businessId={businessId}
-              value={draft.gallery_urls}
-              onSaved={(urls) => patch({ gallery_urls: urls })}
-            />
-          </BuilderSection>
+          {activeTab === "pages" && (
+            <BuilderSection title="Pages" subtitle="Reorder, rename or hide pages — goes live when you press Save and Publish." defaultOpen>
+              <PagesEditor pages={editingPages} onChange={onPagesChange} />
+            </BuilderSection>
+          )}
 
-          <BuilderSection title="About Your Business" subtitle="Your business's own content — name, story and photo.">
+          {activeTab === "sections" && (
+            <BuilderSection title="Sections" subtitle="Add, hide, reorder or edit sections — goes live when you press Save and Publish." defaultOpen>
+              <SectionListEditor
+                sections={draftSections}
+                onChange={onSectionsChange}
+                items={(data?.items ?? []).map((i) => ({ id: i.id, name: i.name }))}
+                templateId={draft.template}
+                signals={{
+                  hasProducts: (data?.items ?? []).some((i) => i.is_active),
+                  hasServices: (data?.services ?? []).some((s) => s.is_active),
+                  hasGallery: draft.gallery_urls.length > 0,
+                  hasReviews: (data?.business?.review_count ?? 0) > 0,
+                  hasAppointments: draft.business_types.includes("appointment"),
+                  hasDeliveryAreas: (data?.deliveryAreas ?? []).length > 0,
+                }}
+              />
+            </BuilderSection>
+          )}
+
+          {activeTab === "media" && (
+            <>
+              <BuilderSection title="Hero" subtitle="One photo or video for the top of your page — a video autoplays on loop." defaultOpen>
+                <HeroMediaUploader
+                  businessId={businessId}
+                  value={{ image: draft.hero_image_url, video: draft.main_video_url }}
+                  onChange={({ image, video }) => onImmediateChange({ hero_image_url: image, main_video_url: video })}
+                  wrapperClassName={uploaderWrapper}
+                />
+                <p className="text-xs text-muted-foreground">Want a tagline under your name here? Set it in Sections → Hero → Edit.</p>
+              </BuilderSection>
+
+              <BuilderSection title="Short Videos" subtitle="Up to 3 short clips (max 60s each) shown on your website.">
+                {[0, 1, 2].map((i) => (
+                  <MediaUploader
+                    key={i}
+                    businessId={businessId}
+                    kind="short"
+                    value={draft.short_video_urls[i] ?? null}
+                    onChange={(path) => setShortVideo(i, path)}
+                    wrapperClassName={uploaderWrapper}
+                  />
+                ))}
+              </BuilderSection>
+
+              <BuilderSection title="Logo" subtitle="Shown in your site's navigation bar.">
+                <MediaUploader
+                  businessId={businessId}
+                  kind="logo"
+                  value={draft.logo_url}
+                  onChange={(path) => onImmediateChange({ logo_url: path })}
+                  wrapperClassName={uploaderWrapper}
+                />
+              </BuilderSection>
+
+              <BuilderSection title="Gallery" subtitle="Up to 6 photos showcasing your work.">
+                <GalleryEditor businessId={businessId} value={draft.gallery_urls} onSaved={(urls) => patch({ gallery_urls: urls })} />
+              </BuilderSection>
+            </>
+          )}
+
+          {activeTab === "content" && (
+          <BuilderSection title="About Your Business" subtitle="Your business's own content — name, story and photo." defaultOpen>
             <div>
               <label className="text-[13px] font-medium text-foreground">Business name</label>
               <input
@@ -633,40 +678,47 @@ function WebsiteBuilder() {
               .
             </p>
           </BuilderSection>
+          )}
 
-          <BuilderSection
-            title="Products & Services"
-            subtitle={`${data?.items?.length ?? 0} product(s) · ${data?.services?.length ?? 0} service(s)`}
-          >
-            <ManageLinkRow
-              to="/business/dashboard/products"
-              label="Add / Edit Products"
-              count={`${data?.items?.length ?? 0} product${data?.items?.length === 1 ? "" : "s"}`}
-              visible={isSectionVisible("products")}
-              onToggle={() => toggleSectionVisible("products")}
-            />
-            <ManageLinkRow
-              to="/business/dashboard/services"
-              label="Add / Edit Services"
-              count={`${data?.services?.length ?? 0} service${data?.services?.length === 1 ? "" : "s"}`}
-              visible={isSectionVisible("services")}
-              onToggle={() => toggleSectionVisible("services")}
-            />
-          </BuilderSection>
-
-          {draft.business_types.includes("appointment") && (
-            <BuilderSection title="Book Appointments" subtitle="Manage staff & availability there.">
+          {activeTab === "products" && (
+            <BuilderSection title="Products" subtitle={`${data?.items?.length ?? 0} product(s)`} defaultOpen>
               <ManageLinkRow
-                to="/business/dashboard/staff"
-                label="Add / Edit Appointments"
-                count={`${data?.staff?.length ?? 0} staff member${data?.staff?.length === 1 ? "" : "s"}`}
-                visible={isSectionVisible("booking")}
-                onToggle={() => toggleSectionVisible("booking")}
+                to="/business/dashboard/products"
+                label="Add / Edit Products"
+                count={`${data?.items?.length ?? 0} product${data?.items?.length === 1 ? "" : "s"}`}
+                visible={isSectionVisible("products")}
+                onToggle={() => toggleSectionVisible("products")}
               />
             </BuilderSection>
           )}
 
-          <BuilderSection title="Website Settings" subtitle="Brand, contact, social, domain, locations & delivery.">
+          {activeTab === "services" && (
+            <>
+              <BuilderSection title="Services" subtitle={`${data?.services?.length ?? 0} service(s)`} defaultOpen>
+                <ManageLinkRow
+                  to="/business/dashboard/services"
+                  label="Add / Edit Services"
+                  count={`${data?.services?.length ?? 0} service${data?.services?.length === 1 ? "" : "s"}`}
+                  visible={isSectionVisible("services")}
+                  onToggle={() => toggleSectionVisible("services")}
+                />
+              </BuilderSection>
+              {draft.business_types.includes("appointment") && (
+                <BuilderSection title="Book Appointments" subtitle="Manage staff & availability there.">
+                  <ManageLinkRow
+                    to="/business/dashboard/staff"
+                    label="Add / Edit Appointments"
+                    count={`${data?.staff?.length ?? 0} staff member${data?.staff?.length === 1 ? "" : "s"}`}
+                    visible={isSectionVisible("booking")}
+                    onToggle={() => toggleSectionVisible("booking")}
+                  />
+                </BuilderSection>
+              )}
+            </>
+          )}
+
+          {activeTab === "design" && (
+          <BuilderSection title="Design" subtitle="Brand colours, corners, density and image treatment." defaultOpen>
             <SettingsGroup label="Brand">
               <div>
                 <p className="text-[13px] font-medium text-foreground">Accent colour</p>
@@ -744,8 +796,62 @@ function WebsiteBuilder() {
                   ))}
                 </div>
               </div>
+              <div>
+                <p className="text-[13px] font-medium text-foreground">Button style</p>
+                <div className="mt-2 flex gap-1.5">
+                  {(
+                    [
+                      ["solid", "Solid"],
+                      ["outline", "Outline"],
+                      ["pill", "Pill"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => onImmediateChange({ button_style: value })}
+                      aria-pressed={draft.button_style === value}
+                      className={`rounded-[8px] border px-3 py-1.5 text-xs font-medium transition-colors duration-150 ${
+                        draft.button_style === value ? "border-accent bg-accent-soft text-accent" : "border-[#EAEAEA] text-muted-foreground hover:border-accent/40"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">Applies to the main "Enquire"/"Book now" buttons on your pages.</p>
+              </div>
+              <div>
+                <p className="text-[13px] font-medium text-foreground">Image treatment</p>
+                <div className="mt-2 flex gap-1.5">
+                  {(
+                    [
+                      [null, "None"],
+                      ["warm", "Warm"],
+                      ["mono", "Mono"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => onImmediateChange({ image_treatment: value })}
+                      aria-pressed={draft.image_treatment === value}
+                      className={`rounded-[8px] border px-3 py-1.5 text-xs font-medium transition-colors duration-150 ${
+                        draft.image_treatment === value ? "border-accent bg-accent-soft text-accent" : "border-[#EAEAEA] text-muted-foreground hover:border-accent/40"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">A subtle filter across your product, service and gallery photos.</p>
+              </div>
             </SettingsGroup>
+          </BuilderSection>
+          )}
 
+          {activeTab === "settings" && (
+          <BuilderSection title="Website Settings" subtitle="Contact, social, domain, locations & delivery." defaultOpen>
             <SettingsGroup label="Contact">
               <div>
                 <label className="text-[13px] font-medium text-foreground">WhatsApp number</label>
@@ -841,6 +947,7 @@ function WebsiteBuilder() {
               <LocationsEditor businessId={businessId} />
             </SettingsGroup>
           </BuilderSection>
+          )}
         </aside>
 
         {/* Live preview */}
@@ -880,20 +987,25 @@ function WebsiteBuilder() {
               deriveSitePages() the public site uses, so previewing can't show a page visitors
               won't get (or miss one they will). */}
           <div className="flex flex-wrap gap-1 border-b border-[#EEEEEE] bg-white px-5 py-2">
-            {previewPages.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setPreviewPage(p.id)}
-                className={`rounded-[8px] px-3 py-1.5 text-xs transition-colors duration-150 ${
-                  activePreviewPage === p.id
-                    ? "bg-accent-soft font-medium text-accent"
-                    : "text-muted-foreground hover:bg-[#FAFAFA] hover:text-foreground"
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+            {/* Custom pages aren't previewable inline here — this pane renders through the same
+                PageId-keyed SectionRenderer every built-in page uses; their own real page (once
+                published) is the actual source of truth for them, same as it is for every page. */}
+            {previewPages
+              .filter((p) => KNOWN_PAGE_IDS.has(p.id as PageId))
+              .map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setPreviewPage(p.id as PageId)}
+                  className={`rounded-[8px] px-3 py-1.5 text-xs transition-colors duration-150 ${
+                    activePreviewPage === p.id
+                      ? "bg-accent-soft font-medium text-accent"
+                      : "text-muted-foreground hover:bg-[#FAFAFA] hover:text-foreground"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
           </div>
           <p className="border-b border-[#EEEEEE] bg-white px-5 py-2.5 text-xs text-muted-foreground">
             {isPubliclyLive

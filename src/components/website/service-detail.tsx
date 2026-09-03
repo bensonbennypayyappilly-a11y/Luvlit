@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Reveal } from "@/components/reveal";
 import { SectionEyebrow } from "@/components/website/media";
-import { corners, ctaClass, heading, ItemImage, pad } from "@/components/website/section-renderer";
+import { corners, CtaButton, heading, imageFilterClass, ItemImage, pad } from "@/components/website/section-renderer";
 import type { TemplateStyle } from "@/lib/website-templates";
 import type { SiteBusiness } from "@/lib/website-site-types";
 
@@ -14,8 +14,21 @@ function relatedServices(all: Service[], current: Service): Service[] {
   return [...sameCategory, ...rest].slice(0, 4);
 }
 
-function RelatedGrid({ services, style, accent, corner }: { services: Service[]; style: TemplateStyle; accent: string; corner?: string | null }) {
+function RelatedGrid({
+  services,
+  style,
+  accent,
+  corner,
+  imageTreatment,
+}: {
+  services: Service[];
+  style: TemplateStyle;
+  accent: string;
+  corner?: string | null;
+  imageTreatment?: string | null;
+}) {
   if (services.length === 0) return null;
+  const filter = imageFilterClass(imageTreatment);
   return (
     <div className="mx-auto mt-20 max-w-6xl px-6">
       <SectionEyebrow accent={accent} show={style.showEyebrows}>
@@ -29,7 +42,7 @@ function RelatedGrid({ services, style, accent, corner }: { services: Service[];
                 <ItemImage
                   path={s.image_url}
                   alt={s.name}
-                  className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className={`aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105 ${filter}`}
                 />
               ) : (
                 <div className="aspect-square w-full" />
@@ -44,16 +57,24 @@ function RelatedGrid({ services, style, accent, corner }: { services: Service[];
   );
 }
 
-function BookingCta({ style, accent, corner, business }: { style: TemplateStyle; accent: string; corner?: string | null; business: SiteBusiness }) {
+function BookingCta({
+  style,
+  accent,
+  corner,
+  buttonStyle,
+  business,
+}: {
+  style: TemplateStyle;
+  accent: string;
+  corner?: string | null;
+  buttonStyle?: string | null;
+  business: SiteBusiness;
+}) {
   const bookable = business.business_types.includes("appointment");
   return (
-    <Link
-      to={bookable ? "/appointments" : "/contact"}
-      className={ctaClass(style, corner)}
-      style={{ backgroundColor: accent, color: "#fff" }}
-    >
+    <CtaButton href={bookable ? "/appointments" : "/contact"} accent={accent} style={style} cornerOverride={corner} buttonStyle={buttonStyle}>
       {bookable ? "Book now" : "Request a quote"} →
-    </Link>
+    </CtaButton>
   );
 }
 
@@ -73,6 +94,8 @@ export function ServiceDetail({
 }) {
   const related = relatedServices(business.services, service);
   const corner = business.corner_style;
+  const buttonStyle = business.button_style;
+  const filter = imageFilterClass(business.image_treatment);
   const gallery = business.gallery_urls.slice(0, 3);
 
   if (style.id === "editorial") {
@@ -81,7 +104,7 @@ export function ServiceDetail({
         <section className="mx-auto grid max-w-6xl gap-14 px-6 pb-8 pt-16 md:grid-cols-[1.2fr_1fr] md:gap-20 md:pt-24">
           <div className={`overflow-hidden ${corners(style, "lg", corner)}`} style={{ backgroundColor: `${accent}10` }}>
             {service.image_url ? (
-              <ItemImage path={service.image_url} alt={service.name} className="aspect-[4/5] w-full object-cover" />
+              <ItemImage path={service.image_url} alt={service.name} className={`aspect-[4/5] w-full object-cover ${filter}`} />
             ) : (
               <div className="aspect-[4/5] w-full" />
             )}
@@ -99,11 +122,11 @@ export function ServiceDetail({
             </div>
             {service.description && <p className={`mt-6 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{service.description}</p>}
             <div className="mt-9">
-              <BookingCta style={style} accent={accent} corner={corner} business={business} />
+              <BookingCta style={style} accent={accent} corner={corner} buttonStyle={buttonStyle} business={business} />
             </div>
           </div>
         </section>
-        <RelatedGrid services={related} style={style} accent={accent} corner={corner} />
+        <RelatedGrid services={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
       </Reveal>
     );
   }
@@ -114,7 +137,7 @@ export function ServiceDetail({
         <section className={`mx-auto max-w-6xl px-6 ${pad(style)}`}>
           <div className="grid gap-10 md:grid-cols-2 md:items-start">
             {service.image_url ? (
-              <ItemImage path={service.image_url} alt={service.name} className={`aspect-[4/3] w-full object-cover ${corners(style, "lg", corner)}`} />
+              <ItemImage path={service.image_url} alt={service.name} className={`aspect-[4/3] w-full object-cover ${corners(style, "lg", corner)} ${filter}`} />
             ) : (
               <div className={`aspect-[4/3] w-full ${corners(style, "lg", corner)}`} style={{ backgroundColor: `${accent}14` }} />
             )}
@@ -131,12 +154,12 @@ export function ServiceDetail({
               </div>
               {service.description && <p className={`mt-5 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{service.description}</p>}
               <div className="mt-8">
-                <BookingCta style={style} accent={accent} corner={corner} business={business} />
+                <BookingCta style={style} accent={accent} corner={corner} buttonStyle={buttonStyle} business={business} />
               </div>
             </div>
           </div>
         </section>
-        <RelatedGrid services={related} style={style} accent={accent} corner={corner} />
+        <RelatedGrid services={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
       </Reveal>
     );
   }
@@ -155,7 +178,7 @@ export function ServiceDetail({
           </div>
           <div className={`mx-auto mt-10 max-w-3xl overflow-hidden ${corners(style, "lg", corner)}`} style={{ backgroundColor: `${accent}10` }}>
             {service.image_url ? (
-              <ItemImage path={service.image_url} alt={service.name} className="aspect-[4/3] w-full object-cover" />
+              <ItemImage path={service.image_url} alt={service.name} className={`aspect-[4/3] w-full object-cover ${filter}`} />
             ) : (
               <div className="aspect-[4/3] w-full" />
             )}
@@ -171,11 +194,11 @@ export function ServiceDetail({
             </div>
             {service.description && <p className={`mt-4 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{service.description}</p>}
             <div className="mt-8 flex justify-center">
-              <BookingCta style={style} accent={accent} corner={corner} business={business} />
+              <BookingCta style={style} accent={accent} corner={corner} buttonStyle={buttonStyle} business={business} />
             </div>
           </div>
         </section>
-        <RelatedGrid services={related} style={style} accent={accent} corner={corner} />
+        <RelatedGrid services={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
       </Reveal>
     );
   }
@@ -185,7 +208,7 @@ export function ServiceDetail({
       <Reveal>
         <section className="relative flex min-h-[55vh] items-end overflow-hidden">
           {service.image_url ? (
-            <ItemImage path={service.image_url} alt={service.name} className="absolute inset-0 h-full w-full object-cover" />
+            <ItemImage path={service.image_url} alt={service.name} className={`absolute inset-0 h-full w-full object-cover ${filter}`} />
           ) : (
             <div className="absolute inset-0" style={{ backgroundColor: `${accent}22` }} />
           )}
@@ -208,17 +231,17 @@ export function ServiceDetail({
             <p className={`mx-auto mt-4 max-w-xl whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{service.description}</p>
           )}
           <div className="mt-8 flex justify-center">
-            <BookingCta style={style} accent={accent} corner={corner} business={business} />
+            <BookingCta style={style} accent={accent} corner={corner} buttonStyle={buttonStyle} business={business} />
           </div>
         </div>
         {gallery.length > 0 && (
           <div className="mx-auto grid max-w-5xl grid-cols-3 gap-3 px-6 pb-16">
             {gallery.map((g, i) => (
-              <ItemImage key={i} path={g} alt="" className={`aspect-square w-full object-cover ${corners(style, "lg", corner)}`} />
+              <ItemImage key={i} path={g} alt="" className={`aspect-square w-full object-cover ${corners(style, "lg", corner)} ${filter}`} />
             ))}
           </div>
         )}
-        <RelatedGrid services={related} style={style} accent={accent} corner={corner} />
+        <RelatedGrid services={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
       </Reveal>
     );
   }
@@ -236,7 +259,7 @@ export function ServiceDetail({
       </section>
       <div className="mx-auto mt-4 max-w-3xl px-6">
         {service.image_url ? (
-          <ItemImage path={service.image_url} alt={service.name} className={`aspect-[16/10] w-full object-cover ${corners(style, "lg", corner)}`} />
+          <ItemImage path={service.image_url} alt={service.name} className={`aspect-[16/10] w-full object-cover ${corners(style, "lg", corner)} ${filter}`} />
         ) : (
           <div className={`aspect-[16/10] w-full border ${corners(style, "lg", corner)}`} />
         )}
@@ -245,9 +268,9 @@ export function ServiceDetail({
         <p className={`mx-auto mt-10 max-w-xl whitespace-pre-line text-center text-muted-foreground ${style.bodyClass}`}>{service.description}</p>
       )}
       <div className="mt-9 flex justify-center">
-        <BookingCta style={style} accent={accent} corner={corner} business={business} />
+        <BookingCta style={style} accent={accent} corner={corner} buttonStyle={buttonStyle} business={business} />
       </div>
-      <RelatedGrid services={related} style={style} accent={accent} corner={corner} />
+      <RelatedGrid services={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
     </Reveal>
   );
 }

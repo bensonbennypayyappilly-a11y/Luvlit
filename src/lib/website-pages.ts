@@ -11,7 +11,9 @@ import type { SitePageRecord } from "./public.types";
 
 export type PageId = "home" | "about" | "products" | "services" | "gallery" | "appointments" | "contact";
 
-export type SitePage = { id: PageId; label: string; path: string };
+/** `id` is a `PageId` for the 6 built-in pages, or a custom page's own uuid — widened to `string`
+ * so both fit one type without a discriminated union rippling through every consumer. */
+export type SitePage = { id: string; label: string; path: string };
 
 type PageInput = Pick<SiteBusiness, "sections" | "business_types" | "items" | "services">;
 
@@ -73,13 +75,15 @@ export function deriveSitePages(input: PageInput, overrides: SitePageRecord[] = 
   const seen = new Set<string>();
   const ordered: SitePage[] = [];
   for (const o of overrides) {
-    const candidate = byId.get(o.id as PageId);
-    if (!candidate || o.visible === false) {
-      seen.add(o.id);
+    seen.add(o.id);
+    if (o.visible === false) continue;
+    if (o.type === "custom") {
+      ordered.push({ id: o.id, label: o.label, path: `/${o.slug}` });
       continue;
     }
+    const candidate = byId.get(o.id as PageId);
+    if (!candidate) continue;
     ordered.push({ ...candidate, label: o.label?.trim() || candidate.label });
-    seen.add(o.id);
   }
   for (const c of candidates) {
     if (!seen.has(c.id)) ordered.push(c);
@@ -91,24 +95,27 @@ export function deriveSitePages(input: PageInput, overrides: SitePageRecord[] = 
  * INCLUDING pages they've hidden (unlike `deriveSitePages`, which drops hidden pages entirely) —
  * this is what the Pages panel itself needs to show, so a hidden page stays editable/restorable
  * rather than disappearing from the editor along with the live site. */
-export function pagesForEditing(input: PageInput, overrides: SitePageRecord[]): (SitePage & { visible: boolean })[] {
+export type EditingPage = SitePage & { visible: boolean; custom: boolean; slug: string; content?: SitePageRecord["content"] };
+
+export function pagesForEditing(input: PageInput, overrides: SitePageRecord[]): EditingPage[] {
   const candidates = candidatePages(input);
-  if (overrides.length === 0) return candidates.map((c) => ({ ...c, visible: true }));
+  if (overrides.length === 0) return candidates.map((c) => ({ ...c, visible: true, custom: false, slug: c.id }));
 
   const byId = new Map(candidates.map((p) => [p.id, p]));
   const seen = new Set<string>();
-  const ordered: (SitePage & { visible: boolean })[] = [];
+  const ordered: EditingPage[] = [];
   for (const o of overrides) {
-    const candidate = byId.get(o.id as PageId);
-    if (!candidate) {
-      seen.add(o.id);
+    seen.add(o.id);
+    if (o.type === "custom") {
+      ordered.push({ id: o.id, label: o.label, path: `/${o.slug}`, visible: o.visible !== false, custom: true, slug: o.slug, content: o.content });
       continue;
     }
-    ordered.push({ ...candidate, label: o.label?.trim() || candidate.label, visible: o.visible !== false });
-    seen.add(o.id);
+    const candidate = byId.get(o.id as PageId);
+    if (!candidate) continue;
+    ordered.push({ ...candidate, label: o.label?.trim() || candidate.label, visible: o.visible !== false, custom: false, slug: candidate.id });
   }
   for (const c of candidates) {
-    if (!seen.has(c.id)) ordered.push({ ...c, visible: true });
+    if (!seen.has(c.id)) ordered.push({ ...c, visible: true, custom: false, slug: c.id });
   }
   return ordered;
 }

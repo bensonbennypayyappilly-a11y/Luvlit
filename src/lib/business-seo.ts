@@ -223,6 +223,7 @@ export function toProfileBusiness(business: NonNullable<BusinessDetail>) {
     template: business.template ?? "editorial",
     corner_style: business.corner_style,
     density: business.density,
+    image_treatment: business.image_treatment,
     review_count: business.review_count ?? 0,
     review_avg: business.review_avg,
     reviews: business.reviews ?? [],

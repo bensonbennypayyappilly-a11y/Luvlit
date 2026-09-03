@@ -3,6 +3,7 @@ import {
   NON_DELETABLE,
   SECTION_CATEGORY,
   SECTION_LIBRARY,
+  SECTION_PREVIEW_SHAPE,
   SIGNATURE_TEMPLATE,
   newSection,
   recommendSections,
@@ -18,6 +19,7 @@ import {
 } from "@/lib/website-sections";
 import { templateStyle, type TemplateId } from "@/lib/website-templates";
 import { ColorField } from "@/components/website-builder/color-field";
+import { SectionPreviewIcon } from "@/components/website-builder/section-preview-icon";
 
 type ItemOption = { id: string; name: string };
 
@@ -202,13 +204,11 @@ export function SectionListEditor({
                           key={t}
                           type="button"
                           onClick={() => add(t)}
-                          className="flex w-full items-start gap-2.5 rounded-[8px] px-2.5 py-2 text-left text-sm transition-colors hover:bg-[#FAFAFA]"
+                          className="flex w-full items-start gap-3 rounded-[8px] px-2.5 py-2 text-left text-sm transition-colors hover:bg-[#FAFAFA]"
                         >
-                          <span
-                            className="mt-1 size-2 shrink-0 rounded-full"
-                            style={{ backgroundColor: group.key === "recommended" ? "#5B8C5A" : "#D8D4CC" }}
-                            aria-hidden="true"
-                          />
+                          <span className="mt-0.5 flex shrink-0 items-center justify-center rounded-[6px] border border-[#EEEEEE] bg-white p-1">
+                            <SectionPreviewIcon shape={SECTION_PREVIEW_SHAPE[t]} />
+                          </span>
                           <span>
                             <span className="block font-medium">{SECTION_LIBRARY[t].label}</span>
                             <span className="block text-xs text-muted-foreground">{SECTION_LIBRARY[t].description}</span>

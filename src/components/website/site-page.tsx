@@ -5,7 +5,10 @@ import { ProductDetail } from "@/components/website/product-detail";
 import { ServiceDetail } from "@/components/website/service-detail";
 import { resolveSections, sectionsForPage, type PageId } from "@/lib/website-pages";
 import { templateStyle } from "@/lib/website-templates";
+import { heading, pad } from "@/components/website/section-renderer";
+import { Reveal } from "@/components/reveal";
 import type { SiteBusiness } from "@/lib/website-site-types";
+import type { SitePageRecord } from "@/lib/public.types";
 
 /** Banner copy per inner page. Home is excluded — it opens with the hero section instead. */
 const PAGE_HEADERS: Record<Exclude<PageId, "home">, { eyebrow: string; title: string }> = {
@@ -65,6 +68,28 @@ export function BusinessProductDetailPage({ business, item }: { business: SiteBu
     <SiteChrome business={business} style={style} accent={accent} currentPage="products">
       <main>
         <ProductDetail business={business} item={item} style={style} accent={accent} />
+      </main>
+    </SiteChrome>
+  );
+}
+
+/**
+ * A plain owner-added page — a heading and a text body, the simplest genuinely useful page
+ * beyond the 6 built-in ones (Policies, Our Story, FAQs, ...). Same nav/footer chrome as every
+ * other page; `currentPage` is the page's own id so its nav link highlights correctly.
+ */
+export function BusinessCustomPage({ business, page }: { business: SiteBusiness; page: SitePageRecord }) {
+  const accent = business.brand_accent_color || "#4F46E5";
+  const style = templateStyle(business.template);
+  return (
+    <SiteChrome business={business} style={style} accent={accent} currentPage={page.id}>
+      <main>
+        <Reveal>
+          <section className={`mx-auto max-w-3xl px-6 ${pad(style)}`}>
+            <h1 className={`text-4xl ${heading(style)}`}>{page.content?.heading || page.label}</h1>
+            {page.content?.body && <p className={`mt-6 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{page.content.body}</p>}
+          </section>
+        </Reveal>
       </main>
     </SiteChrome>
   );
