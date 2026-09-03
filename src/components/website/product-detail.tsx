@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { EcoBadge } from "@/components/eco-badge";
 import { FavoriteButton } from "@/components/favorite-button";
-import { Reveal } from "@/components/reveal";
+import { TemplateReveal } from "@/components/website/template-reveal";
 import { SectionEyebrow } from "@/components/website/media";
 import { corners, CtaButton, heading, imageFilterClass, ItemImage, pad } from "@/components/website/section-renderer";
 import type { TemplateStyle } from "@/lib/website-templates";
@@ -106,7 +106,7 @@ export function ProductDetail({
 
   if (style.id === "editorial") {
     return (
-      <Reveal>
+      <TemplateReveal templateId={style.id}>
         <section className="mx-auto grid max-w-6xl gap-14 px-6 pb-8 pt-16 md:grid-cols-[1.2fr_1fr] md:gap-20 md:pt-24">
           <div className={`overflow-hidden ${corners(style, "lg", corner)}`} style={{ backgroundColor: `${accent}10` }}>
             {item.image_url ? (
@@ -135,13 +135,13 @@ export function ProductDetail({
           </div>
         </section>
         <RelatedGrid items={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
-      </Reveal>
+      </TemplateReveal>
     );
   }
 
   if (style.id === "modern-business") {
     return (
-      <Reveal>
+      <TemplateReveal templateId={style.id}>
         <section className={`mx-auto max-w-6xl px-6 ${pad(style)}`}>
           <div className="grid gap-10 md:grid-cols-2 md:items-start">
             {item.image_url ? (
@@ -162,13 +162,13 @@ export function ProductDetail({
           </div>
         </section>
         <RelatedGrid items={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
-      </Reveal>
+      </TemplateReveal>
     );
   }
 
   if (style.id === "catalogue") {
     return (
-      <Reveal>
+      <TemplateReveal templateId={style.id}>
         <section className="px-6 pb-8 pt-14">
           <div className="mx-auto max-w-3xl text-center">
             {item.category && (
@@ -199,13 +199,13 @@ export function ProductDetail({
           </div>
         </section>
         <RelatedGrid items={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
-      </Reveal>
+      </TemplateReveal>
     );
   }
 
   if (style.id === "experience") {
     return (
-      <Reveal>
+      <TemplateReveal templateId={style.id}>
         <section className="relative flex min-h-[55vh] items-end overflow-hidden">
           {item.image_url ? (
             <ItemImage path={item.image_url} alt={item.name} className={`absolute inset-0 h-full w-full object-cover ${filter}`} />
@@ -238,13 +238,13 @@ export function ProductDetail({
           </div>
         )}
         <RelatedGrid items={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
-      </Reveal>
+      </TemplateReveal>
     );
   }
 
   // story
   return (
-    <Reveal>
+    <TemplateReveal templateId={style.id}>
       <section className="mx-auto max-w-2xl px-6 pb-8 pt-20 text-center">
         {item.category && <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{item.category}</p>}
         <h1 className={`mt-4 text-4xl md:text-6xl ${heading(style)}`}>{item.name}</h1>
@@ -265,6 +265,6 @@ export function ProductDetail({
         <FavoriteButton businessId={business.id} />
       </div>
       <RelatedGrid items={related} style={style} accent={accent} corner={corner} imageTreatment={business.image_treatment} />
-    </Reveal>
+    </TemplateReveal>
   );
 }

@@ -5,7 +5,7 @@ import { EcoBadge } from "@/components/eco-badge";
 import { FavoriteButton } from "@/components/favorite-button";
 import { BookingWidget } from "@/components/booking-widget";
 import { GalleryGrid } from "@/components/gallery-grid";
-import { Reveal } from "@/components/reveal";
+import { TemplateReveal } from "@/components/website/template-reveal";
 import { useMediaUrl } from "@/components/media-uploader";
 import { SectionEyebrow, VideoPlayer, isPlayableVideo, useResolvedList } from "@/components/website/media";
 import { templateStyle, type TemplateStyle } from "@/lib/website-templates";
@@ -221,7 +221,7 @@ function renderSectionBlock({
     case "reviews":
       return <ReviewsBlock business={business} style={style} accent={accent} />;
     case "faq":
-      return <FaqBlock style={style} accent={accent} content={section.content as FaqContent} />;
+      return <FaqBlock style={style} accent={accent} content={section.content as FaqContent} density={business.density} />;
     case "team":
       return <TeamBlock business={business} style={style} accent={accent} />;
     case "hours":
@@ -239,15 +239,15 @@ function renderSectionBlock({
     case "promo-banner":
       return <PromoBannerBlock style={style} accent={accent} content={section.content as PromoBannerContent} />;
     case "custom-text":
-      return <CustomTextBlock style={style} content={section.content as CustomTextContent} />;
+      return <CustomTextBlock style={style} content={section.content as CustomTextContent} density={business.density} />;
     case "editorial-spread":
       return <EditorialSpreadBlock business={business} style={style} accent={accent} content={section.content as EditorialSpreadContent} />;
     case "collection-spotlight":
       return <CollectionSpotlightBlock business={business} style={style} accent={accent} content={section.content as CollectionSpotlightContent} />;
     case "process-timeline":
-      return <ProcessTimelineBlock style={style} accent={accent} content={section.content as ProcessTimelineContent} />;
+      return <ProcessTimelineBlock style={style} accent={accent} content={section.content as ProcessTimelineContent} density={business.density} />;
     case "capability-grid":
-      return <CapabilityGridBlock style={style} accent={accent} content={section.content as CapabilityGridContent} />;
+      return <CapabilityGridBlock style={style} accent={accent} content={section.content as CapabilityGridContent} density={business.density} />;
     case "product-story":
       return <ProductStoryBlock business={business} style={style} accent={accent} content={section.content as ProductStoryContent} />;
     case "benefits-strip":
@@ -381,14 +381,14 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
             {business.is_eco_friendly && <EcoBadge />}
           </div>
           <div className="mt-9">
-            <a href="/contact" className={ctaClass(style)} style={{ backgroundColor: accent, color: "#fff" }}>
+            <a href="/contact" className={ctaClass(style, business.corner_style)} style={{ backgroundColor: accent, color: "#fff" }}>
               Let's connect →
             </a>
           </div>
         </div>
         {hasHeroMedia && (
           <div className="mx-auto mt-14 max-w-4xl">
-            <HeroMedia videoUrl={heroVideoUrl} imageUrl={heroUrl} alt={business.name} className={`aspect-[16/9] w-full object-cover ${corners(style)}`} />
+            <HeroMedia videoUrl={heroVideoUrl} imageUrl={heroUrl} alt={business.name} className={`aspect-[16/9] w-full object-cover ${corners(style, "lg", business.corner_style)}`} />
           </div>
         )}
       </section>
@@ -413,7 +413,7 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
           </h1>
           {tagline && <p className={`mt-6 max-w-sm whitespace-pre-line text-base text-white/90 ${style.bodyClass}`}>{tagline}</p>}
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <a href="/products" className={ctaClass(style)} style={{ backgroundColor: "#fff", color: "#171717" }}>
+            <a href="/products" className={ctaClass(style, business.corner_style)} style={{ backgroundColor: "#fff", color: "#171717" }}>
               Shop now →
             </a>
             {business.is_eco_friendly && <EcoBadge />}
@@ -433,7 +433,7 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
           </h1>
           {tagline && <p className={`mt-6 max-w-sm whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{tagline}</p>}
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <a href="/products" className={ctaClass(style)} style={{ backgroundColor: accent, color: "#fff" }}>
+            <a href="/products" className={ctaClass(style, business.corner_style)} style={{ backgroundColor: accent, color: "#fff" }}>
               Shop now →
             </a>
             {business.is_eco_friendly && <EcoBadge />}
@@ -455,16 +455,16 @@ function HeroBlock({ business, style, accent, content }: { business: SiteBusines
             <h1 className={`mt-3 text-4xl md:text-5xl ${heading(style)}`}>{business.name}</h1>
             {tagline && <p className={`mt-5 max-w-md whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{tagline}</p>}
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="/contact" className={ctaClass(style)} style={{ backgroundColor: accent, color: "#fff" }}>
+              <a href="/contact" className={ctaClass(style, business.corner_style)} style={{ backgroundColor: accent, color: "#fff" }}>
                 {style.hero === "image-right" ? "Shop now" : "Get in touch"}
               </a>
               {business.is_eco_friendly && <EcoBadge />}
             </div>
           </div>
           {hasHeroMedia ? (
-            <HeroMedia videoUrl={heroVideoUrl} imageUrl={heroUrl} alt={business.name} className={`aspect-[4/3] w-full object-cover ${corners(style)}`} />
+            <HeroMedia videoUrl={heroVideoUrl} imageUrl={heroUrl} alt={business.name} className={`aspect-[4/3] w-full object-cover ${corners(style, "lg", business.corner_style)}`} />
           ) : (
-            <div className={`aspect-[4/3] w-full ${corners(style)}`} style={{ backgroundColor: `${accent}14` }} />
+            <div className={`aspect-[4/3] w-full ${corners(style, "lg", business.corner_style)}`} style={{ backgroundColor: `${accent}14` }} />
           )}
         </div>
       </section>
@@ -530,13 +530,13 @@ function AboutBlock({ business, style, accent, content }: { business: SiteBusine
   if (aboutImageUrl) {
     return (
       <EmptyGuard empty={empty} type="about">
-        <Reveal>
-          <section className={`mx-auto max-w-6xl px-6 ${pad(style)}`}>
+        <TemplateReveal templateId={style.id}>
+          <section className={`mx-auto max-w-6xl px-6 ${pad(style, business.density)}`}>
             <div className="grid items-center gap-10 md:grid-cols-2">
               <img
                 src={aboutImageUrl}
                 alt={`${business.name} — about us`}
-                className={`aspect-[4/3] w-full object-cover ${corners(style)}`}
+                className={`aspect-[4/3] w-full object-cover ${corners(style, "lg", business.corner_style)}`}
               />
               <div>
                 <SectionEyebrow accent={accent} show={style.showEyebrows}>
@@ -549,15 +549,15 @@ function AboutBlock({ business, style, accent, content }: { business: SiteBusine
               </div>
             </div>
           </section>
-        </Reveal>
+        </TemplateReveal>
       </EmptyGuard>
     );
   }
 
   return (
     <EmptyGuard empty={empty} type="about">
-      <Reveal>
-        <section className={`mx-auto max-w-5xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-5xl px-6 ${pad(style, business.density)}`}>
           <div className={style.spacing === "compact" ? "grid gap-8 md:grid-cols-[0.9fr_1.4fr] md:items-start" : ""}>
             <div>
               <SectionEyebrow accent={accent} show={style.showEyebrows}>
@@ -568,7 +568,7 @@ function AboutBlock({ business, style, accent, content }: { business: SiteBusine
             {aboutText && <p className={`mt-6 max-w-2xl whitespace-pre-line text-lg text-muted-foreground md:mt-0 ${style.bodyClass}`}>{aboutText}</p>}
           </div>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -588,20 +588,20 @@ function ServicesBlock({ business, style, accent }: { business: SiteBusiness; st
   const services = business.services.filter((s) => s.is_active);
   return (
     <EmptyGuard empty={services.length === 0} type="services">
-      <Reveal>
-        <section className={`mx-auto max-w-6xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-6xl px-6 ${pad(style, business.density)}`}>
           <SectionEyebrow accent={accent} show={style.showEyebrows}>
             What we offer
           </SectionEyebrow>
           <h2 className={`mt-3 text-3xl ${heading(style)}`}>Services</h2>
           <div className={`mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 ${style.cardStyle === "flat-divide" ? "sm:grid-cols-1 lg:grid-cols-2" : ""}`}>
             {services.map((s) => (
-              <Link key={s.id} to="/services/$slug" params={{ slug: s.slug }} className={`block ${cardClass(style)}`}>
+              <Link key={s.id} to="/services/$slug" params={{ slug: s.slug }} className={`block ${cardClass(style, business.corner_style)}`}>
                 {s.image_url && (
                   <ItemImage
                     path={s.image_url}
                     alt={s.name}
-                    className={`aspect-[4/3] w-full object-cover ${style.cardStyle === "editorial-frame" ? "" : `${corners(style)} rounded-b-none`}`}
+                    className={`aspect-[4/3] w-full object-cover ${style.cardStyle === "editorial-frame" ? "" : `${corners(style, "lg", business.corner_style)} rounded-b-none`}`}
                   />
                 )}
                 <div className="p-6">
@@ -616,12 +616,12 @@ function ServicesBlock({ business, style, accent }: { business: SiteBusiness; st
             ))}
           </div>
           <div className="mt-8">
-            <a href="/contact" className={ctaClass(style)} style={{ backgroundColor: accent, color: "#fff" }}>
+            <a href="/contact" className={ctaClass(style, business.corner_style)} style={{ backgroundColor: accent, color: "#fff" }}>
               Enquire about a service →
             </a>
           </div>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -710,7 +710,7 @@ function CatalogueHomeProducts({ business, accent, items }: { business: SiteBusi
 
   return (
     <EmptyGuard empty={items.length === 0} type="products">
-      <Reveal>
+      <TemplateReveal templateId="catalogue">
         <section className="mx-auto max-w-6xl px-6 py-16 md:py-20">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -764,7 +764,7 @@ function CatalogueHomeProducts({ business, accent, items }: { business: SiteBusi
           </div>
           {filtered.length === 0 && <p className="mt-10 text-sm text-muted-foreground">No products match your search.</p>}
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -775,10 +775,14 @@ function ProductsPageBlock({
   style,
   accent,
   items,
+  corner,
+  density,
 }: {
   style: TemplateStyle;
   accent: string;
   items: SiteBusiness["items"];
+  corner?: string | null;
+  density?: string | null;
 }) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
@@ -787,8 +791,8 @@ function ProductsPageBlock({
 
   return (
     <EmptyGuard empty={items.length === 0} type="products">
-      <Reveal>
-        <section className={`mx-auto max-w-6xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-6xl px-6 ${pad(style, density)}`}>
           <SectionEyebrow accent={accent} show={style.showEyebrows}>
             Catalogue
           </SectionEyebrow>
@@ -803,12 +807,12 @@ function ProductsPageBlock({
               catalogue ? (
                 <CatalogueProductCard key={item.id} item={item} accent={accent} />
               ) : (
-                <Link key={item.id} to="/products/$slug" params={{ slug: item.slug }} className={`block ${cardClass(style)}`}>
+                <Link key={item.id} to="/products/$slug" params={{ slug: item.slug }} className={`block ${cardClass(style, corner)}`}>
                   {item.image_url && (
                     <ItemImage
                       path={item.image_url}
                       alt={item.name}
-                      className={`aspect-square w-full object-cover ${style.cardStyle === "editorial-frame" ? "" : corners(style)} ${style.cardStyle !== "editorial-frame" ? "rounded-b-none" : ""}`}
+                      className={`aspect-square w-full object-cover ${style.cardStyle === "editorial-frame" ? "" : corners(style, "lg", corner)} ${style.cardStyle !== "editorial-frame" ? "rounded-b-none" : ""}`}
                     />
                   )}
                   <div className="p-4">
@@ -821,7 +825,7 @@ function ProductsPageBlock({
           </div>
           {filtered.length === 0 && query && <p className="mt-8 text-sm text-muted-foreground">No products match "{query}".</p>}
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -831,7 +835,7 @@ function ProductsBlock({ business, style, accent, page }: { business: SiteBusine
   if (style.id === "catalogue" && page === "home") {
     return <CatalogueHomeProducts business={business} accent={accent} items={items} />;
   }
-  return <ProductsPageBlock style={style} accent={accent} items={items} />;
+  return <ProductsPageBlock style={style} accent={accent} items={items} corner={business.corner_style} density={business.density} />;
 }
 
 function FeaturedProductsBlock({
@@ -849,16 +853,16 @@ function FeaturedProductsBlock({
   const items = business.items.filter((i) => i.is_active && ids.has(i.id));
   return (
     <EmptyGuard empty={items.length === 0} type="featured-products">
-      <Reveal>
-        <section className={`mx-auto max-w-6xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-6xl px-6 ${pad(style, business.density)}`}>
           <SectionEyebrow accent={accent} show={style.showEyebrows}>
             Spotlight
           </SectionEyebrow>
           <h2 className={`mt-3 text-3xl ${heading(style)}`}>Featured</h2>
           <div className="mt-10 grid grid-cols-2 gap-5 sm:grid-cols-4">
             {items.map((item) => (
-              <Link key={item.id} to="/products/$slug" params={{ slug: item.slug }} className={`block ${cardClass(style)}`}>
-                {item.image_url && <ItemImage path={item.image_url} alt={item.name} className={`aspect-square w-full object-cover ${corners(style)}`} />}
+              <Link key={item.id} to="/products/$slug" params={{ slug: item.slug }} className={`block ${cardClass(style, business.corner_style)}`}>
+                {item.image_url && <ItemImage path={item.image_url} alt={item.name} className={`aspect-square w-full object-cover ${corners(style, "lg", business.corner_style)}`} />}
                 <div className="p-3">
                   <p className="text-sm font-medium">{item.name}</p>
                   {item.price != null && <p className="text-xs text-muted-foreground">₹{item.price}</p>}
@@ -867,7 +871,7 @@ function FeaturedProductsBlock({
             ))}
           </div>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -893,17 +897,17 @@ function GalleryBlock({ business, style, accent }: { business: SiteBusiness; sty
 
   return (
     <EmptyGuard empty={galleryItems.length === 0} type="gallery">
-      <Reveal>
-        <section className={`mx-auto max-w-6xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-6xl px-6 ${pad(style, business.density)}`}>
           <SectionEyebrow accent={accent} show={style.showEyebrows}>
             Our work
           </SectionEyebrow>
           <h2 className={`mt-3 text-3xl ${heading(style)}`}>Gallery</h2>
           <div className="mt-10">
-            <GalleryGrid items={galleryItems} accent={accent} layout={style.gallery} rounded={corners(style)} />
+            <GalleryGrid items={galleryItems} accent={accent} layout={style.gallery} rounded={corners(style, "lg", business.corner_style)} />
           </div>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -918,8 +922,8 @@ function VideoBlock({ business, style, accent }: { business: SiteBusiness; style
 
   return (
     <EmptyGuard empty={shorts.length === 0} type="video">
-      <Reveal>
-        <section className={`mx-auto max-w-5xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-5xl px-6 ${pad(style, business.density)}`}>
           <SectionEyebrow accent={accent} show={style.showEyebrows}>
             In motion
           </SectionEyebrow>
@@ -927,14 +931,14 @@ function VideoBlock({ business, style, accent }: { business: SiteBusiness; style
           {shorts.length > 0 && (
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
               {shorts.map((url) => (
-                <div key={url} className={`aspect-[9/16] overflow-hidden border ${corners(style)}`} style={{ borderColor: `${accent}40` }}>
+                <div key={url} className={`aspect-[9/16] overflow-hidden border ${corners(style, "lg", business.corner_style)}`} style={{ borderColor: `${accent}40` }}>
                   <VideoPlayer url={url} className="h-full w-full object-cover" />
                 </div>
               ))}
             </div>
           )}
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -943,8 +947,8 @@ function VideoBlock({ business, style, accent }: { business: SiteBusiness; style
 
 function BookingBlock({ business, style, accent }: { business: SiteBusiness; style: TemplateStyle; accent: string }) {
   return (
-    <Reveal>
-      <section id="booking" className={`mx-auto max-w-5xl px-6 ${pad(style)}`}>
+    <TemplateReveal templateId={style.id}>
+      <section id="booking" className={`mx-auto max-w-5xl px-6 ${pad(style, business.density)}`}>
         <SectionEyebrow accent={accent} show={style.showEyebrows}>
           Appointments
         </SectionEyebrow>
@@ -953,7 +957,7 @@ function BookingBlock({ business, style, accent }: { business: SiteBusiness; sty
           <BookingWidget businessId={business.id} accent={accent} />
         </div>
       </section>
-    </Reveal>
+    </TemplateReveal>
   );
 }
 
@@ -962,22 +966,22 @@ function BookingBlock({ business, style, accent }: { business: SiteBusiness; sty
 function TeamBlock({ business, style, accent }: { business: SiteBusiness; style: TemplateStyle; accent: string }) {
   return (
     <EmptyGuard empty={business.staff.length === 0} type="team">
-      <Reveal>
-        <section className={`mx-auto max-w-5xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-5xl px-6 ${pad(style, business.density)}`}>
           <SectionEyebrow accent={accent} show={style.showEyebrows}>
             Meet the team
           </SectionEyebrow>
           <h2 className={`mt-3 text-3xl ${heading(style)}`}>Team</h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {business.staff.map((s) => (
-              <div key={s.id} className={`${cardClass(style)} p-5`}>
+              <div key={s.id} className={`${cardClass(style, business.corner_style)} p-5`}>
                 <p className={`text-base ${heading(style)}`}>{s.name}</p>
                 {s.specializations.length > 0 && <p className="mt-1 text-sm text-muted-foreground">{s.specializations.join(" · ")}</p>}
               </div>
             ))}
           </div>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -987,8 +991,8 @@ function TeamBlock({ business, style, accent }: { business: SiteBusiness; style:
 function ReviewsBlock({ business, style, accent }: { business: SiteBusiness; style: TemplateStyle; accent: string }) {
   return (
     <EmptyGuard empty={business.reviews.length === 0} type="reviews">
-      <Reveal>
-        <section className={`mx-auto max-w-5xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-5xl px-6 ${pad(style, business.density)}`}>
           <SectionEyebrow accent={accent} show={style.showEyebrows}>
             Testimonials
           </SectionEyebrow>
@@ -1002,26 +1006,26 @@ function ReviewsBlock({ business, style, accent }: { business: SiteBusiness; sty
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {business.reviews.slice(0, 6).map((r) => (
-              <div key={r.id} className={`${cardClass(style)} p-5`}>
+              <div key={r.id} className={`${cardClass(style, business.corner_style)} p-5`}>
                 <p style={{ color: accent }}>{"★".repeat(r.rating)}<span className="text-border">{"★".repeat(5 - r.rating)}</span></p>
                 {r.comment && <p className={`mt-2 text-sm text-muted-foreground ${style.bodyClass}`}>{r.comment}</p>}
               </div>
             ))}
           </div>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
 
 // ---------- FAQ ----------
 
-function FaqBlock({ style, accent, content }: { style: TemplateStyle; accent: string; content: FaqContent }) {
+function FaqBlock({ style, accent, content, density }: { style: TemplateStyle; accent: string; content: FaqContent; density?: string | null }) {
   const items = (content.items ?? []).filter((f) => f.q && f.a);
   return (
     <EmptyGuard empty={items.length === 0} type="faq">
-      <Reveal>
-        <section className={`mx-auto max-w-3xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-3xl px-6 ${pad(style, density)}`}>
           <SectionEyebrow accent={accent} show={style.showEyebrows}>
             Questions
           </SectionEyebrow>
@@ -1035,7 +1039,7 @@ function FaqBlock({ style, accent, content }: { style: TemplateStyle; accent: st
             ))}
           </div>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -1046,8 +1050,8 @@ function HoursBlock({ business, style, accent }: { business: SiteBusiness; style
   const hours = business.operating_hours;
   return (
     <EmptyGuard empty={!hours?.start || !hours?.end || !hours?.days?.length} type="hours">
-      <Reveal>
-        <section className={`mx-auto max-w-3xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-3xl px-6 ${pad(style, business.density)}`}>
           <SectionEyebrow accent={accent} show={style.showEyebrows}>
             When to visit
           </SectionEyebrow>
@@ -1058,7 +1062,7 @@ function HoursBlock({ business, style, accent }: { business: SiteBusiness; style
             </p>
           )}
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -1068,15 +1072,15 @@ function HoursBlock({ business, style, accent }: { business: SiteBusiness; style
 function LocationBlock({ business, style, accent }: { business: SiteBusiness; style: TemplateStyle; accent: string }) {
   return (
     <EmptyGuard empty={business.locations.length === 0} type="location">
-      <Reveal>
-        <section className={`mx-auto max-w-5xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-5xl px-6 ${pad(style, business.density)}`}>
           <SectionEyebrow accent={accent} show={style.showEyebrows}>
             Where to find us
           </SectionEyebrow>
           <h2 className={`mt-3 text-3xl ${heading(style)}`}>Locations</h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {business.locations.map((l) => (
-              <div key={l.id} className={`${cardClass(style)} p-6`}>
+              <div key={l.id} className={`${cardClass(style, business.corner_style)} p-6`}>
                 <p className="text-lg">{l.city}</p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {l.address}
@@ -1091,7 +1095,7 @@ function LocationBlock({ business, style, accent }: { business: SiteBusiness; st
             ))}
           </div>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -1099,9 +1103,9 @@ function LocationBlock({ business, style, accent }: { business: SiteBusiness; st
 function DeliveryBlock({ business, style, accent }: { business: SiteBusiness; style: TemplateStyle; accent: string }) {
   return (
     <EmptyGuard empty={business.delivery_areas.length === 0} type="delivery-areas">
-      <Reveal>
-        <section className={`mx-auto max-w-5xl px-6 ${pad(style)}`}>
-          <div className={`p-8 ${corners(style)}`} style={{ backgroundColor: `${accent}0A` }}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-5xl px-6 ${pad(style, business.density)}`}>
+          <div className={`p-8 ${corners(style, "lg", business.corner_style)}`} style={{ backgroundColor: `${accent}0A` }}>
             <SectionEyebrow accent={accent} show={style.showEyebrows}>
               Delivery
             </SectionEyebrow>
@@ -1111,7 +1115,7 @@ function DeliveryBlock({ business, style, accent }: { business: SiteBusiness; st
             </p>
           </div>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -1120,72 +1124,72 @@ function DeliveryBlock({ business, style, accent }: { business: SiteBusiness; st
 
 function ContactBlock({ business, style, accent }: { business: SiteBusiness; style: TemplateStyle; accent: string }) {
   return (
-    <Reveal>
-      <section className={`mx-auto max-w-5xl px-6 ${pad(style)}`}>
-        <div className={`border p-10 md:p-12 ${corners(style)}`} style={{ borderColor: `${accent}40` }}>
+    <TemplateReveal templateId={style.id}>
+      <section className={`mx-auto max-w-5xl px-6 ${pad(style, business.density)}`}>
+        <div className={`border p-10 md:p-12 ${corners(style, "lg", business.corner_style)}`} style={{ borderColor: `${accent}40` }}>
           <SectionEyebrow accent={accent} show={style.showEyebrows}>
             Get in touch
           </SectionEyebrow>
           <h2 className={`mt-3 text-3xl ${heading(style)}`}>Talk to {business.name}</h2>
           <div className="mt-8 flex flex-wrap gap-3">
             {business.whatsapp && (
-              <a href={`https://wa.me/${business.whatsapp.replace(/\D/g, "")}`} className={ctaClass(style)} style={{ backgroundColor: accent, color: "#fff" }}>
+              <a href={`https://wa.me/${business.whatsapp.replace(/\D/g, "")}`} className={ctaClass(style, business.corner_style)} style={{ backgroundColor: accent, color: "#fff" }}>
                 WhatsApp
               </a>
             )}
             {business.contact_email && (
-              <a href={`mailto:${business.contact_email}`} className={`${ctaClass(style)} border`} style={{ borderColor: accent, color: accent }}>
+              <a href={`mailto:${business.contact_email}`} className={`${ctaClass(style, business.corner_style)} border`} style={{ borderColor: accent, color: accent }}>
                 Email us
               </a>
             )}
             {business.instagram_url && (
-              <a href={business.instagram_url} className={`${ctaClass(style)} border border-border hover:border-foreground/40`}>
+              <a href={business.instagram_url} className={`${ctaClass(style, business.corner_style)} border border-border hover:border-foreground/40`}>
                 Instagram
               </a>
             )}
           </div>
         </div>
       </section>
-    </Reveal>
+    </TemplateReveal>
   );
 }
 
 function SocialBlock({ business, style, accent }: { business: SiteBusiness; style: TemplateStyle; accent: string }) {
   return (
     <EmptyGuard empty={!business.instagram_url} type="social">
-      <Reveal>
-        <section className={`mx-auto max-w-5xl px-6 ${pad(style)} text-center`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-5xl px-6 ${pad(style, business.density)} text-center`}>
           <SectionEyebrow accent={accent} show={style.showEyebrows}>
             Follow along
           </SectionEyebrow>
           {business.instagram_url && (
-            <a href={business.instagram_url} className={`${ctaClass(style)} mt-3 border border-border`}>
+            <a href={business.instagram_url} className={`${ctaClass(style, business.corner_style)} mt-3 border border-border`}>
               @{business.name.replace(/\s+/g, "")} on Instagram
             </a>
           )}
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
 
 function QuoteBlock({ business, style, accent, content }: { business: SiteBusiness; style: TemplateStyle; accent: string; content: QuoteContent }) {
   return (
-    <Reveal>
-      <section className={`mx-auto max-w-5xl px-6 ${pad(style)}`}>
-        <div className={`p-10 text-center md:p-14 ${corners(style)}`} style={{ backgroundColor: `${accent}0F` }}>
+    <TemplateReveal templateId={style.id}>
+      <section className={`mx-auto max-w-5xl px-6 ${pad(style, business.density)}`}>
+        <div className={`p-10 text-center md:p-14 ${corners(style, "lg", business.corner_style)}`} style={{ backgroundColor: `${accent}0F` }}>
           <h2 className={`text-3xl md:text-4xl ${heading(style)}`}>{content.heading || "Tell us what you need"}</h2>
           <p className={`mx-auto mt-4 max-w-xl text-muted-foreground ${style.bodyClass}`}>
             {content.body || `Post your requirement and get a quote directly from ${business.name}.`}
           </p>
           <div className="mt-8">
-            <Link to="/post-requirement" className={ctaClass(style)} style={{ backgroundColor: accent, color: "#fff" }}>
+            <Link to="/post-requirement" className={ctaClass(style, business.corner_style)} style={{ backgroundColor: accent, color: "#fff" }}>
               Request a quote →
             </Link>
           </div>
         </div>
       </section>
-    </Reveal>
+    </TemplateReveal>
   );
 }
 
@@ -1207,15 +1211,15 @@ function PromoBannerBlock({ style, accent, content }: { style: TemplateStyle; ac
   );
 }
 
-function CustomTextBlock({ style, content }: { style: TemplateStyle; content: CustomTextContent }) {
+function CustomTextBlock({ style, content, density }: { style: TemplateStyle; content: CustomTextContent; density?: string | null }) {
   return (
     <EmptyGuard empty={!content.body?.trim()} type="custom-text">
-      <Reveal>
-        <section className={`mx-auto max-w-3xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-3xl px-6 ${pad(style, density)}`}>
           {content.heading && <h2 className={`text-3xl ${heading(style)}`}>{content.heading}</h2>}
           <p className={`mt-4 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{content.body}</p>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -1232,7 +1236,7 @@ function EditorialSpreadBlock({ business, style, accent, content }: { business: 
   const empty = !business.about_image_url || !content.body?.trim();
   return (
     <EmptyGuard empty={empty} type="editorial-spread">
-      <Reveal>
+      <TemplateReveal templateId={style.id}>
         <section className="mx-auto grid max-w-6xl items-center gap-14 px-6 py-24 md:grid-cols-2">
           {imageUrl && <img src={imageUrl} alt={business.name} className="aspect-[3/4] w-full object-cover" />}
           <div>
@@ -1243,7 +1247,7 @@ function EditorialSpreadBlock({ business, style, accent, content }: { business: 
             {content.body && <p className="mt-6 whitespace-pre-line text-lg italic leading-relaxed text-muted-foreground">{content.body}</p>}
           </div>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -1255,7 +1259,7 @@ function CollectionSpotlightBlock({ business, style, accent, content }: { busine
   const items = business.items.filter((i) => i.is_active && ids.has(i.id)).slice(0, 3);
   return (
     <EmptyGuard empty={items.length === 0} type="collection-spotlight">
-      <Reveal>
+      <TemplateReveal templateId={style.id}>
         <section className="mx-auto max-w-6xl px-6 py-24">
           <SectionEyebrow accent={accent} show>
             The edit
@@ -1273,18 +1277,28 @@ function CollectionSpotlightBlock({ business, style, accent, content }: { busine
             ))}
           </div>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
 
 /** Modern (Agencieos): an owner-authored, numbered step-by-step of how they work. */
-function ProcessTimelineBlock({ style, accent, content }: { style: TemplateStyle; accent: string; content: ProcessTimelineContent }) {
+function ProcessTimelineBlock({
+  style,
+  accent,
+  content,
+  density,
+}: {
+  style: TemplateStyle;
+  accent: string;
+  content: ProcessTimelineContent;
+  density?: string | null;
+}) {
   const steps = content.steps ?? [];
   return (
     <EmptyGuard empty={steps.length === 0} type="process-timeline">
-      <Reveal>
-        <section className={`mx-auto max-w-5xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-5xl px-6 ${pad(style, density)}`}>
           <SectionEyebrow accent={accent} show={false}>
             How we work
           </SectionEyebrow>
@@ -1304,18 +1318,28 @@ function ProcessTimelineBlock({ style, accent, content }: { style: TemplateStyle
             ))}
           </ol>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
 
 /** Modern (Agencieos): a bento-style grid of capabilities/highlights. */
-function CapabilityGridBlock({ style, accent, content }: { style: TemplateStyle; accent: string; content: CapabilityGridContent }) {
+function CapabilityGridBlock({
+  style,
+  accent,
+  content,
+  density,
+}: {
+  style: TemplateStyle;
+  accent: string;
+  content: CapabilityGridContent;
+  density?: string | null;
+}) {
   const items = content.items ?? [];
   return (
     <EmptyGuard empty={items.length === 0} type="capability-grid">
-      <Reveal>
-        <section className={`mx-auto max-w-6xl px-6 ${pad(style)}`}>
+      <TemplateReveal templateId={style.id}>
+        <section className={`mx-auto max-w-6xl px-6 ${pad(style, density)}`}>
           <h2 className={`text-3xl ${heading(style)}`}>What we bring</h2>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((it, i) => (
@@ -1327,7 +1351,7 @@ function CapabilityGridBlock({ style, accent, content }: { style: TemplateStyle;
             ))}
           </div>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -1338,7 +1362,7 @@ function ProductStoryBlock({ business, style, accent, content }: { business: Sit
   return (
     <EmptyGuard empty={!item} type="product-story">
       {item && (
-        <Reveal>
+        <TemplateReveal templateId={style.id}>
           <section className="px-6 py-24 text-center">
             <SectionEyebrow accent={accent} show>
               The story
@@ -1348,11 +1372,11 @@ function ProductStoryBlock({ business, style, accent, content }: { business: Sit
               <ItemImage path={item.image_url} alt={item.name} className="mx-auto mt-12 aspect-[16/10] w-full max-w-4xl object-cover" />
             )}
             {item.description && <p className="mx-auto mt-10 max-w-xl text-lg text-muted-foreground">{item.description}</p>}
-            <Link to="/products/$slug" params={{ slug: item.slug }} className={`${ctaClass(style)} mt-8`} style={{ backgroundColor: accent, color: "#fff" }}>
+            <Link to="/products/$slug" params={{ slug: item.slug }} className={`${ctaClass(style, business.corner_style)} mt-8`} style={{ backgroundColor: accent, color: "#fff" }}>
               Discover more →
             </Link>
           </section>
-        </Reveal>
+        </TemplateReveal>
       )}
     </EmptyGuard>
   );
@@ -1363,7 +1387,7 @@ function BenefitsStripBlock({ style, accent, content }: { style: TemplateStyle; 
   const items = content.items ?? [];
   return (
     <EmptyGuard empty={items.length === 0} type="benefits-strip">
-      <Reveal>
+      <TemplateReveal templateId={style.id}>
         <section className="mx-auto max-w-5xl px-6 py-20 text-center">
           <div className="grid gap-8 sm:grid-cols-3">
             {items.map((it, i) => (
@@ -1376,7 +1400,7 @@ function BenefitsStripBlock({ style, accent, content }: { style: TemplateStyle; 
             ))}
           </div>
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -1386,13 +1410,13 @@ function VisualStripBlock({ business, style }: { business: SiteBusiness; style: 
   const urls = business.gallery_urls.slice(0, 4);
   return (
     <EmptyGuard empty={urls.length === 0} type="visual-strip">
-      <Reveal>
+      <TemplateReveal templateId={style.id}>
         <section className={`grid gap-1 ${urls.length >= 3 ? "sm:grid-cols-4" : "sm:grid-cols-2"}`}>
           {urls.map((u, i) => (
             <ItemImage key={i} path={u} alt="" className={`aspect-[3/4] w-full object-cover ${style.corners === "sharp" ? "" : ""}`} />
           ))}
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -1404,7 +1428,7 @@ function FeaturedWorkBlock({ business, style, content }: { business: SiteBusines
   return (
     <EmptyGuard empty={!url} type="featured-work">
       {url && (
-        <Reveal>
+        <TemplateReveal templateId={style.id}>
           <section className="relative">
             <ItemImage path={url} alt={content.heading ?? business.name} className="h-[70vh] w-full object-cover" />
             {(content.heading || content.body) && (
@@ -1414,7 +1438,7 @@ function FeaturedWorkBlock({ business, style, content }: { business: SiteBusines
               </div>
             )}
           </section>
-        </Reveal>
+        </TemplateReveal>
       )}
     </EmptyGuard>
   );
@@ -1426,7 +1450,7 @@ function StoryCollageBlock({ business, style, content }: { business: SiteBusines
   const urls = business.gallery_urls.slice(0, 3);
   return (
     <EmptyGuard empty={urls.length === 0} type="story-collage">
-      <Reveal>
+      <TemplateReveal templateId={style.id}>
         <section className="mx-auto max-w-5xl px-6 py-24">
           <div className="relative grid grid-cols-6 gap-4">
             {urls[0] && <ItemImage path={urls[0]} alt="" className="col-span-4 aspect-[4/3] w-full object-cover" />}
@@ -1440,7 +1464,7 @@ function StoryCollageBlock({ business, style, content }: { business: SiteBusines
             </div>
           )}
         </section>
-      </Reveal>
+      </TemplateReveal>
     </EmptyGuard>
   );
 }
@@ -1454,7 +1478,7 @@ function AtmosphericCtaBlock({ business, style, accent, content }: { business: S
         <div className="max-w-2xl">
           <h2 className={`text-4xl text-white md:text-6xl ${heading(style)}`}>{content.heading}</h2>
           {content.body && <p className="mt-6 text-lg text-white/70">{content.body}</p>}
-          <Link to="/contact" className={`${ctaClass(style)} mt-9`} style={{ backgroundColor: accent, color: "#fff" }}>
+          <Link to="/contact" className={`${ctaClass(style, business.corner_style)} mt-9`} style={{ backgroundColor: accent, color: "#fff" }}>
             {content.ctaLabel || `Talk to ${business.name}`} →
           </Link>
         </div>

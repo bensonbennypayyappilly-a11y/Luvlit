@@ -6,7 +6,7 @@ import { ServiceDetail } from "@/components/website/service-detail";
 import { resolveSections, sectionsForPage, type PageId } from "@/lib/website-pages";
 import { templateStyle } from "@/lib/website-templates";
 import { heading, pad } from "@/components/website/section-renderer";
-import { Reveal } from "@/components/reveal";
+import { TemplateReveal } from "@/components/website/template-reveal";
 import type { SiteBusiness } from "@/lib/website-site-types";
 import type { SitePageRecord } from "@/lib/public.types";
 
@@ -84,12 +84,12 @@ export function BusinessCustomPage({ business, page }: { business: SiteBusiness;
   return (
     <SiteChrome business={business} style={style} accent={accent} currentPage={page.id}>
       <main>
-        <Reveal>
-          <section className={`mx-auto max-w-3xl px-6 ${pad(style)}`}>
+        <TemplateReveal templateId={style.id}>
+          <section className={`mx-auto max-w-3xl px-6 ${pad(style, business.density)}`}>
             <h1 className={`text-4xl ${heading(style)}`}>{page.content?.heading || page.label}</h1>
             {page.content?.body && <p className={`mt-6 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{page.content.body}</p>}
           </section>
-        </Reveal>
+        </TemplateReveal>
       </main>
     </SiteChrome>
   );
