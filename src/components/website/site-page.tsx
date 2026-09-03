@@ -1,6 +1,8 @@
 import { SiteChrome } from "@/components/website/site-chrome";
 import { PageHeader } from "@/components/website/page-header";
 import { PreviewMode, SectionRenderer } from "@/components/website/section-renderer";
+import { ProductDetail } from "@/components/website/product-detail";
+import { ServiceDetail } from "@/components/website/service-detail";
 import { resolveSections, sectionsForPage, type PageId } from "@/lib/website-pages";
 import { templateStyle } from "@/lib/website-templates";
 import type { SiteBusiness } from "@/lib/website-site-types";
@@ -51,4 +53,32 @@ export function BusinessSitePage({
   );
 
   return preview ? <PreviewMode>{body}</PreviewMode> : body;
+}
+
+/** A single product's page — same nav/footer chrome as every other page, but the body is the
+ * template's own `ProductDetail` layout instead of the generic section list (a detail page shows
+ * one item, not a collection, so it isn't expressible as a `Section`). */
+export function BusinessProductDetailPage({ business, item }: { business: SiteBusiness; item: SiteBusiness["items"][number] }) {
+  const accent = business.brand_accent_color || "#4F46E5";
+  const style = templateStyle(business.template);
+  return (
+    <SiteChrome business={business} style={style} accent={accent} currentPage="products">
+      <main>
+        <ProductDetail business={business} item={item} style={style} accent={accent} />
+      </main>
+    </SiteChrome>
+  );
+}
+
+/** Service equivalent of `BusinessProductDetailPage`. */
+export function BusinessServiceDetailPage({ business, service }: { business: SiteBusiness; service: SiteBusiness["services"][number] }) {
+  const accent = business.brand_accent_color || "#4F46E5";
+  const style = templateStyle(business.template);
+  return (
+    <SiteChrome business={business} style={style} accent={accent} currentPage="services">
+      <main>
+        <ServiceDetail business={business} service={service} style={style} accent={accent} />
+      </main>
+    </SiteChrome>
+  );
 }

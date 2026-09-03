@@ -1,6 +1,13 @@
-import { buildDefaultSections, type Section } from "./website-sections";
+import { buildDefaultSections, SIGNATURE_TEMPLATE, type Section } from "./website-sections";
+
+/** Every signature section type, regardless of which template it belongs to — added to Home's
+ * section list for every template so each one is reachable once a business is on the matching
+ * template (`renderSectionBlock` in `section-renderer.tsx` is what actually hides a signature
+ * section on a template that doesn't own it, not this list). */
+const SIGNATURE_SECTION_TYPES = Object.keys(SIGNATURE_TEMPLATE) as Section["type"][];
 import type { SiteBusiness } from "./website-site-types";
 import type { TemplateId } from "./website-templates";
+import type { SitePageRecord } from "./public.types";
 
 export type PageId = "home" | "about" | "products" | "services" | "gallery" | "appointments" | "contact";
 
@@ -13,13 +20,11 @@ function isVisible(sections: Section[], type: Section["type"]) {
 }
 
 /**
- * Derives which pages a business's public site actually has from real content — never an
- * empty page just to pad the nav. Used both by the nav (to know what links to show) and by
- * each page route (to know whether it should render or 404) so the two can never disagree.
- * Doesn't create pages for content-free sections; doesn't force irrelevant pages onto a
- * business that doesn't use that feature.
+ * The content-gated candidate set — never an empty page just to pad the nav. This is the
+ * fallback (and the seed) for `deriveSitePages`; a business that hasn't touched the Pages panel
+ * gets exactly this, unchanged from before the Pages panel existed.
  */
-export function deriveSitePages({ sections, business_types, items, services }: PageInput): SitePage[] {
+function candidatePages({ sections, business_types, items, services }: PageInput): SitePage[] {
   const pages: SitePage[] = [{ id: "home", label: "Home", path: "/" }];
 
   if (isVisible(sections, "about") || isVisible(sections, "team") || isVisible(sections, "faq")) {
@@ -47,6 +52,74 @@ export function deriveSitePages({ sections, business_types, items, services }: P
   return pages;
 }
 
+/**
+ * Derives which pages a business's public site actually has, and in what order/with what nav
+ * labels — used both by the nav (to know what links to show) and by each page route (to know
+ * whether it should render or 404) so the two can never disagree.
+ *
+ * `overrides` is the owner's own Pages-panel edits (`businesses.pages`, resolved via
+ * `resolvePages`): reorder, rename, hide. An untouched business (`overrides` empty) gets exactly
+ * `candidatePages`'s content-gated default, unchanged from before the Pages panel existed. Once
+ * an owner has customized anything, overrides win — a hidden page disappears even if it has
+ * content, a renamed page's own label sticks — but a page that only just became available (e.g.
+ * their first product) still appears, appended after whatever they've already arranged, so new
+ * content is never silently hidden.
+ */
+export function deriveSitePages(input: PageInput, overrides: SitePageRecord[] = []): SitePage[] {
+  const candidates = candidatePages(input);
+  if (overrides.length === 0) return candidates;
+
+  const byId = new Map(candidates.map((p) => [p.id, p]));
+  const seen = new Set<string>();
+  const ordered: SitePage[] = [];
+  for (const o of overrides) {
+    const candidate = byId.get(o.id as PageId);
+    if (!candidate || o.visible === false) {
+      seen.add(o.id);
+      continue;
+    }
+    ordered.push({ ...candidate, label: o.label?.trim() || candidate.label });
+    seen.add(o.id);
+  }
+  for (const c of candidates) {
+    if (!seen.has(c.id)) ordered.push(c);
+  }
+  return ordered;
+}
+
+/** Every content-gated candidate page, in the owner's own arranged order where they've set one,
+ * INCLUDING pages they've hidden (unlike `deriveSitePages`, which drops hidden pages entirely) —
+ * this is what the Pages panel itself needs to show, so a hidden page stays editable/restorable
+ * rather than disappearing from the editor along with the live site. */
+export function pagesForEditing(input: PageInput, overrides: SitePageRecord[]): (SitePage & { visible: boolean })[] {
+  const candidates = candidatePages(input);
+  if (overrides.length === 0) return candidates.map((c) => ({ ...c, visible: true }));
+
+  const byId = new Map(candidates.map((p) => [p.id, p]));
+  const seen = new Set<string>();
+  const ordered: (SitePage & { visible: boolean })[] = [];
+  for (const o of overrides) {
+    const candidate = byId.get(o.id as PageId);
+    if (!candidate) {
+      seen.add(o.id);
+      continue;
+    }
+    ordered.push({ ...candidate, label: o.label?.trim() || candidate.label, visible: o.visible !== false });
+    seen.add(o.id);
+  }
+  for (const c of candidates) {
+    if (!seen.has(c.id)) ordered.push({ ...c, visible: true });
+  }
+  return ordered;
+}
+
+/** A business that has never opened the Pages panel has `pages: []` (and `draft_pages: null`) —
+ * this resolves to the empty override set so `deriveSitePages` falls back to its content-gated
+ * default, exactly matching pre-Pages-panel behaviour. */
+export function resolvePages(business: { pages?: SitePageRecord[] | null }): SitePageRecord[] {
+  return business.pages ?? [];
+}
+
 /** Which section types belong on the Home page — a curated preview, not the full site. Every
  * other page (About, Products, Services, Gallery, Contact) shows that topic's sections in full;
  * Home exists to give a fast overview and funnel into them. Template-dependent: Catalogue's
@@ -62,6 +135,7 @@ export const HOME_SECTION_TYPES: Section["type"][] = [
   "reviews",
   "promo-banner",
   "quote",
+  ...SIGNATURE_SECTION_TYPES,
 ];
 
 const CATALOGUE_HOME_SECTION_TYPES: Section["type"][] = [
@@ -72,6 +146,7 @@ const CATALOGUE_HOME_SECTION_TYPES: Section["type"][] = [
   "reviews",
   "promo-banner",
   "quote",
+  ...SIGNATURE_SECTION_TYPES,
 ];
 
 function homeSectionTypesFor(templateId: TemplateId): Section["type"][] {
@@ -103,8 +178,12 @@ export function sectionsForPage(sections: Section[], pageId: PageId, templateId:
 /** A business that has never opened the website builder has `sections: []` — this falls back
  * to a sensible generated default so their page is never blank, without needing a migration
  * to backfill every existing row. */
-export function resolveSections(business: Pick<SiteBusiness, "sections" | "business_types" | "items">): Section[] {
+export function resolveSections(business: Pick<SiteBusiness, "sections" | "business_types" | "items" | "services">): Section[] {
   return business.sections.length
     ? business.sections
-    : buildDefaultSections({ business_types: business.business_types, items: { length: business.items.length } });
+    : buildDefaultSections({
+        business_types: business.business_types,
+        items: { length: business.items.length },
+        services: { length: business.services.length },
+      });
 }

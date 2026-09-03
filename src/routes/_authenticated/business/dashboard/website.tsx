@@ -12,6 +12,8 @@ import { ColorField } from "@/components/website-builder/color-field";
 import { GalleryEditor } from "@/components/website-builder/gallery-editor";
 import { LocationsEditor } from "@/components/website-builder/locations-editor";
 import { SectionListEditor } from "@/components/website-builder/section-list-editor";
+import { PagesEditor } from "@/components/website-builder/pages-editor";
+import type { SitePageRecord } from "@/lib/public.types";
 import { ACCENT_COLORS, ECO_CATEGORIES } from "@/lib/constants";
 import { normalizeUsername, USERNAME_FORMAT_HINT } from "@/lib/username";
 import { useUsernameAvailability } from "@/hooks/use-username-availability";
@@ -21,7 +23,7 @@ import { FieldError } from "@/components/field-error";
 import { buildDefaultSections, newSection, type Section } from "@/lib/website-sections";
 import { Switch } from "@/components/ui/switch";
 import { TEMPLATE_LIST, type TemplateId } from "@/lib/website-templates";
-import { deriveSitePages, resolveSections, type PageId } from "@/lib/website-pages";
+import { deriveSitePages, pagesForEditing, resolvePages, resolveSections, type PageId } from "@/lib/website-pages";
 import {
   hasErrors,
   validateBusinessName,
@@ -66,6 +68,8 @@ type Draft = {
   instagram_url: string | null;
   custom_domain: string | null;
   template: TemplateId;
+  corner_style: string | null;
+  density: string | null;
 };
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -86,7 +90,7 @@ const VIEWPORT_WIDTH: Record<ViewportId, string> = {
 
 /** Patches accepted here are either a subset of Draft's flat fields, or `draft_sections` — the
  * one other column this page autosaves outside the Draft type (see onSectionsChange below). */
-type BusinessPatch = Partial<Draft> | { draft_sections: Section[] };
+type BusinessPatch = Partial<Draft> | { draft_sections: Section[] } | { draft_pages: SitePageRecord[] };
 
 function useAutosaveField(businessId: string | undefined) {
   const [state, setState] = useState<SaveState>("idle");
@@ -133,12 +137,12 @@ function useBusinessDraft(businessId: string | undefined) {
           supabase.from("delivery_areas").select("*").eq("business_id", businessId!),
           supabase
             .from("items")
-            .select("id,name,description,price,image_url,category,is_active")
+            .select("id,slug,name,description,price,image_url,category,is_active")
             .eq("business_id", businessId!)
             .order("position"),
           supabase
             .from("services")
-            .select("id,name,description,price,duration_minutes,category,image_url,is_active")
+            .select("id,slug,name,description,price,duration_minutes,category,image_url,is_active")
             .eq("business_id", businessId!)
             .order("position"),
           supabase.from("staff").select("id,name,specializations,slot_duration_minutes").eq("business_id", businessId!),
@@ -213,6 +217,11 @@ function WebsiteBuilder() {
   // draft_sections and only becomes publicly visible (copied into `sections`) on Publish, so a
   // business can rearrange their page without it going live mid-edit.
   const [draftSections, setDraftSections] = useState<Section[] | null>(null);
+  // Pages follow the exact same staged-until-publish pattern as sections. Empty ([]) is a real,
+  // meaningful state here — it means "never customized," which is what tells deriveSitePages to
+  // keep auto-deriving pages from content instead of applying overrides.
+  const [draftPages, setDraftPages] = useState<SitePageRecord[] | null>(null);
+  const pagesSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [viewport, setViewport] = useState<ViewportId>("desktop");
   const [previewPage, setPreviewPage] = useState<PageId>("home");
   const [publishState, setPublishState] = useState<SaveState>("idle");
@@ -248,13 +257,19 @@ function WebsiteBuilder() {
         instagram_url: b.instagram_url,
         custom_domain: b.custom_domain,
         template: (b.template as TemplateId) ?? "editorial",
+        corner_style: b.corner_style,
+        density: b.density,
       });
       const existing = (b.draft_sections as Section[] | null)?.length
         ? (b.draft_sections as Section[])
         : (b.sections as Section[] | null)?.length
           ? (b.sections as Section[])
-          : buildDefaultSections({ business_types: b.business_types, items: { length: data.items.length } });
+          : buildDefaultSections({ business_types: b.business_types, items: { length: data.items.length }, services: { length: data.services.length } });
       setDraftSections(existing);
+      const existingPages = (b.draft_pages as SitePageRecord[] | null)?.length
+        ? (b.draft_pages as SitePageRecord[])
+        : ((b.pages as SitePageRecord[] | null) ?? []);
+      setDraftPages(existingPages);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.business]);
@@ -269,7 +284,7 @@ function WebsiteBuilder() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [usernameAvailability.status, draft?.slug]);
 
-  if (!businessId || isLoading || !draft || !draftSections) {
+  if (!businessId || isLoading || !draft || !draftSections || !draftPages) {
     return (
       <div className="flex flex-1 flex-col gap-4 p-6 lg:flex-row">
         <div className="w-full space-y-3 lg:w-[320px]">
@@ -323,6 +338,14 @@ function WebsiteBuilder() {
     }, 400);
   }
 
+  function onPagesChange(next: SitePageRecord[]) {
+    setDraftPages(next);
+    if (pagesSaveTimer.current) clearTimeout(pagesSaveTimer.current);
+    pagesSaveTimer.current = setTimeout(() => {
+      saveImmediate({ draft_pages: next });
+    }, 400);
+  }
+
   /** Quick on/off for whether a section shows on the public site, surfaced next to its "Add /
    * Edit" link so a business doesn't need to open Page Layout separately for the common case.
    * Adds the section (visible) the first time it's toggled on if it doesn't exist yet. */
@@ -364,11 +387,15 @@ function WebsiteBuilder() {
     id: businessId,
     name: draft.name,
     description: draft.description,
+    tagline: data?.business?.tagline ?? null,
     categories: draft.categories,
+    specialities: data?.business?.specialities ?? [],
     business_types: draft.business_types,
     instagram_url: draft.instagram_url,
     custom_domain: draft.custom_domain,
     whatsapp: draft.whatsapp,
+    phone: data?.business?.phone ?? null,
+    preferred_contact: data?.business?.preferred_contact ?? null,
     contact_email: draft.contact_email,
     hero_image_url: draft.hero_image_url,
     about_image_url: draft.about_image_url,
@@ -384,7 +411,10 @@ function WebsiteBuilder() {
     is_eco_friendly: showEco ? draft.is_eco_friendly : false,
     operating_hours: (data?.business?.operating_hours as ProfileBusiness["operating_hours"]) ?? null,
     sections: draftSections,
+    pages: draftPages,
     template: draft.template,
+    corner_style: draft.corner_style,
+    density: draft.density,
     review_count: data?.business?.review_count ?? 0,
     review_avg: data?.business?.review_avg ?? null,
     reviews: [],
@@ -398,18 +428,28 @@ function WebsiteBuilder() {
 
   // Same derivation the public nav uses, fed the *draft* — so hiding a section or adding a
   // product changes the previewable page list immediately, exactly as it will once published.
-  const previewPages = deriveSitePages({ ...previewBusiness, sections: resolveSections(previewBusiness) });
+  const previewPages = deriveSitePages({ ...previewBusiness, sections: resolveSections(previewBusiness) }, resolvePages(previewBusiness));
+  const editingPages = pagesForEditing({ ...previewBusiness, sections: resolveSections(previewBusiness) }, resolvePages(previewBusiness));
   const activePreviewPage = previewPages.some((p) => p.id === previewPage) ? previewPage : "home";
 
   async function publish() {
-    if (!draft || !draftSections) return;
+    if (!draft || !draftSections || !draftPages) return;
     setPublishState("saving");
     setPublishError(null);
     // Self-service publish: a business owner can always take their own site live, no admin
     // approval step involved.
-    const patch: { sections: Section[]; draft_sections: Section[]; template: TemplateId; status: "live" } = {
+    const patch: {
+      sections: Section[];
+      draft_sections: Section[];
+      pages: SitePageRecord[];
+      draft_pages: SitePageRecord[];
+      template: TemplateId;
+      status: "live";
+    } = {
       sections: draftSections,
       draft_sections: draftSections,
+      pages: draftPages,
+      draft_pages: draftPages,
       template: draft.template,
       status: "live",
     };
@@ -489,8 +529,25 @@ function WebsiteBuilder() {
             </div>
           </BuilderSection>
 
+          <BuilderSection title="Pages" subtitle="Reorder, rename or hide pages — goes live when you press Save and Publish.">
+            <PagesEditor pages={editingPages} onChange={onPagesChange} />
+          </BuilderSection>
+
           <BuilderSection title="Page Layout" subtitle="Add, hide, reorder or edit sections — goes live when you press Save and Publish.">
-            <SectionListEditor sections={draftSections} onChange={onSectionsChange} items={(data?.items ?? []).map((i) => ({ id: i.id, name: i.name }))} />
+            <SectionListEditor
+              sections={draftSections}
+              onChange={onSectionsChange}
+              items={(data?.items ?? []).map((i) => ({ id: i.id, name: i.name }))}
+              templateId={draft.template}
+              signals={{
+                hasProducts: (data?.items ?? []).some((i) => i.is_active),
+                hasServices: (data?.services ?? []).some((s) => s.is_active),
+                hasGallery: draft.gallery_urls.length > 0,
+                hasReviews: (data?.business?.review_count ?? 0) > 0,
+                hasAppointments: draft.business_types.includes("appointment"),
+                hasDeliveryAreas: (data?.deliveryAreas ?? []).length > 0,
+              }}
+            />
           </BuilderSection>
 
           <BuilderSection title="Hero" subtitle="One photo or video for the top of your page — a video autoplays on loop.">
@@ -639,6 +696,54 @@ function WebsiteBuilder() {
                 onClear={() => onImmediateChange({ background_color: null })}
                 helpText="The default background behind every page. Leave unset to use the template's own background."
               />
+              <div>
+                <p className="text-[13px] font-medium text-foreground">Corners</p>
+                <div className="mt-2 flex gap-1.5">
+                  {(
+                    [
+                      [null, "Template default"],
+                      ["soft", "Soft"],
+                      ["sharp", "Sharp"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => onImmediateChange({ corner_style: value })}
+                      aria-pressed={draft.corner_style === value}
+                      className={`rounded-[8px] border px-3 py-1.5 text-xs font-medium transition-colors duration-150 ${
+                        draft.corner_style === value ? "border-accent bg-accent-soft text-accent" : "border-[#EAEAEA] text-muted-foreground hover:border-accent/40"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-[13px] font-medium text-foreground">Density</p>
+                <div className="mt-2 flex gap-1.5">
+                  {(
+                    [
+                      [null, "Template default"],
+                      ["airy", "Airy"],
+                      ["compact", "Compact"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => onImmediateChange({ density: value })}
+                      aria-pressed={draft.density === value}
+                      className={`rounded-[8px] border px-3 py-1.5 text-xs font-medium transition-colors duration-150 ${
+                        draft.density === value ? "border-accent bg-accent-soft text-accent" : "border-[#EAEAEA] text-muted-foreground hover:border-accent/40"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </SettingsGroup>
 
             <SettingsGroup label="Contact">

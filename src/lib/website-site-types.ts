@@ -1,4 +1,5 @@
 import type { Section } from "./website-sections";
+import type { SitePageRecord } from "./public.types";
 
 /**
  * The full shape a business's public site is rendered from — shared by the section renderer,
@@ -10,10 +11,14 @@ export type SiteBusiness = {
   id: string;
   name: string;
   description: string | null;
+  tagline: string | null;
   categories: string[];
+  specialities: string[];
   business_types: string[];
   instagram_url: string | null;
   whatsapp: string | null;
+  phone: string | null;
+  preferred_contact: string | null;
   contact_email: string | null;
   hero_image_url: string | null;
   about_image_url: string | null;
@@ -30,7 +35,10 @@ export type SiteBusiness = {
   is_eco_friendly: boolean;
   operating_hours: { start: string; end: string; days: number[] } | null;
   sections: Section[];
+  pages: SitePageRecord[];
   template: string | null;
+  corner_style: string | null;
+  density: string | null;
   review_count: number;
   review_avg: number | null;
   reviews: { id: string; rating: number; comment: string | null; created_at: string }[];
@@ -39,6 +47,7 @@ export type SiteBusiness = {
   delivery_areas: { id: string; city: string | null; is_pan_india: boolean }[];
   items: {
     id: string;
+    slug: string;
     name: string;
     description: string | null;
     price: number | null;
@@ -48,6 +57,7 @@ export type SiteBusiness = {
   }[];
   services: {
     id: string;
+    slug: string;
     name: string;
     description: string | null;
     price: number | null;

@@ -8,51 +8,65 @@ import { GalleryGrid } from "@/components/gallery-grid";
 import { Reveal } from "@/components/reveal";
 import { useMediaUrl } from "@/components/media-uploader";
 import { SectionEyebrow, VideoPlayer, isPlayableVideo, useResolvedList } from "@/components/website/media";
-import type { TemplateStyle } from "@/lib/website-templates";
+import { templateStyle, type TemplateStyle } from "@/lib/website-templates";
 import type { SiteBusiness } from "@/lib/website-site-types";
 import type { PageId } from "@/lib/website-pages";
 import type {
   AboutContent,
+  AtmosphericCtaContent,
+  BenefitsStripContent,
+  CapabilityGridContent,
+  CollectionSpotlightContent,
   CustomTextContent,
+  EditorialSpreadContent,
   FaqContent,
   FeaturedProductsContent,
+  FeaturedWorkContent,
   HeroContent,
+  ProcessTimelineContent,
+  ProductStoryContent,
   PromoBannerContent,
   QuoteContent,
   Section,
   SectionType,
+  StoryCollageContent,
 } from "@/lib/website-sections";
+import { SECTION_LIBRARY, SIGNATURE_TEMPLATE } from "@/lib/website-sections";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function corners(style: TemplateStyle, size: "sm" | "lg" = "lg") {
-  if (style.corners === "sharp") return "rounded-none";
+/** `style.corners` is the template's own default; a business's own Design-panel override
+ * (`corner_style`) always wins once set — see §18/the Design panel. */
+export function corners(style: TemplateStyle, size: "sm" | "lg" = "lg", override?: string | null) {
+  const mode = override ?? style.corners;
+  if (mode === "sharp") return "rounded-none";
   return size === "sm" ? "rounded-md" : "rounded-xl";
 }
 
-function pad(style: TemplateStyle) {
-  return style.spacing === "airy" ? "py-20 md:py-28" : "py-12 md:py-16";
+export function pad(style: TemplateStyle, override?: string | null) {
+  const mode = override ?? style.spacing;
+  return mode === "airy" ? "py-20 md:py-28" : "py-12 md:py-16";
 }
 
-function heading(style: TemplateStyle, className = "") {
+export function heading(style: TemplateStyle, className = "") {
   return `site-heading-font ${style.headingClass} ${className}`;
 }
 
-function cardClass(style: TemplateStyle) {
+export function cardClass(style: TemplateStyle, override?: string | null) {
   switch (style.cardStyle) {
     case "shadow":
-      return `border border-border/60 bg-card shadow-sm transition-shadow hover:shadow-lg ${corners(style)}`;
+      return `border border-border/60 bg-card shadow-sm transition-shadow hover:shadow-lg ${corners(style, "lg", override)}`;
     case "flat-divide":
       return "border-t border-border pt-6";
     case "editorial-frame":
-      return `border border-border p-2 transition-colors hover:border-foreground/40 ${corners(style)}`;
+      return `border border-border p-2 transition-colors hover:border-foreground/40 ${corners(style, "lg", override)}`;
     default:
-      return `border border-border bg-card ${corners(style)}`;
+      return `border border-border bg-card ${corners(style, "lg", override)}`;
   }
 }
 
-function ctaClass(style: TemplateStyle) {
-  return `inline-flex items-center gap-2 px-6 py-3 text-sm font-medium transition-transform hover:scale-[1.02] ${corners(style, "sm")}`;
+export function ctaClass(style: TemplateStyle, override?: string | null) {
+  return `inline-flex items-center gap-2 px-6 py-3 text-sm font-medium transition-transform hover:scale-[1.02] ${corners(style, "sm", override)}`;
 }
 
 /** One section-type -> visual-block map, template-aware via spacing/corners/cardStyle/typography.
@@ -117,6 +131,14 @@ function renderSectionBlock({
   accent: string;
   page: PageId;
 }) {
+  // A signature section only belongs to the template it was designed for (§19) — after a
+  // template switch it's never deleted, but it renders nothing on a template that doesn't own
+  // it. `UnsupportedSignatureNote` surfaces that to the owner in preview only; the public site
+  // just shows nothing, exactly like any other empty section.
+  const signatureTemplate = SIGNATURE_TEMPLATE[section.type];
+  if (signatureTemplate && signatureTemplate !== style.id) {
+    return <UnsupportedSignatureNote type={section.type} templateLabel={templateStyle(signatureTemplate).label} />;
+  }
   switch (section.type) {
     case "hero":
       return <HeroBlock business={business} style={style} accent={accent} content={section.content as HeroContent} />;
@@ -156,6 +178,26 @@ function renderSectionBlock({
       return <PromoBannerBlock style={style} accent={accent} content={section.content as PromoBannerContent} />;
     case "custom-text":
       return <CustomTextBlock style={style} content={section.content as CustomTextContent} />;
+    case "editorial-spread":
+      return <EditorialSpreadBlock business={business} style={style} accent={accent} content={section.content as EditorialSpreadContent} />;
+    case "collection-spotlight":
+      return <CollectionSpotlightBlock business={business} style={style} accent={accent} content={section.content as CollectionSpotlightContent} />;
+    case "process-timeline":
+      return <ProcessTimelineBlock style={style} accent={accent} content={section.content as ProcessTimelineContent} />;
+    case "capability-grid":
+      return <CapabilityGridBlock style={style} accent={accent} content={section.content as CapabilityGridContent} />;
+    case "product-story":
+      return <ProductStoryBlock business={business} style={style} accent={accent} content={section.content as ProductStoryContent} />;
+    case "benefits-strip":
+      return <BenefitsStripBlock style={style} accent={accent} content={section.content as BenefitsStripContent} />;
+    case "visual-strip":
+      return <VisualStripBlock business={business} style={style} />;
+    case "featured-work":
+      return <FeaturedWorkBlock business={business} style={style} content={section.content as FeaturedWorkContent} />;
+    case "story-collage":
+      return <StoryCollageBlock business={business} style={style} content={section.content as StoryCollageContent} />;
+    case "atmospheric-cta":
+      return <AtmosphericCtaBlock business={business} style={style} accent={accent} content={section.content as AtmosphericCtaContent} />;
     default:
       return null;
   }
@@ -192,6 +234,16 @@ const EMPTY_HINTS: Partial<Record<SectionType, { title: string; body: string }>>
   social: { title: "Social links", body: "Add your Instagram link in Website Settings." },
   "promo-banner": { title: "Promo banner", body: "Add banner text in this section's Edit panel." },
   "custom-text": { title: "Custom text", body: "Add your text in this section's Edit panel." },
+  "editorial-spread": { title: "Editorial spread", body: "Add an About photo and write a short story in this section's Edit panel." },
+  "collection-spotlight": { title: "Collection spotlight", body: "Pick a few products to feature in this section's Edit panel." },
+  "process-timeline": { title: "Process timeline", body: "Add your steps in this section's Edit panel." },
+  "capability-grid": { title: "Capability grid", body: "Add a few highlights in this section's Edit panel." },
+  "product-story": { title: "Product story", body: "Pick a hero product in this section's Edit panel." },
+  "benefits-strip": { title: "Benefits", body: "Add a few reasons to choose you in this section's Edit panel." },
+  "visual-strip": { title: "Visual strip", body: "Upload photos in the Gallery panel to fill this section." },
+  "featured-work": { title: "Featured work", body: "Upload photos in the Gallery panel, or add a hero photo, to fill this section." },
+  "story-collage": { title: "Story collage", body: "Upload at least 2 photos in the Gallery panel to fill this section." },
+  "atmospheric-cta": { title: "Atmospheric CTA", body: "Add a heading in this section's Edit panel." },
 };
 
 /** Some sections (services, gallery, products, faq, team, reviews...) render nothing meaningful
@@ -207,6 +259,25 @@ function EmptyGuard({ empty, type, children }: { empty: boolean; type: SectionTy
       <div className="rounded-xl border border-dashed border-border bg-secondary/30 p-8 text-center">
         <p className="text-sm font-medium text-muted-foreground">{hint.title}</p>
         <p className="mx-auto mt-1.5 max-w-sm text-sm text-muted-foreground/80">{hint.body}</p>
+        <p className="mt-3 text-xs text-muted-foreground/70">Only you can see this — it's hidden on your live site.</p>
+      </div>
+    </section>
+  );
+}
+
+/** Shown only in the builder preview when a signature section is left over from a template the
+ * business has since switched away from — never deleted, never rendered on the live site, but
+ * visible here so the owner understands why it's not showing and how to bring it back (§19). */
+function UnsupportedSignatureNote({ type, templateLabel }: { type: SectionType; templateLabel: string }) {
+  const preview = useContext(PreviewContext);
+  if (!preview) return null;
+  return (
+    <section className="mx-auto max-w-5xl px-6 py-8">
+      <div className="rounded-xl border border-dashed border-border bg-secondary/30 p-8 text-center">
+        <p className="text-sm font-medium text-muted-foreground">{SECTION_LIBRARY[type]?.label ?? type}</p>
+        <p className="mx-auto mt-1.5 max-w-sm text-sm text-muted-foreground/80">
+          Not supported by this template — switch back to {templateLabel} to restore it, or remove it in Page Layout.
+        </p>
         <p className="mt-3 text-xs text-muted-foreground/70">Only you can see this — it's hidden on your live site.</p>
       </div>
     </section>
@@ -443,7 +514,7 @@ function AboutBlock({ business, style, accent, content }: { business: SiteBusine
 /** Resolves a product/service's stored image path to a real signed URL before rendering.
  * Unlike hero/logo/gallery images, items/services image_url isn't pre-signed server-side, so
  * using it directly as <img src> resolves as a relative URL against the current page and 404s. */
-function ItemImage({ path, alt, className }: { path: string; alt: string; className?: string }) {
+export function ItemImage({ path, alt, className }: { path: string; alt: string; className?: string }) {
   const url = useMediaUrl(path);
   if (!url) return null;
   return <img src={url} alt={alt} className={className} />;
@@ -463,7 +534,7 @@ function ServicesBlock({ business, style, accent }: { business: SiteBusiness; st
           <h2 className={`mt-3 text-3xl ${heading(style)}`}>Services</h2>
           <div className={`mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 ${style.cardStyle === "flat-divide" ? "sm:grid-cols-1 lg:grid-cols-2" : ""}`}>
             {services.map((s) => (
-              <div key={s.id} className={cardClass(style)}>
+              <Link key={s.id} to="/services/$slug" params={{ slug: s.slug }} className={`block ${cardClass(style)}`}>
                 {s.image_url && (
                   <ItemImage
                     path={s.image_url}
@@ -479,7 +550,7 @@ function ServicesBlock({ business, style, accent }: { business: SiteBusiness; st
                     <span>{s.duration_minutes} min</span>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           <div className="mt-8">
@@ -544,7 +615,7 @@ function WishlistHeart({ accent }: { accent: string }) {
 
 function CatalogueProductCard({ item, accent }: { item: SiteBusiness["items"][number]; accent: string }) {
   return (
-    <div className="group">
+    <Link to="/products/$slug" params={{ slug: item.slug }} className="group block">
       <div className="relative overflow-hidden rounded-md bg-secondary/60">
         {item.image_url ? (
           <ItemImage
@@ -559,7 +630,7 @@ function CatalogueProductCard({ item, accent }: { item: SiteBusiness["items"][nu
       </div>
       <p className="site-heading-font mt-3 text-sm font-medium">{item.name}</p>
       {item.price != null && <p className="mt-0.5 text-sm text-muted-foreground">₹{item.price}</p>}
-    </div>
+    </Link>
   );
 }
 
@@ -670,7 +741,7 @@ function ProductsPageBlock({
               catalogue ? (
                 <CatalogueProductCard key={item.id} item={item} accent={accent} />
               ) : (
-                <div key={item.id} className={cardClass(style)}>
+                <Link key={item.id} to="/products/$slug" params={{ slug: item.slug }} className={`block ${cardClass(style)}`}>
                   {item.image_url && (
                     <ItemImage
                       path={item.image_url}
@@ -682,7 +753,7 @@ function ProductsPageBlock({
                     <p className={`text-sm font-medium ${heading(style)}`}>{item.name}</p>
                     {item.price != null && <p className="mt-1 text-sm text-muted-foreground">₹{item.price}</p>}
                   </div>
-                </div>
+                </Link>
               ),
             )}
           </div>
@@ -724,13 +795,13 @@ function FeaturedProductsBlock({
           <h2 className={`mt-3 text-3xl ${heading(style)}`}>Featured</h2>
           <div className="mt-10 grid grid-cols-2 gap-5 sm:grid-cols-4">
             {items.map((item) => (
-              <div key={item.id} className={cardClass(style)}>
+              <Link key={item.id} to="/products/$slug" params={{ slug: item.slug }} className={`block ${cardClass(style)}`}>
                 {item.image_url && <ItemImage path={item.image_url} alt={item.name} className={`aspect-square w-full object-cover ${corners(style)}`} />}
                 <div className="p-3">
                   <p className="text-sm font-medium">{item.name}</p>
                   {item.price != null && <p className="text-xs text-muted-foreground">₹{item.price}</p>}
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
@@ -1083,6 +1154,249 @@ function CustomTextBlock({ style, content }: { style: TemplateStyle; content: Cu
           <p className={`mt-4 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{content.body}</p>
         </section>
       </Reveal>
+    </EmptyGuard>
+  );
+}
+
+// ---------- Signature sections — two per template, real content-only, §19 template-scoped ----------
+
+/** Editorial (Celesse): a large photo paired with an owner-written story — a magazine spread,
+ * not a generic about block. Uses the business's own about photo (never a stock/placeholder). */
+function EditorialSpreadBlock({ business, style, accent, content }: { business: SiteBusiness; style: TemplateStyle; accent: string; content: EditorialSpreadContent }) {
+  const imageUrl = useMediaUrl(business.about_image_url);
+  // `useMediaUrl` only resolves after hydration (see its own doc comment) — checking the raw
+  // stored path here (not the resolved url) keeps this correct on the very first server render,
+  // same as AboutBlock's existing `!aboutText && !aboutImageUrl` pattern.
+  const empty = !business.about_image_url || !content.body?.trim();
+  return (
+    <EmptyGuard empty={empty} type="editorial-spread">
+      <Reveal>
+        <section className="mx-auto grid max-w-6xl items-center gap-14 px-6 py-24 md:grid-cols-2">
+          {imageUrl && <img src={imageUrl} alt={business.name} className="aspect-[3/4] w-full object-cover" />}
+          <div>
+            <SectionEyebrow accent={accent} show>
+              In the studio
+            </SectionEyebrow>
+            {content.heading && <h2 className={`mt-3 text-3xl md:text-4xl ${heading(style)}`}>{content.heading}</h2>}
+            {content.body && <p className="mt-6 whitespace-pre-line text-lg italic leading-relaxed text-muted-foreground">{content.body}</p>}
+          </div>
+        </section>
+      </Reveal>
+    </EmptyGuard>
+  );
+}
+
+/** Editorial (Celesse): a small, large-format showcase of a curated handful of products — never
+ * the full catalogue grid, an intentional edit. */
+function CollectionSpotlightBlock({ business, style, accent, content }: { business: SiteBusiness; style: TemplateStyle; accent: string; content: CollectionSpotlightContent }) {
+  const ids = new Set(content.itemIds ?? []);
+  const items = business.items.filter((i) => i.is_active && ids.has(i.id)).slice(0, 3);
+  return (
+    <EmptyGuard empty={items.length === 0} type="collection-spotlight">
+      <Reveal>
+        <section className="mx-auto max-w-6xl px-6 py-24">
+          <SectionEyebrow accent={accent} show>
+            The edit
+          </SectionEyebrow>
+          <h2 className={`mt-3 text-3xl md:text-4xl ${heading(style)}`}>{content.heading || "Collection spotlight"}</h2>
+          <div className="mt-12 grid gap-10 md:grid-cols-3">
+            {items.map((item) => (
+              <Link key={item.id} to="/products/$slug" params={{ slug: item.slug }} className="group block">
+                {item.image_url && (
+                  <ItemImage path={item.image_url} alt={item.name} className="aspect-[3/4] w-full object-cover transition-opacity group-hover:opacity-80" />
+                )}
+                <p className="mt-4 text-lg font-medium">{item.name}</p>
+                {item.price != null && <p className="mt-1 text-muted-foreground">₹{item.price}</p>}
+              </Link>
+            ))}
+          </div>
+        </section>
+      </Reveal>
+    </EmptyGuard>
+  );
+}
+
+/** Modern (Agencieos): an owner-authored, numbered step-by-step of how they work. */
+function ProcessTimelineBlock({ style, accent, content }: { style: TemplateStyle; accent: string; content: ProcessTimelineContent }) {
+  const steps = content.steps ?? [];
+  return (
+    <EmptyGuard empty={steps.length === 0} type="process-timeline">
+      <Reveal>
+        <section className={`mx-auto max-w-5xl px-6 ${pad(style)}`}>
+          <SectionEyebrow accent={accent} show={false}>
+            How we work
+          </SectionEyebrow>
+          <h2 className={`mt-3 text-3xl ${heading(style)}`}>Our process</h2>
+          <ol className="mt-10 space-y-8 border-l-2 pl-8" style={{ borderColor: `${accent}40` }}>
+            {steps.map((s, i) => (
+              <li key={i} className="relative">
+                <span
+                  className="absolute -left-[41px] flex size-6 items-center justify-center rounded-full text-xs font-bold text-white"
+                  style={{ backgroundColor: accent }}
+                >
+                  {i + 1}
+                </span>
+                <p className={`text-lg ${heading(style)}`}>{s.title}</p>
+                {s.body && <p className="mt-1.5 text-sm text-muted-foreground">{s.body}</p>}
+              </li>
+            ))}
+          </ol>
+        </section>
+      </Reveal>
+    </EmptyGuard>
+  );
+}
+
+/** Modern (Agencieos): a bento-style grid of capabilities/highlights. */
+function CapabilityGridBlock({ style, accent, content }: { style: TemplateStyle; accent: string; content: CapabilityGridContent }) {
+  const items = content.items ?? [];
+  return (
+    <EmptyGuard empty={items.length === 0} type="capability-grid">
+      <Reveal>
+        <section className={`mx-auto max-w-6xl px-6 ${pad(style)}`}>
+          <h2 className={`text-3xl ${heading(style)}`}>What we bring</h2>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {items.map((it, i) => (
+              <div key={i} className="border border-border p-6">
+                <div className="size-8 rounded-md" style={{ backgroundColor: accent }} />
+                <p className={`mt-4 text-lg font-bold ${heading(style)}`}>{it.title}</p>
+                {it.body && <p className="mt-1.5 text-sm text-muted-foreground">{it.body}</p>}
+              </div>
+            ))}
+          </div>
+        </section>
+      </Reveal>
+    </EmptyGuard>
+  );
+}
+
+/** Catalogue (Essentia): a sequential, cinematic story built around one hero product. */
+function ProductStoryBlock({ business, style, accent, content }: { business: SiteBusiness; style: TemplateStyle; accent: string; content: ProductStoryContent }) {
+  const item = business.items.find((i) => i.id === content.itemId && i.is_active);
+  return (
+    <EmptyGuard empty={!item} type="product-story">
+      {item && (
+        <Reveal>
+          <section className="px-6 py-24 text-center">
+            <SectionEyebrow accent={accent} show>
+              The story
+            </SectionEyebrow>
+            <h2 className={`mx-auto mt-3 max-w-2xl text-3xl md:text-4xl ${heading(style)}`}>{content.heading || item.name}</h2>
+            {item.image_url && (
+              <ItemImage path={item.image_url} alt={item.name} className="mx-auto mt-12 aspect-[16/10] w-full max-w-4xl object-cover" />
+            )}
+            {item.description && <p className="mx-auto mt-10 max-w-xl text-lg text-muted-foreground">{item.description}</p>}
+            <Link to="/products/$slug" params={{ slug: item.slug }} className={`${ctaClass(style)} mt-8`} style={{ backgroundColor: accent, color: "#fff" }}>
+              Discover more →
+            </Link>
+          </section>
+        </Reveal>
+      )}
+    </EmptyGuard>
+  );
+}
+
+/** Catalogue (Essentia): a short, focused row of reasons to choose this business. */
+function BenefitsStripBlock({ style, accent, content }: { style: TemplateStyle; accent: string; content: BenefitsStripContent }) {
+  const items = content.items ?? [];
+  return (
+    <EmptyGuard empty={items.length === 0} type="benefits-strip">
+      <Reveal>
+        <section className="mx-auto max-w-5xl px-6 py-20 text-center">
+          <div className="grid gap-8 sm:grid-cols-3">
+            {items.map((it, i) => (
+              <div key={i}>
+                <p className={`text-xl ${heading(style)}`} style={{ color: accent }}>
+                  {it.title}
+                </p>
+                {it.body && <p className="mt-2 text-sm text-muted-foreground">{it.body}</p>}
+              </div>
+            ))}
+          </div>
+        </section>
+      </Reveal>
+    </EmptyGuard>
+  );
+}
+
+/** Experience (Aperture): a full-width strip of the business's own gallery work. */
+function VisualStripBlock({ business, style }: { business: SiteBusiness; style: TemplateStyle }) {
+  const urls = business.gallery_urls.slice(0, 4);
+  return (
+    <EmptyGuard empty={urls.length === 0} type="visual-strip">
+      <Reveal>
+        <section className={`grid gap-1 ${urls.length >= 3 ? "sm:grid-cols-4" : "sm:grid-cols-2"}`}>
+          {urls.map((u, i) => (
+            <ItemImage key={i} path={u} alt="" className={`aspect-[3/4] w-full object-cover ${style.corners === "sharp" ? "" : ""}`} />
+          ))}
+        </section>
+      </Reveal>
+    </EmptyGuard>
+  );
+}
+
+/** Experience (Aperture): one standout photo treated as its own full-bleed moment, with a caption
+ * — not a hero (doesn't carry the business name), a mid-page visual pause. */
+function FeaturedWorkBlock({ business, style, content }: { business: SiteBusiness; style: TemplateStyle; content: FeaturedWorkContent }) {
+  const url = business.gallery_urls[0] ?? business.hero_image_url;
+  return (
+    <EmptyGuard empty={!url} type="featured-work">
+      {url && (
+        <Reveal>
+          <section className="relative">
+            <ItemImage path={url} alt={content.heading ?? business.name} className="h-[70vh] w-full object-cover" />
+            {(content.heading || content.body) && (
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-10">
+                {content.heading && <p className={`text-2xl text-white ${heading(style)}`}>{content.heading}</p>}
+                {content.body && <p className="mt-2 max-w-md text-white/85">{content.body}</p>}
+              </div>
+            )}
+          </section>
+        </Reveal>
+      )}
+    </EmptyGuard>
+  );
+}
+
+/** Story (Cullen): a layered collage of the business's own photos with a short narrative — the
+ * signature "editorial collage" moment. */
+function StoryCollageBlock({ business, style, content }: { business: SiteBusiness; style: TemplateStyle; content: StoryCollageContent }) {
+  const urls = business.gallery_urls.slice(0, 3);
+  return (
+    <EmptyGuard empty={urls.length === 0} type="story-collage">
+      <Reveal>
+        <section className="mx-auto max-w-5xl px-6 py-24">
+          <div className="relative grid grid-cols-6 gap-4">
+            {urls[0] && <ItemImage path={urls[0]} alt="" className="col-span-4 aspect-[4/3] w-full object-cover" />}
+            {urls[1] && <ItemImage path={urls[1]} alt="" className="col-span-2 mt-10 aspect-square w-full object-cover" />}
+            {urls[2] && <ItemImage path={urls[2]} alt="" className="col-span-3 -mt-6 aspect-[4/3] w-full object-cover" />}
+          </div>
+          {(content.heading || content.body) && (
+            <div className="mt-14 max-w-md">
+              {content.heading && <h2 className={`text-3xl ${heading(style)}`}>{content.heading}</h2>}
+              {content.body && <p className="mt-4 text-muted-foreground">{content.body}</p>}
+            </div>
+          )}
+        </section>
+      </Reveal>
+    </EmptyGuard>
+  );
+}
+
+/** Story (Cullen): a bold, full-bleed mid-page moment — same visual weight as the hero, usable
+ * anywhere in the page order for a second dramatic beat. */
+function AtmosphericCtaBlock({ business, style, accent, content }: { business: SiteBusiness; style: TemplateStyle; accent: string; content: AtmosphericCtaContent }) {
+  return (
+    <EmptyGuard empty={!content.heading?.trim()} type="atmospheric-cta">
+      <section className="relative flex min-h-[50vh] items-center justify-center px-6 text-center" style={{ backgroundColor: "#0A0A0A" }}>
+        <div className="max-w-2xl">
+          <h2 className={`text-4xl text-white md:text-6xl ${heading(style)}`}>{content.heading}</h2>
+          {content.body && <p className="mt-6 text-lg text-white/70">{content.body}</p>}
+          <Link to="/contact" className={`${ctaClass(style)} mt-9`} style={{ backgroundColor: accent, color: "#fff" }}>
+            {content.ctaLabel || `Talk to ${business.name}`} →
+          </Link>
+        </div>
+      </section>
     </EmptyGuard>
   );
 }

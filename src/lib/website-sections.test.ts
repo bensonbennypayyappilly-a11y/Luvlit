@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDefaultSections, NON_DELETABLE, newSection } from "./website-sections";
+import { buildDefaultSections, NON_DELETABLE, newSection, recommendSections } from "./website-sections";
 
 describe("buildDefaultSections", () => {
   it("builds the default section set for a plain business with no products/appointments/gallery", () => {
@@ -24,6 +24,12 @@ describe("buildDefaultSections", () => {
     const sections = buildDefaultSections({ business_types: [], items: { length: 3 } });
     expect(sections.some((s) => s.type === "products")).toBe(true);
     expect(sections.some((s) => s.type === "services")).toBe(false);
+  });
+
+  it("includes both products and services for a genuinely mixed business", () => {
+    const sections = buildDefaultSections({ business_types: ["product", "appointment"], items: { length: 2 }, services: { length: 1 } });
+    expect(sections.some((s) => s.type === "products")).toBe(true);
+    expect(sections.some((s) => s.type === "services")).toBe(true);
   });
 
   it("adds a booking section only when business_types includes 'appointment'", () => {
@@ -59,6 +65,29 @@ describe("buildDefaultSections", () => {
     expect(() => buildDefaultSections({ business_types: null, items: null })).not.toThrow();
     const sections = buildDefaultSections({ business_types: null, items: null });
     expect(sections.some((s) => s.type === "services")).toBe(true);
+  });
+});
+
+describe("recommendSections", () => {
+  const noSignals = { hasProducts: false, hasServices: false, hasGallery: false, hasReviews: false, hasAppointments: false, hasDeliveryAreas: false };
+
+  it("recommends nothing when there's no real content and nothing missing", () => {
+    expect(recommendSections(noSignals, new Set())).toEqual([]);
+  });
+
+  it("recommends featured-products only when the business has products", () => {
+    const recs = recommendSections({ ...noSignals, hasProducts: true }, new Set());
+    expect(recs).toContain("featured-products");
+  });
+
+  it("never recommends a section that's already on the page", () => {
+    const recs = recommendSections({ ...noSignals, hasGallery: true }, new Set(["gallery"]));
+    expect(recs).not.toContain("gallery");
+  });
+
+  it("recommends booking only when the business takes appointments", () => {
+    expect(recommendSections({ ...noSignals, hasAppointments: true }, new Set())).toContain("booking");
+    expect(recommendSections(noSignals, new Set())).not.toContain("booking");
   });
 });
 

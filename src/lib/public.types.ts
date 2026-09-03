@@ -31,6 +31,7 @@ export type BusinessLocation = {
 
 export type BusinessItem = {
   id: string;
+  slug: string;
   name: string;
   description: string | null;
   price: number | null;
@@ -41,6 +42,7 @@ export type BusinessItem = {
 
 export type BusinessService = {
   id: string;
+  slug: string;
   name: string;
   description: string | null;
   price: number | null;
@@ -48,6 +50,21 @@ export type BusinessService = {
   category: string | null;
   image_url: string | null;
   is_active: boolean;
+};
+
+/** A business's public site page — see `src/lib/website-pages.ts` for how these are derived,
+ * defaulted and rendered. `type` picks which listing/detail renderer a page uses (products and
+ * services pages always render from the real `items`/`services` tables, never authored content);
+ * `custom` pages are a plain container for sections and have no built-in data source. */
+export type SitePageType = "home" | "about" | "products" | "services" | "gallery" | "appointments" | "contact" | "custom";
+
+export type SitePageRecord = {
+  id: string;
+  slug: string;
+  label: string;
+  type: SitePageType;
+  visible: boolean;
+  showInNav: boolean;
 };
 
 export type BusinessDetail = {
@@ -61,6 +78,8 @@ export type BusinessDetail = {
   business_types: string[];
   instagram_url: string | null;
   whatsapp: string | null;
+  phone: string | null;
+  preferred_contact: string | null;
   contact_email: string | null;
   hero_image_url: string | null;
   about_image_url: string | null;
@@ -78,7 +97,10 @@ export type BusinessDetail = {
   view_count: number;
   operating_hours: OperatingHours;
   sections: import("./website-sections").Section[];
+  pages: SitePageRecord[];
   template: string | null;
+  corner_style: string | null;
+  density: string | null;
   review_count: number;
   review_avg: number | null;
   reviews: { id: string; rating: number; comment: string | null; created_at: string }[];

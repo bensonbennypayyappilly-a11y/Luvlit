@@ -8,6 +8,7 @@ type Business = NonNullable<BusinessDetail>;
 function makeService(overrides: Partial<BusinessService> & Pick<BusinessService, "name">): BusinessService {
   return {
     id: overrides.name,
+    slug: overrides.name,
     description: null,
     price: null,
     duration_minutes: 30,
@@ -30,6 +31,8 @@ function makeBusiness(overrides: Partial<Business> = {}): Business {
     business_types: [],
     instagram_url: null,
     whatsapp: null,
+    phone: null,
+    preferred_contact: null,
     contact_email: null,
     hero_image_url: null,
     about_image_url: null,
@@ -47,7 +50,10 @@ function makeBusiness(overrides: Partial<Business> = {}): Business {
     view_count: 0,
     operating_hours: null,
     sections: [],
+    pages: [],
     template: null,
+    corner_style: null,
+    density: null,
     review_count: 0,
     review_avg: null,
     reviews: [],

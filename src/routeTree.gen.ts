@@ -38,6 +38,8 @@ import { Route as InfluencerOnboardingRouteImport } from './routes/influencer.on
 import { Route as InfluencerRequestsRouteImport } from './routes/influencer.requests'
 import { Route as InfluencerStatusRouteImport } from './routes/influencer.status'
 import { Route as OrganizerIdRouteImport } from './routes/organizer.$id'
+import { Route as ProductsSlugRouteImport } from './routes/products_.$slug'
+import { Route as ServicesSlugRouteImport } from './routes/services_.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminBusinessApprovalsRouteImport } from './routes/_authenticated/admin/business-approvals'
 import { Route as AuthenticatedAdminInfluencerApprovalsRouteImport } from './routes/_authenticated/admin/influencer-approvals'
@@ -212,6 +214,16 @@ const InfluencerStatusRoute = InfluencerStatusRouteImport.update({
 const OrganizerIdRoute = OrganizerIdRouteImport.update({
   id: '/organizer/$id',
   path: '/organizer/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductsSlugRoute = ProductsSlugRouteImport.update({
+  id: '/products_/$slug',
+  path: '/products/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesSlugRoute = ServicesSlugRouteImport.update({
+  id: '/services_/$slug',
+  path: '/services/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
@@ -414,6 +426,8 @@ export interface FileRoutesByFullPath {
   '/influencer/requests': typeof InfluencerRequestsRoute
   '/influencer/status': typeof InfluencerStatusRoute
   '/organizer/$id': typeof OrganizerIdRoute
+  '/products/$slug': typeof ProductsSlugRoute
+  '/services/$slug': typeof ServicesSlugRoute
   '/browse/': typeof BrowseIndexRoute
   '/events/': typeof EventsIndexRoute
   '/influencer/': typeof InfluencerIndexRoute
@@ -471,6 +485,8 @@ export interface FileRoutesByTo {
   '/influencer/requests': typeof InfluencerRequestsRoute
   '/influencer/status': typeof InfluencerStatusRoute
   '/organizer/$id': typeof OrganizerIdRoute
+  '/products/$slug': typeof ProductsSlugRoute
+  '/services/$slug': typeof ServicesSlugRoute
   '/browse': typeof BrowseIndexRoute
   '/events': typeof EventsIndexRoute
   '/influencer': typeof InfluencerIndexRoute
@@ -531,6 +547,8 @@ export interface FileRoutesById {
   '/influencer/requests': typeof InfluencerRequestsRoute
   '/influencer/status': typeof InfluencerStatusRoute
   '/organizer/$id': typeof OrganizerIdRoute
+  '/products_/$slug': typeof ProductsSlugRoute
+  '/services_/$slug': typeof ServicesSlugRoute
   '/browse/': typeof BrowseIndexRoute
   '/events/': typeof EventsIndexRoute
   '/influencer/': typeof InfluencerIndexRoute
@@ -592,6 +610,8 @@ export interface FileRouteTypes {
     | '/influencer/requests'
     | '/influencer/status'
     | '/organizer/$id'
+    | '/products/$slug'
+    | '/services/$slug'
     | '/browse/'
     | '/events/'
     | '/influencer/'
@@ -649,6 +669,8 @@ export interface FileRouteTypes {
     | '/influencer/requests'
     | '/influencer/status'
     | '/organizer/$id'
+    | '/products/$slug'
+    | '/services/$slug'
     | '/browse'
     | '/events'
     | '/influencer'
@@ -708,6 +730,8 @@ export interface FileRouteTypes {
     | '/influencer/requests'
     | '/influencer/status'
     | '/organizer/$id'
+    | '/products_/$slug'
+    | '/services_/$slug'
     | '/browse/'
     | '/events/'
     | '/influencer/'
@@ -766,6 +790,8 @@ export interface RootRouteChildren {
   InfluencerRequestsRoute: typeof InfluencerRequestsRoute
   InfluencerStatusRoute: typeof InfluencerStatusRoute
   OrganizerIdRoute: typeof OrganizerIdRoute
+  ProductsSlugRoute: typeof ProductsSlugRoute
+  ServicesSlugRoute: typeof ServicesSlugRoute
   BrowseIndexRoute: typeof BrowseIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
   InfluencerIndexRoute: typeof InfluencerIndexRoute
@@ -974,6 +1000,20 @@ declare module '@tanstack/react-router' {
       path: '/organizer/$id'
       fullPath: '/organizer/$id'
       preLoaderRoute: typeof OrganizerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products_/$slug': {
+      id: '/products_/$slug'
+      path: '/products/$slug'
+      fullPath: '/products/$slug'
+      preLoaderRoute: typeof ProductsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services_/$slug': {
+      id: '/services_/$slug'
+      path: '/services/$slug'
+      fullPath: '/services/$slug'
+      preLoaderRoute: typeof ServicesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
@@ -1336,6 +1376,8 @@ const rootRouteChildren: RootRouteChildren = {
   InfluencerRequestsRoute: InfluencerRequestsRoute,
   InfluencerStatusRoute: InfluencerStatusRoute,
   OrganizerIdRoute: OrganizerIdRoute,
+  ProductsSlugRoute: ProductsSlugRoute,
+  ServicesSlugRoute: ServicesSlugRoute,
   BrowseIndexRoute: BrowseIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
   InfluencerIndexRoute: InfluencerIndexRoute,

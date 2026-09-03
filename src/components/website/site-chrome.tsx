@@ -2,7 +2,7 @@ import { useState } from "react";
 import { EcoBadge } from "@/components/eco-badge";
 import { useMediaUrl } from "@/components/media-uploader";
 import { FloatingContactButton } from "@/components/website/floating-contact-button";
-import { deriveSitePages, resolveSections, type PageId } from "@/lib/website-pages";
+import { deriveSitePages, resolvePages, resolveSections, type PageId } from "@/lib/website-pages";
 import type { TemplateStyle } from "@/lib/website-templates";
 import type { SiteBusiness } from "@/lib/website-site-types";
 
@@ -69,7 +69,7 @@ export function SiteChrome({
 }) {
   const logoUrl = useMediaUrl(business.logo_url);
   const [menuOpen, setMenuOpen] = useState(false);
-  const pages = deriveSitePages({ ...business, sections: resolveSections(business) });
+  const pages = deriveSitePages({ ...business, sections: resolveSections(business) }, resolvePages(business));
   const dark = style.navStyle === "bar-dark";
   const minimal = style.navStyle === "minimal-underline";
   const primaryCta = pages.find((p) => p.id === "appointments") ?? pages.find((p) => p.id === "contact");

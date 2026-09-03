@@ -104,12 +104,15 @@ export type Database = {
           button_style: string
           categories: string[]
           contact_email: string | null
+          corner_style: string | null
           courier_available: boolean
           created_at: string
           custom_domain: string | null
           deleted_at: string | null
           delivery_available: boolean
+          density: string | null
           description: string | null
+          draft_pages: Json | null
           draft_sections: Json | null
           gallery_alt_text: Json
           gallery_urls: string[]
@@ -125,6 +128,7 @@ export type Database = {
           order_types: string[]
           owner_email_verified: boolean
           owner_id: string
+          pages: Json
           phone: string | null
           pickup_available: boolean
           preferred_contact: string | null
@@ -153,12 +157,15 @@ export type Database = {
           button_style?: string
           categories?: string[]
           contact_email?: string | null
+          corner_style?: string | null
           courier_available?: boolean
           created_at?: string
           custom_domain?: string | null
           deleted_at?: string | null
           delivery_available?: boolean
+          density?: string | null
           description?: string | null
+          draft_pages?: Json | null
           draft_sections?: Json | null
           gallery_alt_text?: Json
           gallery_urls?: string[]
@@ -174,6 +181,7 @@ export type Database = {
           order_types?: string[]
           owner_email_verified?: boolean
           owner_id: string
+          pages?: Json
           phone?: string | null
           pickup_available?: boolean
           preferred_contact?: string | null
@@ -202,12 +210,15 @@ export type Database = {
           button_style?: string
           categories?: string[]
           contact_email?: string | null
+          corner_style?: string | null
           courier_available?: boolean
           created_at?: string
           custom_domain?: string | null
           deleted_at?: string | null
           delivery_available?: boolean
+          density?: string | null
           description?: string | null
+          draft_pages?: Json | null
           draft_sections?: Json | null
           gallery_alt_text?: Json
           gallery_urls?: string[]
@@ -223,6 +234,7 @@ export type Database = {
           order_types?: string[]
           owner_email_verified?: boolean
           owner_id?: string
+          pages?: Json
           phone?: string | null
           pickup_available?: boolean
           preferred_contact?: string | null
@@ -645,6 +657,7 @@ export type Database = {
           position: number
           price: number | null
           search_vector: unknown
+          slug: string
         }
         Insert: {
           business_id: string
@@ -658,6 +671,7 @@ export type Database = {
           position?: number
           price?: number | null
           search_vector?: unknown
+          slug?: string
         }
         Update: {
           business_id?: string
@@ -671,6 +685,7 @@ export type Database = {
           position?: number
           price?: number | null
           search_vector?: unknown
+          slug?: string
         }
         Relationships: [
           {
@@ -1079,6 +1094,7 @@ export type Database = {
           position: number
           price: number | null
           search_vector: unknown
+          slug: string
         }
         Insert: {
           business_id: string
@@ -1092,6 +1108,7 @@ export type Database = {
           position?: number
           price?: number | null
           search_vector?: unknown
+          slug?: string
         }
         Update: {
           business_id?: string
@@ -1105,6 +1122,7 @@ export type Database = {
           position?: number
           price?: number | null
           search_vector?: unknown
+          slug?: string
         }
         Relationships: [
           {
@@ -1386,6 +1404,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      slugify: { Args: { _text: string }; Returns: string }
       soft_delete_account: { Args: never; Returns: undefined }
       submit_requirement_with_matches: {
         Args: {

@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import {
   NON_DELETABLE,
+  SECTION_CATEGORY,
   SECTION_LIBRARY,
+  SIGNATURE_TEMPLATE,
   newSection,
+  recommendSections,
+  type ContentSignals,
   type CustomTextContent,
   type FaqContent,
   type FeaturedProductsContent,
@@ -12,9 +16,17 @@ import {
   type Section,
   type SectionType,
 } from "@/lib/website-sections";
+import { templateStyle, type TemplateId } from "@/lib/website-templates";
 import { ColorField } from "@/components/website-builder/color-field";
 
 type ItemOption = { id: string; name: string };
+
+const CATEGORY_LABEL: Record<"recommended" | "universal" | "content" | "signature", string> = {
+  recommended: "Recommended",
+  universal: "Universal",
+  content: "Content",
+  signature: "Template signature",
+};
 
 /**
  * Controls presence, order and visibility of a business's page sections, plus inline content
@@ -27,10 +39,14 @@ export function SectionListEditor({
   sections,
   onChange,
   items,
+  templateId,
+  signals,
 }: {
   sections: Section[];
   onChange: (sections: Section[]) => void;
   items: ItemOption[];
+  templateId: TemplateId;
+  signals: ContentSignals;
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -61,7 +77,20 @@ export function SectionListEditor({
   }
 
   const usedTypes = new Set(sections.map((s) => s.type));
-  const availableToAdd = (Object.keys(SECTION_LIBRARY) as SectionType[]).filter((t) => !usedTypes.has(t));
+  // A signature section only makes sense — and is only offered — while its own template is
+  // active (§10C/§19); every other type is available regardless of template.
+  const availableToAdd = (Object.keys(SECTION_LIBRARY) as SectionType[]).filter((t) => {
+    if (usedTypes.has(t)) return false;
+    const owner = SIGNATURE_TEMPLATE[t];
+    return !owner || owner === templateId;
+  });
+  const recommended = recommendSections(signals, usedTypes);
+  const groups: { key: "recommended" | "universal" | "content" | "signature"; types: SectionType[] }[] = [
+    { key: "recommended", types: recommended },
+    { key: "universal", types: availableToAdd.filter((t) => SECTION_CATEGORY[t] === "universal") },
+    { key: "content", types: availableToAdd.filter((t) => SECTION_CATEGORY[t] === "content" && !recommended.includes(t)) },
+    { key: "signature", types: availableToAdd.filter((t) => SECTION_CATEGORY[t] === "signature") },
+  ];
 
   return (
     <div className="space-y-1.5">
@@ -152,24 +181,45 @@ export function SectionListEditor({
 
       {adding ? (
         <div className="rounded-[10px] border border-[#EEEEEE] bg-white p-3">
-          <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">Add a section</p>
-          <div className="mt-2 space-y-0.5">
-            {availableToAdd.length === 0 && <p className="text-xs text-muted-foreground">All sections added.</p>}
-            {availableToAdd.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => add(t)}
-                className="block w-full rounded-[8px] px-2.5 py-2 text-left text-sm transition-colors hover:bg-[#FAFAFA]"
-              >
-                <span className="font-medium">{SECTION_LIBRARY[t].label}</span>
-                <span className="ml-2 text-xs text-muted-foreground">{SECTION_LIBRARY[t].description}</span>
-              </button>
-            ))}
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">Add a section</p>
+            <button type="button" onClick={() => setAdding(false)} className="text-xs text-muted-foreground transition-colors hover:text-foreground">
+              Cancel
+            </button>
           </div>
-          <button type="button" onClick={() => setAdding(false)} className="mt-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
-            Cancel
-          </button>
+          {availableToAdd.length === 0 && <p className="mt-2 text-xs text-muted-foreground">All sections added.</p>}
+          <div className="mt-1 max-h-80 space-y-3 overflow-y-auto">
+            {groups.map(
+              (group) =>
+                group.types.length > 0 && (
+                  <div key={group.key}>
+                    <p className="px-2.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground/70">
+                      {group.key === "signature" ? `${templateStyle(templateId).label} signature` : CATEGORY_LABEL[group.key]}
+                    </p>
+                    <div className="mt-1 space-y-0.5">
+                      {group.types.map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => add(t)}
+                          className="flex w-full items-start gap-2.5 rounded-[8px] px-2.5 py-2 text-left text-sm transition-colors hover:bg-[#FAFAFA]"
+                        >
+                          <span
+                            className="mt-1 size-2 shrink-0 rounded-full"
+                            style={{ backgroundColor: group.key === "recommended" ? "#5B8C5A" : "#D8D4CC" }}
+                            aria-hidden="true"
+                          />
+                          <span>
+                            <span className="block font-medium">{SECTION_LIBRARY[t].label}</span>
+                            <span className="block text-xs text-muted-foreground">{SECTION_LIBRARY[t].description}</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ),
+            )}
+          </div>
         </div>
       ) : (
         <button
