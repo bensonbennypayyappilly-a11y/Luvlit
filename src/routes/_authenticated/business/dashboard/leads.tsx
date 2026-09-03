@@ -121,14 +121,36 @@ function LeadsPage() {
     },
   });
 
+  // leads always arrive with their conversation already created (submit_requirement_with_matches
+  // creates both together), so this is the only place the requirement's own category/description
+  // actually lives — without it, a requirement-sourced conversation would show nothing but the
+  // customer's name, and the business would have no idea what was being asked for.
+  type RequirementInfo = { category: string | null; description: string | null; image_urls: string[] | null };
+  const requirementByReqId = useMemo(() => {
+    const map = new Map<string, RequirementInfo>();
+    for (const l of leads ?? []) {
+      const req = (l as any).requirements as RequirementInfo | null;
+      if (l.requirement_id && req) map.set(l.requirement_id, req);
+    }
+    return map;
+  }, [leads]);
+
   const rows: InboxRow[] = useMemo(() => {
-    const conv = (conversations ?? []).map((c) => ({
-      id: c.id,
-      conversationId: c.id,
-      title: c.partnerName ?? (c.requirement_id ? "Requirement conversation" : "Direct conversation"),
-      subtitle: new Date(c.created_at).toLocaleDateString(),
-      unread: unreadMap?.has(c.id) ?? false,
-    }));
+    const conv = (conversations ?? []).map((c) => {
+      const req = c.requirement_id ? requirementByReqId.get(c.requirement_id) : undefined;
+      return {
+        id: c.id,
+        conversationId: c.id,
+        title: c.partnerName ?? (c.requirement_id ? "Requirement conversation" : "Direct conversation"),
+        subtitle: req
+          ? [req.category, req.description].filter(Boolean).join(" — ") || new Date(c.created_at).toLocaleDateString()
+          : new Date(c.created_at).toLocaleDateString(),
+        unread: unreadMap?.has(c.id) ?? false,
+        imageUrls: req?.image_urls ?? null,
+      };
+    });
+    // Kept as a fallback for the (currently unreachable in practice) case of a lead whose
+    // conversation hasn't been created yet, so a lead is never silently dropped from the inbox.
     const leadRows = (leads ?? [])
       .filter((l) => !conversations?.some((c) => c.requirement_id === l.requirement_id))
       .map((l) => ({
@@ -140,7 +162,12 @@ function LeadsPage() {
         imageUrls: (l as any).requirements?.image_urls ?? null,
       }));
     return [...conv, ...leadRows];
-  }, [leads, conversations, unreadMap]);
+  }, [leads, conversations, unreadMap, requirementByReqId]);
+
+  const activeRequirement = useMemo(() => {
+    const conv = conversations?.find((c) => c.id === activeConversationId);
+    return conv?.requirement_id ? requirementByReqId.get(conv.requirement_id) : undefined;
+  }, [conversations, activeConversationId, requirementByReqId]);
 
   async function openConversation(conversationId: string | null) {
     setActiveConversationId(conversationId);
@@ -198,12 +225,23 @@ function LeadsPage() {
 
         <div>
           {activeConversationId && businessId ? (
-            <ChatPanel
-              conversationId={activeConversationId}
-              senderType="business"
-              senderId={businessId}
-              title={rows.find((r) => r.conversationId === activeConversationId)?.title ?? "Conversation"}
-            />
+            <div className="flex h-full flex-col gap-3">
+              {activeRequirement && (
+                <div className="dashboard-card space-y-2 p-4">
+                  <p className="eyebrow">{activeRequirement.category ?? "Requirement"}</p>
+                  {activeRequirement.description && (
+                    <p className="text-sm text-foreground">{activeRequirement.description}</p>
+                  )}
+                  <LeadThumbs imageUrls={activeRequirement.image_urls} />
+                </div>
+              )}
+              <ChatPanel
+                conversationId={activeConversationId}
+                senderType="business"
+                senderId={businessId}
+                title={rows.find((r) => r.conversationId === activeConversationId)?.title ?? "Conversation"}
+              />
+            </div>
           ) : (
             <div className="dashboard-card flex min-h-[24rem] items-center justify-center text-sm text-muted-foreground">
               Select a conversation to chat.
