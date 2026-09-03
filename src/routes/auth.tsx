@@ -44,7 +44,7 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">(search.role ? "signup" : "signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "reset">(search.role ? "signup" : "signin");
   const [role, setRole] = useState<"business" | "customer" | "organizer">(search.role ?? "customer");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -54,6 +54,11 @@ function AuthPage() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendStatus, setResendStatus] = useState<{ type: "idle" | "success" | "error"; message?: string }>({
+    type: "idle",
+  });
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetStatus, setResetStatus] = useState<{ type: "idle" | "success" | "error"; message?: string }>({
     type: "idle",
   });
 
@@ -90,6 +95,26 @@ function AuthPage() {
     }
   }
 
+  async function submitReset(e: React.FormEvent) {
+    e.preventDefault();
+    setResetBusy(true);
+    setResetStatus({ type: "idle" });
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setResetBusy(false);
+    if (error) {
+      setResetStatus({ type: "error", message: error.message });
+      return;
+    }
+    // Supabase doesn't reveal whether the email is registered — same message either way, so
+    // this can't be used to enumerate accounts.
+    setResetStatus({
+      type: "success",
+      message: "If an account exists for that email, we've sent a password reset link.",
+    });
+  }
+
   async function resend() {
     if (!email || resendCooldown > 0) return;
     setResendStatus({ type: "idle" });
@@ -110,76 +135,136 @@ function AuthPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
       <main className="mx-auto w-full max-w-md flex-1 px-6 py-24">
-        <p className="eyebrow">{mode === "signup" ? "Create an account" : "Welcome back"}</p>
-        <h1 className="mt-4 text-4xl">{mode === "signup" ? "Join LuvLit" : "Sign in"}</h1>
+        <p className="eyebrow">
+          {mode === "signup" ? "Create an account" : mode === "reset" ? "Reset your password" : "Welcome back"}
+        </p>
+        <h1 className="mt-4 text-4xl">
+          {mode === "signup" ? "Join LuvLit" : mode === "reset" ? "Forgot your password?" : "Sign in"}
+        </h1>
 
-        <form onSubmit={submit} className="mt-10 space-y-5">
-          {mode === "signup" && (
-            <>
-              <div className="grid grid-cols-3 gap-3">
-                {(["customer", "business", "organizer"] as const).map((r) => (
-                  <button
-                    type="button"
-                    key={r}
-                    onClick={() => setRole(r)}
-                    className={`rounded-md border px-4 py-3 text-sm capitalize transition-colors ${
-                      role === r ? "border-accent bg-accent-soft" : "border-border"
-                    }`}
-                  >
-                    {r === "business" ? "Business owner" : r === "organizer" ? "Event organizer" : "Customer"}
-                  </button>
-                ))}
-              </div>
+        {mode === "reset" ? (
+          <>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Enter the email on your account and we'll send you a link to set a new password.
+            </p>
+            <form onSubmit={submitReset} className="mt-10 space-y-5">
               <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
+                type="email"
+                required
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                placeholder="Email"
                 className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
               />
-            </>
-          )}
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
-          />
-          <input
-            type="password"
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
-          />
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <button
-            disabled={busy}
-            className="w-full rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-          >
-            {mode === "signup" ? "Create account" : "Sign in"}
-          </button>
-        </form>
+              {resetStatus.type === "success" && (
+                <p className="text-sm text-accent">{resetStatus.message}</p>
+              )}
+              {resetStatus.type === "error" && (
+                <p className="text-sm text-destructive">{resetStatus.message}</p>
+              )}
+              <button
+                disabled={resetBusy}
+                className="w-full rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+              >
+                {resetBusy ? "Sending…" : "Send reset link"}
+              </button>
+            </form>
+            <p className="mt-8 text-sm text-muted-foreground">
+              <button
+                className="text-primary underline-offset-4 hover:underline"
+                onClick={() => setMode("signin")}
+              >
+                Back to sign in
+              </button>
+            </p>
+          </>
+        ) : (
+          <>
+            <form onSubmit={submit} className="mt-10 space-y-5">
+              {mode === "signup" && (
+                <>
+                  <div className="grid grid-cols-3 gap-3">
+                    {(["customer", "business", "organizer"] as const).map((r) => (
+                      <button
+                        type="button"
+                        key={r}
+                        onClick={() => setRole(r)}
+                        className={`rounded-md border px-4 py-3 text-sm capitalize transition-colors ${
+                          role === r ? "border-accent bg-accent-soft" : "border-border"
+                        }`}
+                      >
+                        {r === "business" ? "Business owner" : r === "organizer" ? "Event organizer" : "Customer"}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your name"
+                    className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
+                  />
+                </>
+              )}
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
+              />
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
+              />
+              {mode === "signin" && (
+                <p className="text-right text-sm">
+                  <button
+                    type="button"
+                    className="text-primary underline-offset-4 hover:underline"
+                    onClick={() => {
+                      setError(null);
+                      setResetEmail(email);
+                      setResetStatus({ type: "idle" });
+                      setMode("reset");
+                    }}
+                  >
+                    Forgot password?
+                  </button>
+                </p>
+              )}
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <button
+                disabled={busy}
+                className="w-full rounded-md bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+              >
+                {mode === "signup" ? "Create account" : "Sign in"}
+              </button>
+            </form>
 
-        <p className="mt-8 text-sm text-muted-foreground">
-          {mode === "signup" ? "Already have an account?" : "New to LuvLit?"}{" "}
-          <button
-            className="text-primary underline-offset-4 hover:underline"
-            onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
-          >
-            {mode === "signup" ? "Sign in" : "Create one"}
-          </button>
-        </p>
-        <p className="mt-4 text-sm text-muted-foreground">
-          You can browse and book appointments without an account —{" "}
-          <Link to="/browse" className="text-primary underline-offset-4 hover:underline">
-            keep browsing
-          </Link>
-          .
-        </p>
+            <p className="mt-8 text-sm text-muted-foreground">
+              {mode === "signup" ? "Already have an account?" : "New to LuvLit?"}{" "}
+              <button
+                className="text-primary underline-offset-4 hover:underline"
+                onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
+              >
+                {mode === "signup" ? "Sign in" : "Create one"}
+              </button>
+            </p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              You can browse and book appointments without an account —{" "}
+              <Link to="/browse" className="text-primary underline-offset-4 hover:underline">
+                keep browsing
+              </Link>
+              .
+            </p>
+          </>
+        )}
       </main>
       <SiteFooter />
 
