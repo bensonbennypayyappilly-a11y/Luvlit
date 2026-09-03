@@ -137,7 +137,7 @@ describe("BusinessSitePage", () => {
     for (const t of TEMPLATE_LIST) {
       const html = render(<BusinessSitePage business={{ ...business, template: t.id }} page="products" />);
       expect(html).toContain("Truffle cake");
-      expect(html).toContain("1200");
+      expect(html).toContain("1,200");
     }
   });
 

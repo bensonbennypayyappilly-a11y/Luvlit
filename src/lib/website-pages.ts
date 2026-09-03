@@ -190,7 +190,7 @@ export function resolveSections(business: Pick<SiteBusiness, "sections" | "busin
     ? business.sections
     : buildDefaultSections({
         business_types: business.business_types,
-        items: { length: business.items.length },
+        items: { length: business.items.length, ids: business.items.filter((i) => i.is_active).map((i) => i.id) },
         services: { length: business.services.length },
       });
 }

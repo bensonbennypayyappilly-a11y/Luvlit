@@ -66,6 +66,24 @@ describe("buildDefaultSections", () => {
     const sections = buildDefaultSections({ business_types: null, items: null });
     expect(sections.some((s) => s.type === "services")).toBe(true);
   });
+
+  it("seeds a featured-products spotlight from real item ids so a new product business isn't empty on Home (Home never shows the full 'products' section, only 'featured-products' — see HOME_SECTION_TYPES)", () => {
+    const sections = buildDefaultSections({ business_types: ["product"], items: { length: 3, ids: ["a", "b", "c"] } });
+    const featured = sections.find((s) => s.type === "featured-products");
+    expect(featured).toBeDefined();
+    expect(featured?.content).toEqual({ itemIds: ["a", "b", "c"] });
+  });
+
+  it("caps the seeded featured-products spotlight at 4 items", () => {
+    const sections = buildDefaultSections({ business_types: ["product"], items: { length: 6, ids: ["a", "b", "c", "d", "e", "f"] } });
+    const featured = sections.find((s) => s.type === "featured-products");
+    expect((featured?.content as { itemIds: string[] }).itemIds).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("doesn't add featured-products when no item ids are known (existing call sites that only pass a length)", () => {
+    const sections = buildDefaultSections({ business_types: ["product"], items: { length: 3 } });
+    expect(sections.some((s) => s.type === "featured-products")).toBe(false);
+  });
 });
 
 describe("recommendSections", () => {

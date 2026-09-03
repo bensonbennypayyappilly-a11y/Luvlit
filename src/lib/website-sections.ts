@@ -250,7 +250,7 @@ function id() {
 export function buildDefaultSections(business: {
   business_types?: string[] | null;
   gallery_urls?: string[] | null;
-  items?: { length: number } | null;
+  items?: { length: number; ids?: string[] } | null;
   services?: { length: number } | null;
 }): Section[] {
   const sections: Section[] = [
@@ -261,6 +261,15 @@ export function buildDefaultSections(business: {
   // business genuinely has just one kind of offering (or business_types hints at only one).
   const hasProducts = (business.business_types ?? []).includes("product") || (business.items?.length ?? 0) > 0;
   const hasServices = (business.business_types ?? []).includes("appointment") || (business.services?.length ?? 0) > 0;
+  // Home only ever shows a curated "featured-products" spotlight, never the full catalogue
+  // (see HOME_SECTION_TYPES in website-pages.ts) — without this, a brand-new product business
+  // that's never touched the section editor gets no product preview on Home at all, just About
+  // and Gallery. Seed it with their first few items so Home isn't empty out of the box; an owner
+  // can always repick which products it spotlights later.
+  const featuredIds = business.items?.ids?.slice(0, 4) ?? [];
+  if (hasProducts && featuredIds.length > 0) {
+    sections.push({ id: id(), type: "featured-products", visible: true, content: { itemIds: featuredIds } });
+  }
   if (hasProducts) sections.push({ id: id(), type: "products", visible: true, content: {} });
   if (hasServices || !hasProducts) sections.push({ id: id(), type: "services", visible: true, content: {} });
   sections.push({ id: id(), type: "gallery", visible: true, content: {} });

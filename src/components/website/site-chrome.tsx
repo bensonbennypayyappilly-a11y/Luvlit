@@ -336,7 +336,7 @@ function CatalogueFooter({ business, style, accent, pages }: ChromeProps) {
   );
 }
 
-// ---------- Experience (Aperture) — airy, centered, image-led ----------
+// ---------- Experience (Cullen) — airy, centered, image-led ----------
 
 function ExperienceNav({ business, style, accent, currentPage, pages, logoUrl }: NavProps) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -410,7 +410,7 @@ function ExperienceFooter({ business, style, accent, pages }: ChromeProps) {
   );
 }
 
-// ---------- Story (Cullen) — minimal bar + full-screen immersive menu ----------
+// ---------- Story (Aperture) — minimal bar + full-screen immersive menu ----------
 
 function StoryNav({ business, style, accent, currentPage, pages }: NavProps) {
   const [open, setOpen] = useState(false);

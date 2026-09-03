@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { TemplateReveal } from "@/components/website/template-reveal";
 import { SectionEyebrow } from "@/components/website/media";
-import { corners, CtaButton, heading, imageFilterClass, ItemImage, pad } from "@/components/website/section-renderer";
+import { corners, CtaButton, formatPrice, heading, imageFilterClass, ItemImage, pad } from "@/components/website/section-renderer";
 import type { TemplateStyle } from "@/lib/website-templates";
 import type { SiteBusiness } from "@/lib/website-site-types";
 
@@ -117,7 +117,7 @@ export function ServiceDetail({
             )}
             <h1 className={`mt-4 text-4xl md:text-5xl ${heading(style)}`}>{service.name}</h1>
             <div className="mt-5 flex items-center gap-4 text-sm text-muted-foreground">
-              {service.price != null && <span style={{ color: accent }}>From ₹{service.price}</span>}
+              {service.price != null && <span style={{ color: accent }}>From ₹{formatPrice(service.price)}</span>}
               <span>{service.duration_minutes} min</span>
             </div>
             {service.description && <p className={`mt-6 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{service.description}</p>}
@@ -147,7 +147,7 @@ export function ServiceDetail({
               <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
                 {service.price != null && (
                   <span className="text-lg font-semibold" style={{ color: accent }}>
-                    ₹{service.price}
+                    ₹{formatPrice(service.price)}
                   </span>
                 )}
                 <span>{service.duration_minutes} min</span>
@@ -187,7 +187,7 @@ export function ServiceDetail({
             <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
               {service.price != null && (
                 <span className="text-2xl font-semibold" style={{ color: accent }}>
-                  ₹{service.price}
+                  ₹{formatPrice(service.price)}
                 </span>
               )}
               <span>{service.duration_minutes} min</span>
@@ -222,7 +222,7 @@ export function ServiceDetail({
           <div className="flex items-center justify-center gap-4 text-muted-foreground">
             {service.price != null && (
               <span className="text-2xl" style={{ color: accent }}>
-                ₹{service.price}
+                ₹{formatPrice(service.price)}
               </span>
             )}
             <span>{service.duration_minutes} min</span>
@@ -253,7 +253,7 @@ export function ServiceDetail({
         {service.category && <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{service.category}</p>}
         <h1 className={`mt-4 text-4xl md:text-6xl ${heading(style)}`}>{service.name}</h1>
         <p className="mt-5 text-lg text-muted-foreground">
-          {service.price != null ? `₹${service.price} · ` : ""}
+          {service.price != null ? `₹${formatPrice(service.price)} · ` : ""}
           {service.duration_minutes} min
         </p>
       </section>

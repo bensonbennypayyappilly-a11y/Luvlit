@@ -287,7 +287,11 @@ function WebsiteBuilder() {
         ? (b.draft_sections as Section[])
         : (b.sections as Section[] | null)?.length
           ? (b.sections as Section[])
-          : buildDefaultSections({ business_types: b.business_types, items: { length: data.items.length }, services: { length: data.services.length } });
+          : buildDefaultSections({
+              business_types: b.business_types,
+              items: { length: data.items.length, ids: data.items.filter((i) => i.is_active).map((i) => i.id) },
+              services: { length: data.services.length },
+            });
       setDraftSections(existing);
       const existingPages = (b.draft_pages as SitePageRecord[] | null)?.length
         ? (b.draft_pages as SitePageRecord[])

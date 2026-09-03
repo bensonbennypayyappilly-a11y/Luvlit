@@ -3,7 +3,7 @@ import { EcoBadge } from "@/components/eco-badge";
 import { FavoriteButton } from "@/components/favorite-button";
 import { TemplateReveal } from "@/components/website/template-reveal";
 import { SectionEyebrow } from "@/components/website/media";
-import { corners, CtaButton, heading, imageFilterClass, ItemImage, pad } from "@/components/website/section-renderer";
+import { corners, CtaButton, formatPrice, heading, imageFilterClass, ItemImage, pad } from "@/components/website/section-renderer";
 import type { TemplateStyle } from "@/lib/website-templates";
 import type { SiteBusiness } from "@/lib/website-site-types";
 
@@ -53,7 +53,7 @@ function RelatedGrid({
               )}
             </div>
             <p className={`mt-3 text-sm ${heading(style)}`}>{item.name}</p>
-            {item.price != null && <p className="mt-0.5 text-sm text-muted-foreground">₹{item.price}</p>}
+            {item.price != null && <p className="mt-0.5 text-sm text-muted-foreground">₹{formatPrice(item.price)}</p>}
           </Link>
         ))}
       </div>
@@ -124,7 +124,7 @@ export function ProductDetail({
             <h1 className={`mt-4 text-4xl md:text-5xl ${heading(style)}`}>{item.name}</h1>
             {item.price != null && (
               <p className="mt-5 text-2xl" style={{ color: accent }}>
-                ₹{item.price}
+                ₹{formatPrice(item.price)}
               </p>
             )}
             {item.description && <p className={`mt-6 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{item.description}</p>}
@@ -152,7 +152,7 @@ export function ProductDetail({
             <div className={`border p-8 ${corners(style, "lg", corner)}`}>
               {item.category && <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{item.category}</p>}
               <h1 className={`mt-2 text-3xl md:text-4xl ${heading(style)}`}>{item.name}</h1>
-              {item.price != null && <p className="mt-3 text-xl font-semibold" style={{ color: accent }}>₹{item.price}</p>}
+              {item.price != null && <p className="mt-3 text-xl font-semibold" style={{ color: accent }}>₹{formatPrice(item.price)}</p>}
               {item.description && <p className={`mt-5 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{item.description}</p>}
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <EnquireCta style={style} accent={accent} corner={corner} buttonStyle={buttonStyle} label="Request a quote" />
@@ -188,7 +188,7 @@ export function ProductDetail({
           <div className="mx-auto mt-10 max-w-xl text-center">
             {item.price != null && (
               <p className="text-2xl font-semibold" style={{ color: accent }}>
-                ₹{item.price}
+                ₹{formatPrice(item.price)}
               </p>
             )}
             {item.description && <p className={`mt-4 whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{item.description}</p>}
@@ -221,7 +221,7 @@ export function ProductDetail({
         <div className="mx-auto max-w-3xl px-6 py-14 text-center">
           {item.price != null && (
             <p className="text-2xl" style={{ color: accent }}>
-              ₹{item.price}
+              ₹{formatPrice(item.price)}
             </p>
           )}
           {item.description && <p className={`mx-auto mt-4 max-w-xl whitespace-pre-line text-muted-foreground ${style.bodyClass}`}>{item.description}</p>}
@@ -248,7 +248,7 @@ export function ProductDetail({
       <section className="mx-auto max-w-2xl px-6 pb-8 pt-20 text-center">
         {item.category && <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{item.category}</p>}
         <h1 className={`mt-4 text-4xl md:text-6xl ${heading(style)}`}>{item.name}</h1>
-        {item.price != null && <p className="mt-5 text-lg text-muted-foreground">₹{item.price}</p>}
+        {item.price != null && <p className="mt-5 text-lg text-muted-foreground">₹{formatPrice(item.price)}</p>}
       </section>
       <div className="mx-auto mt-4 max-w-3xl px-6">
         {item.image_url ? (

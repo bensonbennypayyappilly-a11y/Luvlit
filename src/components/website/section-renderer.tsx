@@ -52,6 +52,12 @@ export function heading(style: TemplateStyle, className = "") {
   return `site-heading-font ${style.headingClass} ${className}`;
 }
 
+/** Indian-grouped price display (₹48,500, not ₹48500) — every product/service price on a
+ * business's public site goes through this so a premium template never reads as a raw number. */
+export function formatPrice(price: number) {
+  return price.toLocaleString("en-IN", { maximumFractionDigits: 0 });
+}
+
 export function cardClass(style: TemplateStyle, override?: string | null) {
   switch (style.cardStyle) {
     case "shadow":
@@ -608,7 +614,7 @@ function ServicesBlock({ business, style, accent }: { business: SiteBusiness; st
                   <h3 className={`text-lg ${heading(style)}`}>{s.name}</h3>
                   {s.description && <p className={`mt-2 text-sm text-muted-foreground ${style.bodyClass}`}>{s.description}</p>}
                   <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                    {s.price != null && <span style={{ color: accent }}>From ₹{s.price}</span>}
+                    {s.price != null && <span style={{ color: accent }}>From ₹{formatPrice(s.price)}</span>}
                     <span>{s.duration_minutes} min</span>
                   </div>
                 </div>
@@ -691,7 +697,7 @@ function CatalogueProductCard({ item, accent }: { item: SiteBusiness["items"][nu
         <WishlistHeart accent={accent} />
       </div>
       <p className="site-heading-font mt-3 text-sm font-medium">{item.name}</p>
-      {item.price != null && <p className="mt-0.5 text-sm text-muted-foreground">₹{item.price}</p>}
+      {item.price != null && <p className="mt-0.5 text-sm text-muted-foreground">₹{formatPrice(item.price)}</p>}
     </Link>
   );
 }
@@ -817,7 +823,7 @@ function ProductsPageBlock({
                   )}
                   <div className="p-4">
                     <p className={`text-sm font-medium ${heading(style)}`}>{item.name}</p>
-                    {item.price != null && <p className="mt-1 text-sm text-muted-foreground">₹{item.price}</p>}
+                    {item.price != null && <p className="mt-1 text-sm text-muted-foreground">₹{formatPrice(item.price)}</p>}
                   </div>
                 </Link>
               ),
@@ -865,7 +871,7 @@ function FeaturedProductsBlock({
                 {item.image_url && <ItemImage path={item.image_url} alt={item.name} className={`aspect-square w-full object-cover ${corners(style, "lg", business.corner_style)}`} />}
                 <div className="p-3">
                   <p className="text-sm font-medium">{item.name}</p>
-                  {item.price != null && <p className="text-xs text-muted-foreground">₹{item.price}</p>}
+                  {item.price != null && <p className="text-xs text-muted-foreground">₹{formatPrice(item.price)}</p>}
                 </div>
               </Link>
             ))}
@@ -1272,7 +1278,7 @@ function CollectionSpotlightBlock({ business, style, accent, content }: { busine
                   <ItemImage path={item.image_url} alt={item.name} className="aspect-[3/4] w-full object-cover transition-opacity group-hover:opacity-80" />
                 )}
                 <p className="mt-4 text-lg font-medium">{item.name}</p>
-                {item.price != null && <p className="mt-1 text-muted-foreground">₹{item.price}</p>}
+                {item.price != null && <p className="mt-1 text-muted-foreground">₹{formatPrice(item.price)}</p>}
               </Link>
             ))}
           </div>
@@ -1405,7 +1411,7 @@ function BenefitsStripBlock({ style, accent, content }: { style: TemplateStyle; 
   );
 }
 
-/** Experience (Aperture): a full-width strip of the business's own gallery work. */
+/** Experience (Cullen): a full-width strip of the business's own gallery work. */
 function VisualStripBlock({ business, style }: { business: SiteBusiness; style: TemplateStyle }) {
   const urls = business.gallery_urls.slice(0, 4);
   return (
@@ -1421,7 +1427,7 @@ function VisualStripBlock({ business, style }: { business: SiteBusiness; style: 
   );
 }
 
-/** Experience (Aperture): one standout photo treated as its own full-bleed moment, with a caption
+/** Experience (Cullen): one standout photo treated as its own full-bleed moment, with a caption
  * — not a hero (doesn't carry the business name), a mid-page visual pause. */
 function FeaturedWorkBlock({ business, style, content }: { business: SiteBusiness; style: TemplateStyle; content: FeaturedWorkContent }) {
   const url = business.gallery_urls[0] ?? business.hero_image_url;
@@ -1444,7 +1450,7 @@ function FeaturedWorkBlock({ business, style, content }: { business: SiteBusines
   );
 }
 
-/** Story (Cullen): a layered collage of the business's own photos with a short narrative — the
+/** Story (Aperture): a layered collage of the business's own photos with a short narrative — the
  * signature "editorial collage" moment. */
 function StoryCollageBlock({ business, style, content }: { business: SiteBusiness; style: TemplateStyle; content: StoryCollageContent }) {
   const urls = business.gallery_urls.slice(0, 3);
@@ -1469,7 +1475,7 @@ function StoryCollageBlock({ business, style, content }: { business: SiteBusines
   );
 }
 
-/** Story (Cullen): a bold, full-bleed mid-page moment — same visual weight as the hero, usable
+/** Story (Aperture): a bold, full-bleed mid-page moment — same visual weight as the hero, usable
  * anywhere in the page order for a second dramatic beat. */
 function AtmosphericCtaBlock({ business, style, accent, content }: { business: SiteBusiness; style: TemplateStyle; accent: string; content: AtmosphericCtaContent }) {
   return (
