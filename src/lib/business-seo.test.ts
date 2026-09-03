@@ -24,7 +24,9 @@ function makeBusiness(overrides: Partial<Business> = {}): Business {
     slug: "priyas-cakes",
     name: "Priya's Cakes",
     description: null,
+    tagline: null,
     categories: [],
+    specialities: [],
     business_types: [],
     instagram_url: null,
     whatsapp: null,
@@ -84,6 +86,37 @@ describe("buildBusinessHead", () => {
     const business = makeBusiness({ description: null });
     const head = buildBusinessHead(business, URL);
     expect(metaDescription(head)).toBe("Priya's Cakes on LuvLit.");
+  });
+
+  it("prefers the business's tagline over the plain description column when there's no section copy", () => {
+    const business = makeBusiness({
+      tagline: "Custom cakes across Kochi",
+      description: "The flat description column.",
+    });
+    const head = buildBusinessHead(business, URL);
+    expect(metaDescription(head)).toBe("Custom cakes across Kochi");
+  });
+
+  it("still prefers a visible section's own copy over the tagline", () => {
+    const business = makeBusiness({
+      tagline: "Custom cakes across Kochi",
+      sections: [section({ type: "custom-text", content: { heading: "Fresh daily", body: "Baked to order." } })],
+    });
+    const head = buildBusinessHead(business, URL);
+    expect(metaDescription(head)).toBe("Fresh daily. Baked to order.");
+  });
+
+  it("includes categories and specialities in the keywords meta tag and JSON-LD knowsAbout", () => {
+    const business = makeBusiness({ categories: ["Bakers & Patisserie"], specialities: ["Wedding", "Eggless"] });
+    const head = buildBusinessHead(business, URL);
+    expect(head.meta.find((m) => m.name === "keywords")?.content).toBe("Bakers & Patisserie, Wedding, Eggless");
+    expect(jsonLd(head, "LocalBusiness")?.knowsAbout).toEqual(["Bakers & Patisserie", "Wedding", "Eggless"]);
+  });
+
+  it("omits the keywords meta tag when there are no categories or specialities", () => {
+    const business = makeBusiness({ categories: [], specialities: [] });
+    const head = buildBusinessHead(business, URL);
+    expect(head.meta.find((m) => m.name === "keywords")).toBeUndefined();
   });
 
   it("prefers a visible custom-text section's own copy over the description column", () => {

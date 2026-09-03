@@ -5,12 +5,36 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { CITIES } from "@/lib/constants";
+import { CITIES, DELIVERY_PREFERENCES, INTENTS, SPECIALITY_OPTIONS } from "@/lib/constants";
 import { MediaUploader } from "@/components/media-uploader";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type MatchedBusiness = { id: string; name: string; categories: string[] };
+type MatchedBusiness = { id: string; name: string; categories: string[]; score: number | null };
 type Phase = "form" | "scanning" | "results";
+
+// Quantity only makes sense for categories where "how many" is a real question — a one-off
+// service ask (a haircut, a repair visit) doesn't have a meaningful quantity.
+const QUANTITY_RELEVANT_CATEGORIES = new Set([
+  "Bakers & Patisserie", "Gifts", "Handmade", "Home Décor", "Jewellery", "Fashion & Boutiques", "Food Stalls",
+]);
+
+// A reasonable starting point for "what do you need" — always overridable, never required to
+// be accepted as-is.
+const DEFAULT_INTENT_BY_CATEGORY: Record<string, string> = {
+  "Salons & Spa": "book",
+  "Fitness & Wellness": "book",
+  "Services & Repair": "repair",
+  "Event Planning": "hire",
+  Entertainment: "hire",
+  Photography: "hire",
+  "Bakers & Patisserie": "custom_order",
+  Jewellery: "buy",
+  "Fashion & Boutiques": "buy",
+  "Home Décor": "buy",
+  Handmade: "custom_order",
+  Gifts: "buy",
+  "Food Stalls": "buy",
+};
 
 export const Route = createFileRoute("/_authenticated/post-requirement")({
   head: () => ({
@@ -36,7 +60,19 @@ function PostRequirement() {
       (await supabase.from("categories").select("id,name").eq("is_approved", true).order("name"))
         .data ?? [],
   });
-  const [form, setForm] = useState({ category: "", description: "", city: "", budget: "" });
+  const [form, setForm] = useState({
+    title: "",
+    category: "",
+    description: "",
+    city: "",
+    budget: "",
+    intent: "",
+    specialityTags: [] as string[],
+    deliveryPreference: "",
+    quantity: "",
+    neededBefore: "",
+    urgent: false,
+  });
   const [images, setImages] = useState<(string | null)[]>([null, null, null]);
   const [posterId, setPosterId] = useState<string | null>(null);
 
@@ -47,67 +83,75 @@ function PostRequirement() {
   const [phase, setPhase] = useState<Phase>("form");
   const [matchedBusinesses, setMatchedBusinesses] = useState<MatchedBusiness[]>([]);
 
+  function pickCategory(category: string) {
+    setForm({
+      ...form,
+      category,
+      // Only nudge a default in if the owner hasn't already chosen one — never overwrite an
+      // intentional pick just because the category changed.
+      intent: form.intent || DEFAULT_INTENT_BY_CATEGORY[category] || "",
+      specialityTags: [],
+    });
+  }
+
+  function toggleSpeciality(tag: string) {
+    setForm((f) => ({
+      ...f,
+      specialityTags: f.specialityTags.includes(tag)
+        ? f.specialityTags.filter((t) => t !== tag)
+        : [...f.specialityTags, tag],
+    }));
+  }
+
+  const specialityOptions = SPECIALITY_OPTIONS[form.category] ?? [];
+  const showQuantity = QUANTITY_RELEVANT_CATEGORIES.has(form.category);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setPhase("scanning");
     setError(null);
     const startedAt = Date.now();
     // 1.5–2.5s minimum so the scanning moment never feels like a flicker — but never
-    // padded beyond the real wait if the queries below happen to take longer than this.
+    // padded beyond the real wait if the matching engine happens to take longer than this.
     const minDurationMs = 1500 + Math.random() * 1000;
 
     const { data: userData } = await supabase.auth.getUser();
     setPosterId(userData.user?.id ?? null);
-    const { data: ownBusiness } = await supabase
-      .from("businesses")
-      .select("id")
-      .eq("owner_id", userData.user!.id)
-      .is("deleted_at", null)
-      .maybeSingle();
 
-    // Find matching live businesses: same category AND (location in that city OR delivery area for that city OR pan-India delivery).
-    // Read-only, no side effects — safe to run before the actual write. Only the write
-    // sequence below (requirement + leads + conversations) needs to be atomic.
-    let query = supabase
-      .from("businesses")
-      .select("id,name,categories,locations(city),delivery_areas(city,is_pan_india)")
-      .eq("status", "live")
-      .is("deleted_at", null)
-      .contains("categories", [form.category]);
-    if (ownBusiness) query = query.neq("id", ownBusiness.id);
-    // Cap the candidate pool: this feeds a bulk leads+conversations write below, so an
-    // unbounded match set is a data-volume risk as well as a read-performance one. 100 live
-    // businesses in a single category is already an extreme case.
-    const { data: candidates } = await query.limit(100);
-
-    const matches: MatchedBusiness[] = (candidates ?? []).filter((b: any) => {
-      if (!form.city) return true;
-      const inCity = (b.locations ?? []).some((l: any) => l.city === form.city);
-      const delivers = (b.delivery_areas ?? []).some(
-        (d: any) => d.is_pan_india || d.city === form.city,
-      );
-      return inCity || delivers;
-    });
-
-    // One transactional RPC for the requirement + its leads + its conversations, so a failure
-    // partway through can never strand a lead with no conversation, or a requirement with none
-    // of its leads — it either all lands, or none of it does.
-    const { error: submitError } = await supabase.rpc("submit_requirement_with_matches", {
+    // The server decides who matches — this only submits what the customer described. No
+    // candidate query, no client-supplied business list; the RPC runs the full hard-filter-
+    // then-score pass itself.
+    const { data: requirementId, error: submitError } = await supabase.rpc("submit_requirement_with_matches", {
       _category: form.category,
       _description: form.description,
+      _title: form.title || undefined,
       _city: form.city || undefined,
       _budget: form.budget ? Number(form.budget) : undefined,
       _image_urls: images.filter((i): i is string => !!i),
-      _matched_business_ids: matches.map((m) => m.id),
+      _intent: form.intent || undefined,
+      _speciality_tags: form.specialityTags,
+      _delivery_preference: form.deliveryPreference || undefined,
+      _quantity: showQuantity && form.quantity ? Number(form.quantity) : undefined,
+      _needed_before: form.neededBefore || undefined,
+      _urgent: form.urgent,
     });
     if (submitError) {
       setPhase("form");
       return setError(submitError.message);
     }
 
+    // The RPC only returns the new requirement's id — read back who actually qualified (the
+    // customer already has read access to leads on their own requirement via existing RLS).
+    const { data: leadRows } = await supabase
+      .from("leads")
+      .select("match_score,businesses:matched_business_id(id,name,categories)")
+      .eq("requirement_id", requirementId)
+      .order("match_score", { ascending: false });
+    const matches: MatchedBusiness[] = (leadRows ?? [])
+      .map((l: any) => (l.businesses ? { id: l.businesses.id, name: l.businesses.name, categories: l.businesses.categories ?? [], score: l.match_score } : null))
+      .filter((m: MatchedBusiness | null): m is MatchedBusiness => !!m);
+
     if (matches.length) {
-      // Only hold for the scanning moment when there's something exciting to reveal —
-      // a zero-match result skips straight to the calmer empty state, never padded.
       const remaining = minDurationMs - (Date.now() - startedAt);
       if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining));
     }
@@ -145,8 +189,8 @@ function PostRequirement() {
             <p className="eyebrow">Requirement posted</p>
             <h1 className="mt-4 text-4xl">No matches yet</h1>
             <p className="mt-4 text-muted-foreground">
-              We couldn't find a matching business right now, but your requirement is live and new
-              businesses can still respond.
+              We couldn't find a business that's a genuine fit right now, but your requirement is
+              live and new businesses can still respond.
             </p>
             <button
               onClick={() => navigate({ to: "/dashboard" })}
@@ -214,14 +258,22 @@ function PostRequirement() {
         <p className="eyebrow">Tell us what you need</p>
         <h1 className="mt-4 text-4xl">Post a requirement</h1>
         <p className="mt-4 text-muted-foreground">
-          Matching businesses in your city will be able to respond with a quote.
+          We'll only send this to businesses that are a genuine fit — not everyone in the category.
         </p>
 
         <form onSubmit={submit} className="mt-10 space-y-5">
+          <input
+            required
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            placeholder="Short title — e.g. Wedding photographer needed"
+            maxLength={120}
+            className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
+          />
           <select
             required
             value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
+            onChange={(e) => pickCategory(e.target.value)}
             className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
           >
             <option value="">Choose a category</option>
@@ -237,23 +289,111 @@ function PostRequirement() {
             placeholder="Describe what you're looking for…"
             className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
           />
-          <select
-            value={form.city}
-            onChange={(e) => setForm({ ...form, city: e.target.value })}
-            className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
-          >
-            <option value="">Any city</option>
-            {CITIES.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
-          <input
-            type="number"
-            value={form.budget}
-            onChange={(e) => setForm({ ...form, budget: e.target.value })}
-            placeholder="Budget (optional, ₹)"
-            className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
-          />
+
+          {form.category && (
+            <div className="space-y-5 rounded-lg border border-border bg-card/50 p-5">
+              <div>
+                <label className="text-sm text-muted-foreground">What do you need?</label>
+                <select
+                  value={form.intent}
+                  onChange={(e) => setForm({ ...form, intent: e.target.value })}
+                  className="mt-2 w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
+                >
+                  <option value="">Not sure — just show my description</option>
+                  {INTENTS.map((i) => (
+                    <option key={i.value} value={i.value}>{i.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {specialityOptions.length > 0 && (
+                <div>
+                  <label className="text-sm text-muted-foreground">Anything specific? (optional)</label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {specialityOptions.map((tag) => (
+                      <button
+                        type="button"
+                        key={tag}
+                        onClick={() => toggleSpeciality(tag)}
+                        className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
+                          form.specialityTags.includes(tag)
+                            ? "border-accent bg-accent-soft text-accent"
+                            : "border-border text-foreground hover:border-accent/40"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <select
+                  value={form.city}
+                  onChange={(e) => setForm({ ...form, city: e.target.value })}
+                  className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
+                >
+                  <option value="">Any city</option>
+                  {CITIES.map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+                <select
+                  value={form.deliveryPreference}
+                  onChange={(e) => setForm({ ...form, deliveryPreference: e.target.value })}
+                  className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
+                >
+                  <option value="">How should this reach you?</option>
+                  {DELIVERY_PREFERENCES.map((d) => (
+                    <option key={d.value} value={d.value}>{d.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <input
+                  type="number"
+                  value={form.budget}
+                  onChange={(e) => setForm({ ...form, budget: e.target.value })}
+                  placeholder="Budget (optional, ₹)"
+                  className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
+                />
+                {showQuantity && (
+                  <input
+                    type="number"
+                    min={1}
+                    value={form.quantity}
+                    onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                    placeholder="Quantity (optional)"
+                    className="w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
+                  />
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="text-sm text-muted-foreground">Needed by (optional)</label>
+                  <input
+                    type="date"
+                    value={form.neededBefore}
+                    onChange={(e) => setForm({ ...form, neededBefore: e.target.value })}
+                    className="mt-2 w-full rounded-md border border-border bg-card px-4 py-3 text-sm"
+                  />
+                </div>
+                <label className="flex items-center gap-3 self-end rounded-md border border-border bg-card px-4 py-3 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.urgent}
+                    onChange={(e) => setForm({ ...form, urgent: e.target.checked })}
+                    className="size-4 accent-primary"
+                  />
+                  This is urgent
+                </label>
+              </div>
+            </div>
+          )}
+
           <div>
             <p className="text-sm text-muted-foreground">Add up to 3 photos (optional)</p>
             {posterId ? (

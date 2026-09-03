@@ -55,7 +55,9 @@ export type BusinessDetail = {
   slug: string;
   name: string;
   description: string | null;
+  tagline: string | null;
   categories: string[];
+  specialities: string[];
   business_types: string[];
   instagram_url: string | null;
   whatsapp: string | null;

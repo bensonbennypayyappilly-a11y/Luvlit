@@ -61,7 +61,7 @@ function buildBusinessDescription(business: NonNullable<BusinessDetail>): string
   const visible = sections.filter((s) => s.visible);
 
   const sectionText = visible.map(sectionOwnText).find((t): t is string => !!t) ?? null;
-  let desc = (sectionText ?? business.description ?? `${business.name} on LuvLit.`)
+  let desc = (sectionText ?? business.tagline ?? business.description ?? `${business.name} on LuvLit.`)
     .trim()
     .replace(/\s+/g, " ");
 
@@ -98,6 +98,8 @@ export function buildBusinessHead(business: NonNullable<BusinessDetail>, url: st
     { property: "og:url", content: url },
     { property: "og:type", content: "website" },
   ];
+  const keywords = Array.from(new Set([...(business.categories ?? []), ...(business.specialities ?? [])]));
+  if (keywords.length) meta.push({ name: "keywords", content: keywords.join(", ") });
   if (business.hero_image_url) {
     meta.push({ property: "og:image", content: business.hero_image_url });
     meta.push({ name: "twitter:image", content: business.hero_image_url });
@@ -125,7 +127,7 @@ export function buildBusinessHead(business: NonNullable<BusinessDetail>, url: st
         ...(business.hero_image_url ? { image: business.hero_image_url } : {}),
         ...(business.logo_url ? { logo: business.logo_url } : {}),
         ...(business.contact_email ? { email: business.contact_email } : {}),
-        ...(business.categories?.length ? { knowsAbout: business.categories } : {}),
+        ...(keywords.length ? { knowsAbout: keywords } : {}),
         ...(business.instagram_url ? { sameAs: [business.instagram_url] } : {}),
         // Real reviews only (Phase 10) — omitted entirely until a business has at least one,
         // never a placeholder rating.

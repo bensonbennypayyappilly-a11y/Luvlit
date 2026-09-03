@@ -8,7 +8,17 @@ import { LuvLitLogo } from "@/components/luvlit-logo";
 import { HeroMediaUploader, MediaUploader } from "@/components/media-uploader";
 import { GalleryEditor } from "@/components/website-builder/gallery-editor";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
-import { ACCENT_COLORS, BUSINESS_TYPES, CITIES, ECO_CATEGORIES } from "@/lib/constants";
+import {
+  ACCENT_COLORS,
+  BUSINESS_TYPES,
+  CITIES,
+  ECO_CATEGORIES,
+  ORDER_TYPES,
+  PREFERRED_CONTACT_METHODS,
+  SERVICE_LOCATIONS,
+  SERVICE_RADIUS_OPTIONS,
+  SPECIALITY_OPTIONS,
+} from "@/lib/constants";
 import { normalizeUsername, USERNAME_FORMAT_HINT } from "@/lib/username";
 import { useUsernameAvailability } from "@/hooks/use-username-availability";
 import { UsernameStatusLine } from "@/components/username-status";
@@ -88,17 +98,29 @@ function Onboarding() {
   const [form, setForm] = useState({
     username: "",
     name: "",
+    tagline: "",
     description: "",
     categories: [] as string[],
     newCategory: "",
+    specialities: [] as string[],
+    newSpeciality: "",
     business_types: [] as string[],
+    order_types: [] as string[],
     is_eco_friendly: false,
     address: "",
     city: "",
     state: "",
     pincode: "",
+    landmark: "",
     delivery: [] as string[],
     panIndia: false,
+    service_locations: [] as string[],
+    service_radius: "",
+    pickup_available: false,
+    delivery_available: false,
+    courier_available: false,
+    phone: "",
+    preferred_contact: "",
     whatsapp: "",
     contact_email: "",
     instagram_url: "",
@@ -106,6 +128,7 @@ function Onboarding() {
     hero_image_url: null as string | null,
     main_video_url: null as string | null,
     thumbnail_url: null as string | null,
+    logo_url: null as string | null,
     gallery_urls: [] as string[],
     shorts: [] as (string | null)[],
     accent: ACCENT_COLORS[0].value,
@@ -120,6 +143,20 @@ function Onboarding() {
   const set = (patch: Partial<typeof form>) => setForm({ ...form, ...patch });
   const toggle = (list: string[], value: string) =>
     list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
+
+  // Union of curated speciality chips across every category the business picked — one taxonomy,
+  // shared with the requirement-posting form, so speciality matching compares like with like.
+  const specialityChoices = Array.from(
+    new Set(form.categories.flatMap((c) => SPECIALITY_OPTIONS[c] ?? [])),
+  );
+  // Radius/order-capability fields only make sense for the business shapes they actually apply
+  // to — a pure appointment business doesn't see delivery/courier toggles, an online-only
+  // consultant doesn't see a radius field.
+  const showFulfilmentCapabilities = form.business_types.includes("product");
+  const showServiceLocations = form.business_types.includes("appointment") || form.business_types.includes("custom");
+  const showServiceRadius =
+    showServiceLocations &&
+    (form.service_locations.includes("home_visit") || form.service_locations.includes("customer_location"));
 
   /** Creates the business row (once) so media uploads can target its storage folder. */
   async function ensureBusiness() {
@@ -189,10 +226,19 @@ function Onboarding() {
       .update({
         name: form.name,
         slug: normalizeUsername(form.username),
+        tagline: form.tagline || null,
         description: form.description,
         categories: form.categories,
+        specialities: form.specialities,
         business_types: form.business_types,
+        order_types: form.order_types,
         is_eco_friendly: showEco ? form.is_eco_friendly : false,
+        service_locations: showServiceLocations ? form.service_locations : [],
+        pickup_available: showFulfilmentCapabilities ? form.pickup_available : false,
+        delivery_available: showFulfilmentCapabilities ? form.delivery_available : false,
+        courier_available: showFulfilmentCapabilities ? form.courier_available : false,
+        phone: form.phone || null,
+        preferred_contact: form.preferred_contact || null,
         whatsapp: form.whatsapp,
         contact_email: form.contact_email,
         instagram_url: form.instagram_url,
@@ -200,6 +246,7 @@ function Onboarding() {
         hero_image_url: form.hero_image_url,
         main_video_url: form.main_video_url,
         thumbnail_url: form.thumbnail_url,
+        logo_url: form.logo_url,
         gallery_urls: form.gallery_urls,
         short_video_urls: form.shorts.filter((s): s is string => !!s).slice(0, 3),
         brand_accent_color: form.accent,
@@ -232,6 +279,8 @@ function Onboarding() {
           city: form.city,
           state: form.state,
           pincode: form.pincode || null,
+          landmark: form.landmark || null,
+          service_radius: showServiceRadius ? form.service_radius || null : null,
           is_primary: true,
         });
       if (locationError) {
@@ -313,6 +362,14 @@ function Onboarding() {
               className={inputClass}
             />
           </Field>
+          <Field label="One-line tagline (optional)">
+            <input
+              value={form.tagline}
+              onChange={(e) => set({ tagline: e.target.value })}
+              placeholder="e.g. Wedding photography across Kerala"
+              className={inputClass}
+            />
+          </Field>
           <Field label="Describe what you do">
             <textarea
               rows={4}
@@ -354,6 +411,55 @@ function Onboarding() {
               className={inputClass}
             />
           </Field>
+          {(specialityChoices.length > 0 || form.specialities.length > 0) && (
+            <div>
+              <p className={labelClass}>Specialities</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                What within these categories are you best known for? Helps us send you more relevant requirements.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {Array.from(new Set([...specialityChoices, ...form.specialities])).map((s) => (
+                  <button
+                    type="button"
+                    key={s}
+                    onClick={() => set({ specialities: toggle(form.specialities, s) })}
+                    className={chipClass(form.specialities.includes(s))}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-3 flex gap-2">
+                <input
+                  value={form.newSpeciality}
+                  onChange={(e) => set({ newSpeciality: e.target.value })}
+                  placeholder="Add your own speciality"
+                  className={inputClass}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter" || !form.newSpeciality.trim()) return;
+                    e.preventDefault();
+                    set({
+                      specialities: Array.from(new Set([...form.specialities, form.newSpeciality.trim()])),
+                      newSpeciality: "",
+                    });
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!form.newSpeciality.trim()) return;
+                    set({
+                      specialities: Array.from(new Set([...form.specialities, form.newSpeciality.trim()])),
+                      newSpeciality: "",
+                    });
+                  }}
+                  className="shrink-0 rounded-xl border border-border bg-white px-4 text-sm font-medium text-foreground hover:border-primary/40"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          )}
           {showEco && (
             <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-white p-5 text-sm">
               <span>Is your business eco-friendly / sustainable?</span>
@@ -399,6 +505,21 @@ function Onboarding() {
               </button>
             );
           })}
+          <div className="pt-2">
+            <p className={labelClass}>What kind of orders do you take? (optional)</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {ORDER_TYPES.map((t) => (
+                <button
+                  type="button"
+                  key={t}
+                  onClick={() => set({ order_types: toggle(form.order_types, t) })}
+                  className={chipClass(form.order_types.includes(t))}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       ),
     },
@@ -434,15 +555,25 @@ function Onboarding() {
               />
             </Field>
           </div>
-          <Field label="PIN code">
-            <input
-              value={form.pincode}
-              onChange={(e) => set({ pincode: e.target.value })}
-              placeholder="e.g. 682001"
-              inputMode="numeric"
-              className={inputClass}
-            />
-          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="PIN code">
+              <input
+                value={form.pincode}
+                onChange={(e) => set({ pincode: e.target.value })}
+                placeholder="e.g. 682001"
+                inputMode="numeric"
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Landmark (optional)">
+              <input
+                value={form.landmark}
+                onChange={(e) => set({ landmark: e.target.value })}
+                placeholder="e.g. Near City Centre mall"
+                className={inputClass}
+              />
+            </Field>
+          </div>
         </div>
       ),
     },
@@ -478,6 +609,61 @@ function Onboarding() {
               </div>
             </div>
           )}
+          {showServiceLocations && (
+            <div>
+              <p className={labelClass}>Where can you actually do the work?</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {SERVICE_LOCATIONS.map((l) => (
+                  <button
+                    type="button"
+                    key={l.value}
+                    onClick={() => set({ service_locations: toggle(form.service_locations, l.value) })}
+                    className={chipClass(form.service_locations.includes(l.value))}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {showServiceRadius && (
+            <Field label="How far will you travel?">
+              <select
+                value={form.service_radius}
+                onChange={(e) => set({ service_radius: e.target.value })}
+                className={inputClass}
+              >
+                <option value="">Select a range</option>
+                {SERVICE_RADIUS_OPTIONS.map((r) => (
+                  <option key={r}>{r}</option>
+                ))}
+              </select>
+            </Field>
+          )}
+          {showFulfilmentCapabilities && (
+            <div>
+              <p className={labelClass}>How do customers get their order?</p>
+              <div className="mt-2 space-y-2">
+                {(
+                  [
+                    ["pickup_available", "Customer pickup"],
+                    ["delivery_available", "I deliver myself"],
+                    ["courier_available", "Courier / shipping"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label key={key} className="flex items-center gap-3 rounded-xl border border-border bg-white p-4 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={form[key]}
+                      onChange={(e) => set({ [key]: e.target.checked } as Partial<typeof form>)}
+                      className="size-5 accent-primary"
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ),
     },
@@ -489,6 +675,7 @@ function Onboarding() {
         <div className="space-y-5">
           {(
             [
+              ["phone", "Phone number", "+91 98765 43210"],
               ["whatsapp", "WhatsApp number", "+91 98765 43210"],
               ["contact_email", "Email address", "hello@yourbusiness.com"],
               ["instagram_url", "Instagram link", "instagram.com/yourbusiness"],
@@ -503,6 +690,20 @@ function Onboarding() {
               />
             </Field>
           ))}
+          <Field label="Preferred contact method (optional)">
+            <select
+              value={form.preferred_contact}
+              onChange={(e) => set({ preferred_contact: e.target.value })}
+              className={inputClass}
+            >
+              <option value="">No preference</option>
+              {PREFERRED_CONTACT_METHODS.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </Field>
         </div>
       ),
     },
@@ -512,6 +713,19 @@ function Onboarding() {
       art: <MediaStepArt />,
       body: businessId ? (
         <div className="space-y-6">
+          <div>
+            <p className={labelClass}>Logo (optional)</p>
+            <p className="mt-1 text-xs text-muted-foreground">Used where a compact mark works better than your thumbnail.</p>
+            <div className="mt-3 max-w-xs">
+              <MediaUploader
+                businessId={businessId}
+                kind="logo"
+                value={form.logo_url}
+                onChange={(path) => set({ logo_url: path })}
+                wrapperClassName="rounded-xl border border-border bg-white p-4"
+              />
+            </div>
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <p className={labelClass}>Business thumbnail</p>

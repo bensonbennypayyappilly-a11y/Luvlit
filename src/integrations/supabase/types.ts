@@ -104,11 +104,14 @@ export type Database = {
           button_style: string
           categories: string[]
           contact_email: string | null
+          courier_available: boolean
           created_at: string
           custom_domain: string | null
           deleted_at: string | null
+          delivery_available: boolean
           description: string | null
           draft_sections: Json | null
+          gallery_alt_text: Json
           gallery_urls: string[]
           hero_image_url: string | null
           id: string
@@ -119,14 +122,22 @@ export type Database = {
           main_video_url: string | null
           name: string
           operating_hours: Json | null
+          order_types: string[]
           owner_email_verified: boolean
           owner_id: string
+          phone: string | null
+          pickup_available: boolean
+          preferred_contact: string | null
           review_avg: number | null
           review_count: number
+          search_vector: unknown
           sections: Json
+          service_locations: string[]
           short_video_urls: string[]
           slug: string
+          specialities: string[]
           status: string
+          tagline: string | null
           template: string
           thumbnail_url: string | null
           view_count: number
@@ -142,11 +153,14 @@ export type Database = {
           button_style?: string
           categories?: string[]
           contact_email?: string | null
+          courier_available?: boolean
           created_at?: string
           custom_domain?: string | null
           deleted_at?: string | null
+          delivery_available?: boolean
           description?: string | null
           draft_sections?: Json | null
+          gallery_alt_text?: Json
           gallery_urls?: string[]
           hero_image_url?: string | null
           id?: string
@@ -157,14 +171,22 @@ export type Database = {
           main_video_url?: string | null
           name: string
           operating_hours?: Json | null
+          order_types?: string[]
           owner_email_verified?: boolean
           owner_id: string
+          phone?: string | null
+          pickup_available?: boolean
+          preferred_contact?: string | null
           review_avg?: number | null
           review_count?: number
+          search_vector?: unknown
           sections?: Json
+          service_locations?: string[]
           short_video_urls?: string[]
           slug: string
+          specialities?: string[]
           status?: string
+          tagline?: string | null
           template?: string
           thumbnail_url?: string | null
           view_count?: number
@@ -180,11 +202,14 @@ export type Database = {
           button_style?: string
           categories?: string[]
           contact_email?: string | null
+          courier_available?: boolean
           created_at?: string
           custom_domain?: string | null
           deleted_at?: string | null
+          delivery_available?: boolean
           description?: string | null
           draft_sections?: Json | null
+          gallery_alt_text?: Json
           gallery_urls?: string[]
           hero_image_url?: string | null
           id?: string
@@ -195,14 +220,22 @@ export type Database = {
           main_video_url?: string | null
           name?: string
           operating_hours?: Json | null
+          order_types?: string[]
           owner_email_verified?: boolean
           owner_id?: string
+          phone?: string | null
+          pickup_available?: boolean
+          preferred_contact?: string | null
           review_avg?: number | null
           review_count?: number
+          search_vector?: unknown
           sections?: Json
+          service_locations?: string[]
           short_video_urls?: string[]
           slug?: string
+          specialities?: string[]
           status?: string
+          tagline?: string | null
           template?: string
           thumbnail_url?: string | null
           view_count?: number
@@ -231,6 +264,21 @@ export type Database = {
           is_approved?: boolean
           name?: string
           suggested_by_business_id?: string | null
+        }
+        Relationships: []
+      }
+      category_relations: {
+        Row: {
+          category: string
+          related_category: string
+        }
+        Insert: {
+          category: string
+          related_category: string
+        }
+        Update: {
+          category?: string
+          related_category?: string
         }
         Relationships: []
       }
@@ -596,6 +644,7 @@ export type Database = {
           name: string
           position: number
           price: number | null
+          search_vector: unknown
         }
         Insert: {
           business_id: string
@@ -608,6 +657,7 @@ export type Database = {
           name: string
           position?: number
           price?: number | null
+          search_vector?: unknown
         }
         Update: {
           business_id?: string
@@ -620,6 +670,7 @@ export type Database = {
           name?: string
           position?: number
           price?: number | null
+          search_vector?: unknown
         }
         Relationships: [
           {
@@ -631,10 +682,42 @@ export type Database = {
           },
         ]
       }
+      keyword_exclusions: {
+        Row: {
+          category: string
+          excluded_term: string
+        }
+        Insert: {
+          category: string
+          excluded_term: string
+        }
+        Update: {
+          category?: string
+          excluded_term?: string
+        }
+        Relationships: []
+      }
+      keyword_synonyms: {
+        Row: {
+          canonical: string
+          term: string
+        }
+        Insert: {
+          canonical: string
+          term: string
+        }
+        Update: {
+          canonical?: string
+          term?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           created_at: string
           id: string
+          match_reasons: Json
+          match_score: number | null
           matched_business_id: string
           requirement_id: string
           status: string
@@ -642,6 +725,8 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          match_reasons?: Json
+          match_score?: number | null
           matched_business_id: string
           requirement_id: string
           status?: string
@@ -649,6 +734,8 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          match_reasons?: Json
+          match_score?: number | null
           matched_business_id?: string
           requirement_id?: string
           status?: string
@@ -677,7 +764,9 @@ export type Database = {
           city: string
           id: string
           is_primary: boolean
+          landmark: string | null
           pincode: string | null
+          service_radius: string | null
           state: string | null
         }
         Insert: {
@@ -686,7 +775,9 @@ export type Database = {
           city: string
           id?: string
           is_primary?: boolean
+          landmark?: string | null
           pincode?: string | null
+          service_radius?: string | null
           state?: string | null
         }
         Update: {
@@ -695,7 +786,9 @@ export type Database = {
           city?: string
           id?: string
           is_primary?: boolean
+          landmark?: string | null
           pincode?: string | null
+          service_radius?: string | null
           state?: string | null
         }
         Relationships: [
@@ -860,42 +953,63 @@ export type Database = {
           category: string
           city: string | null
           created_at: string
+          delivery_preference: string | null
           description: string
           extra_answers: Json | null
           id: string
           image_urls: string[]
+          intent: string | null
+          needed_before: string | null
           posted_by_business_id: string | null
           posted_by_type: string
           posted_by_user_id: string | null
+          quantity: number | null
+          speciality_tags: string[]
           status: string
+          title: string | null
+          urgent: boolean
         }
         Insert: {
           budget?: number | null
           category: string
           city?: string | null
           created_at?: string
+          delivery_preference?: string | null
           description: string
           extra_answers?: Json | null
           id?: string
           image_urls?: string[]
+          intent?: string | null
+          needed_before?: string | null
           posted_by_business_id?: string | null
           posted_by_type: string
           posted_by_user_id?: string | null
+          quantity?: number | null
+          speciality_tags?: string[]
           status?: string
+          title?: string | null
+          urgent?: boolean
         }
         Update: {
           budget?: number | null
           category?: string
           city?: string | null
           created_at?: string
+          delivery_preference?: string | null
           description?: string
           extra_answers?: Json | null
           id?: string
           image_urls?: string[]
+          intent?: string | null
+          needed_before?: string | null
           posted_by_business_id?: string | null
           posted_by_type?: string
           posted_by_user_id?: string | null
+          quantity?: number | null
+          speciality_tags?: string[]
           status?: string
+          title?: string | null
+          urgent?: boolean
         }
         Relationships: [
           {
@@ -964,6 +1078,7 @@ export type Database = {
           name: string
           position: number
           price: number | null
+          search_vector: unknown
         }
         Insert: {
           business_id: string
@@ -976,6 +1091,7 @@ export type Database = {
           name: string
           position?: number
           price?: number | null
+          search_vector?: unknown
         }
         Update: {
           business_id?: string
@@ -988,6 +1104,7 @@ export type Database = {
           name?: string
           position?: number
           price?: number | null
+          search_vector?: unknown
         }
         Relationships: [
           {
@@ -1162,6 +1279,41 @@ export type Database = {
       }
       cancel_booking: { Args: { _booking_id: string }; Returns: undefined }
       cleanup_expired_events: { Args: never; Returns: undefined }
+      debug_match_requirement: {
+        Args: { _requirement_id: string }
+        Returns: {
+          business_id: string
+          business_name: string
+          category_score: number
+          delivery_score: number
+          exclusion_reason: string
+          included: boolean
+          intent_score: number
+          location_score: number
+          service_score: number
+          speciality_score: number
+          text_score: number
+          total_score: number
+        }[]
+      }
+      evaluate_requirement_match: {
+        Args: { _requirement_id: string }
+        Returns: {
+          business_id: string
+          business_name: string
+          category_score: number
+          delivery_score: number
+          exclusion_reason: string
+          included: boolean
+          intent_score: number
+          location_score: number
+          reasons: Json
+          service_score: number
+          speciality_score: number
+          text_score: number
+          total_score: number
+        }[]
+      }
       get_conversation_partner_names: {
         Args: { _conversation_ids: string[] }
         Returns: {
@@ -1185,6 +1337,14 @@ export type Database = {
       mark_conversation_read: {
         Args: { _conversation_id: string }
         Returns: undefined
+      }
+      match_requirement_to_businesses: {
+        Args: { _requirement_id: string }
+        Returns: {
+          business_id: string
+          reasons: Json
+          score: number
+        }[]
       }
       owns_business: { Args: { _business_id: string }; Returns: boolean }
       owns_influencer_profile: {
@@ -1232,9 +1392,15 @@ export type Database = {
           _budget?: number
           _category: string
           _city?: string
+          _delivery_preference?: string
           _description: string
           _image_urls?: string[]
-          _matched_business_ids?: string[]
+          _intent?: string
+          _needed_before?: string
+          _quantity?: number
+          _speciality_tags?: string[]
+          _title?: string
+          _urgent?: boolean
         }
         Returns: string
       }
@@ -1257,12 +1423,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1286,11 +1452,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1311,11 +1477,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1336,11 +1502,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1353,11 +1519,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
