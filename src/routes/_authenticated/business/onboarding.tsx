@@ -250,6 +250,10 @@ function Onboarding() {
         gallery_urls: form.gallery_urls,
         short_video_urls: form.shorts.filter((s): s is string => !!s).slice(0, 3),
         brand_accent_color: form.accent,
+        // Self-service publish, same as the Website Builder's own "Save and Publish" — there's
+        // no admin approval step (see guard_business_status_change), so a business that finishes
+        // onboarding should actually go live instead of sitting invisible in `draft` forever.
+        status: "live",
       })
       .eq("id", id);
     if (businessError) {
