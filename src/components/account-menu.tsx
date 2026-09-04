@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { DeleteAccountDialog } from "@/components/delete-account-dialog";
 import type { AppRole } from "@/hooks/use-session";
 
 /** Where "Profile" in the account menu goes — there's no single /profile route, each role has
@@ -15,7 +14,6 @@ const PROFILE_PATH: Record<NonNullable<AppRole>, string> = {
 
 export function AccountMenu({ label, role }: { label: string; role: AppRole }) {
   const [open, setOpen] = useState(false);
-  const [showDelete, setShowDelete] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -87,18 +85,8 @@ export function AccountMenu({ label, role }: { label: string; role: AppRole }) {
             Sign out
           </button>
           {signOutError && <p className="px-4 pb-2 text-xs text-destructive">{signOutError}</p>}
-          <button
-            onClick={() => {
-              setShowDelete(true);
-              setOpen(false);
-            }}
-            className="flex min-h-11 w-full items-center px-4 text-left text-destructive transition-colors hover:bg-accent-soft"
-          >
-            Delete account
-          </button>
         </div>
       )}
-      {showDelete && <DeleteAccountDialog role={role} onClose={() => setShowDelete(false)} />}
     </div>
   );
 }
