@@ -21,7 +21,7 @@ export function NotificationsList({
   recipientType,
   recipientId,
 }: {
-  recipientType: "customer" | "business";
+  recipientType: "customer" | "business" | "influencer";
   recipientId: string | null;
 }) {
   const qc = useQueryClient();
@@ -51,6 +51,7 @@ export function NotificationsList({
     // immediately instead of waiting for their own next natural refetch.
     qc.invalidateQueries({ queryKey: ["sidebar-unread-notifications"] });
     qc.invalidateQueries({ queryKey: ["customer-unread-notifications"] });
+    qc.invalidateQueries({ queryKey: ["influencer-unread-notifications"] });
   }
 
   if (isLoading) return <CardListSkeleton rows={4} />;

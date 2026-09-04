@@ -4,13 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 /** Query keys deliberately match what NotificationsList.markRead() already invalidates
  * (see src/components/notifications-list.tsx), so marking a notification read anywhere
  * updates this badge immediately with no extra wiring. */
-function queryKeyFor(recipientType: "business" | "customer", recipientId: string | null) {
-  return recipientType === "business"
-    ? (["sidebar-unread-notifications", recipientId] as const)
-    : (["customer-unread-notifications", recipientId] as const);
+function queryKeyFor(recipientType: "business" | "customer" | "influencer", recipientId: string | null) {
+  if (recipientType === "business") return ["sidebar-unread-notifications", recipientId] as const;
+  if (recipientType === "influencer") return ["influencer-unread-notifications", recipientId] as const;
+  return ["customer-unread-notifications", recipientId] as const;
 }
 
-export function useUnreadNotifications(recipientType: "business" | "customer", recipientId: string | null) {
+export function useUnreadNotifications(recipientType: "business" | "customer" | "influencer", recipientId: string | null) {
   return useQuery({
     queryKey: queryKeyFor(recipientType, recipientId),
     enabled: !!recipientId,

@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { useSession } from "@/hooks/use-session";
 import { acceptCollaborationRequest } from "@/lib/collaboration";
+import { NotificationsList } from "@/components/notifications-list";
 
 export const Route = createFileRoute("/influencer/requests")({
   head: () => ({
@@ -214,14 +215,24 @@ function CollaborationRequests() {
             </Link>
           </div>
         ) : (
-          <div className="mt-10 space-y-4">
-            {(requests ?? []).map((r) => (
-              <RequestCard key={r.id} request={r} influencerId={influencerId!} onChanged={refresh} />
-            ))}
-            {!requests?.length && (
-              <p className="text-muted-foreground">No collaboration requests yet.</p>
+          <>
+            {influencerId && (
+              <div className="surface-card mt-10 p-6">
+                <h2 className="text-lg font-medium">Notifications</h2>
+                <div className="mt-4">
+                  <NotificationsList recipientType="influencer" recipientId={influencerId} />
+                </div>
+              </div>
             )}
-          </div>
+            <div className="mt-10 space-y-4">
+              {(requests ?? []).map((r) => (
+                <RequestCard key={r.id} request={r} influencerId={influencerId!} onChanged={refresh} />
+              ))}
+              {!requests?.length && (
+                <p className="text-muted-foreground">No collaboration requests yet.</p>
+              )}
+            </div>
+          </>
         )}
       </main>
       <SiteFooter />

@@ -12,7 +12,7 @@ export function NotificationsPopover({
   recipientId,
   viewAllHref,
 }: {
-  recipientType: "business" | "customer";
+  recipientType: "business" | "customer" | "influencer";
   recipientId: string | null;
   viewAllHref: string;
 }) {
