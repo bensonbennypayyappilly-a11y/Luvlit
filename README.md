@@ -182,25 +182,19 @@ Build a simple /admin area (protected, restricted to your own account): pending 
 
 Final design pass: confirm every marketplace-shell page (home, browse, dashboards) follows the Phase 1 design system consistently, and confirm every business profile page (Phase 6) genuinely reads as "their own site" — check spacing, color wash usage, and that no marketplace navigation clutter has crept back in. Test mobile responsiveness across every page.
 
-This project was built with [Lovable](https://lovable.dev).
-
 **Live app**: https://luvlit.in
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/5e0b0d79-7845-4c5a-8e08-d267b3fc9893).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
 git clone <this-repository-url>
 cd <repository-name>
+cp .env.example .env   # fill in real values from your Supabase project settings
 npm i
 npm run dev
 ```
+
+Database schema/RLS changes live in `supabase/migrations/`, applied via `npx supabase db push`.
+`npm run typecheck` runs automatically before `npm run build`; `npm test` runs the test suite.

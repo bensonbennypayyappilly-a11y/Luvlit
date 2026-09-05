@@ -83,11 +83,13 @@ function Onboarding() {
     }
   }, [existingBusiness, navigate]);
 
-  const { data: categories } = useQuery({
+  const { data: categories, error: categoriesError } = useQuery({
     queryKey: ["categories"],
-    queryFn: async () =>
-      (await supabase.from("categories").select("id,name").eq("is_approved", true).order("name"))
-        .data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("categories").select("id,name").eq("is_approved", true).order("name");
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
 
   const [step, setStep] = useState(0);
@@ -394,6 +396,9 @@ function Onboarding() {
         <div className="space-y-5">
           <div>
             <p className={labelClass}>Categories</p>
+            {categoriesError && (
+              <p className="mt-1.5 text-xs text-destructive">Couldn't load categories: {categoriesError.message}</p>
+            )}
             <div className="mt-2 flex flex-wrap gap-2">
               {(categories ?? []).map((c) => (
                 <button

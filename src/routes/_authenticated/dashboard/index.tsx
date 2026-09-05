@@ -102,11 +102,96 @@ function RescheduleDialog({
   );
 }
 
+/** Star-rating + comment for a single completed booking. Gated server-side by
+ * can_review_booking() (a non-cancelled booking whose slot date has passed) and a
+ * unique(booking_id) constraint — this form can only ever succeed once per booking. */
+function ReviewDialog({
+  bookingId,
+  businessId,
+  businessName,
+  customerUserId,
+  onDone,
+  onClose,
+}: {
+  bookingId: string;
+  businessId: string;
+  businessName: string;
+  customerUserId: string;
+  onDone: () => void;
+  onClose: () => void;
+}) {
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (!rating) return setError("Choose a star rating first.");
+    setBusy(true);
+    setError(null);
+    const { error: insertError } = await supabase
+      .from("reviews")
+      .insert({ business_id: businessId, booking_id: bookingId, customer_user_id: customerUserId, rating, comment: comment.trim() || null });
+    setBusy(false);
+    if (insertError) {
+      setError(insertError.message);
+      return;
+    }
+    onDone();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={onClose}>
+      <div className="surface-card w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <p className="text-lg font-medium">Review {businessName}</p>
+          <button type="button" onClick={onClose} className="min-h-11 min-w-11 text-muted-foreground hover:text-foreground">
+            ✕
+          </button>
+        </div>
+        <div className="mt-5 flex justify-center gap-1 text-3xl" onMouseLeave={() => setHoverRating(0)}>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setRating(n)}
+              onMouseEnter={() => setHoverRating(n)}
+              aria-label={`${n} star${n > 1 ? "s" : ""}`}
+              className={`min-h-11 min-w-11 leading-none ${n <= (hoverRating || rating) ? "text-accent" : "text-border"}`}
+            >
+              ★
+            </button>
+          ))}
+        </div>
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="What was it like working with them? (optional)"
+          rows={3}
+          className="mt-4 w-full rounded-md border border-border bg-background px-4 py-3 text-sm"
+        />
+        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+        <button
+          type="button"
+          disabled={busy}
+          onClick={submit}
+          className="mt-4 min-h-11 w-full rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {busy ? "Submitting…" : "Submit review"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Dashboard() {
   const { userId, displayName, role } = useAccount();
   const qc = useQueryClient();
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const { data, error: overviewError, refetch: refetchOverview } = useQuery({
     queryKey: ["customer-dashboard-overview", userId],
@@ -116,6 +201,7 @@ function Dashboard() {
         { data: bookings, error: bookingsError },
         { data: requirements, error: requirementsError },
         { data: favorites, error: favoritesError },
+        { data: reviews, error: reviewsError },
       ] = await Promise.all([
         supabase
           .from("bookings")
@@ -134,11 +220,18 @@ function Dashboard() {
           .select("business_id, businesses(id,name)")
           .eq("user_id", userId!)
           .limit(4),
+        supabase.from("reviews").select("booking_id,rating").eq("customer_user_id", userId!),
       ]);
       if (bookingsError) throw new Error(bookingsError.message);
       if (requirementsError) throw new Error(requirementsError.message);
       if (favoritesError) throw new Error(favoritesError.message);
-      return { bookings: bookings ?? [], requirements: requirements ?? [], favorites: favorites ?? [] };
+      if (reviewsError) throw new Error(reviewsError.message);
+      return {
+        bookings: bookings ?? [],
+        requirements: requirements ?? [],
+        favorites: favorites ?? [],
+        reviewedBookingIds: new Map((reviews ?? []).map((r) => [r.booking_id, r.rating])),
+      };
     },
   });
 
@@ -209,56 +302,91 @@ function Dashboard() {
 
         <section className="mt-16">
           <div className="hairline flex items-end justify-between pt-10">
-            <h2 className="text-2xl">Upcoming appointments</h2>
+            <h2 className="text-2xl">Your appointments</h2>
           </div>
           {actionError && <p className="mt-3 text-sm text-destructive">{actionError}</p>}
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
             {!overviewError &&
-              (data?.bookings ?? []).map((b) => (
-                <div key={b.id} className="surface-card p-7">
-                  <p className="text-lg">{b.businesses?.name ?? "Business"}</p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {b.slots?.date} · {b.slots?.start_time}
-                    {b.slots?.staff?.name ? ` · with ${b.slots.staff.name}` : ""}
-                  </p>
-                  <p className="mt-3 eyebrow">{b.status}</p>
-                  {b.status === "confirmed" && b.slots?.id && b.business_id && (
-                    <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
-                      <button
-                        type="button"
-                        onClick={() => setReschedulingId(b.id)}
-                        className="inline-flex min-h-11 items-center px-1 text-xs text-muted-foreground hover:text-accent"
-                      >
-                        Reschedule
-                      </button>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          setActionError(null);
-                          const { error } = await supabase.rpc("cancel_booking", { _booking_id: b.id });
-                          if (error) return setActionError(error.message);
+              (data?.bookings ?? []).map((b) => {
+                const isPast = !!b.slots?.date && b.slots.date < todayStr;
+                const reviewedRating = data?.reviewedBookingIds.get(b.id);
+                return (
+                  <div key={b.id} className="surface-card p-7">
+                    <p className="text-lg">{b.businesses?.name ?? "Business"}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {b.slots?.date} · {b.slots?.start_time}
+                      {b.slots?.staff?.name ? ` · with ${b.slots.staff.name}` : ""}
+                    </p>
+                    <p className="mt-3 eyebrow">{b.status}</p>
+                    {b.status === "confirmed" && !isPast && b.slots?.id && b.business_id && (
+                      <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
+                        <button
+                          type="button"
+                          onClick={() => setReschedulingId(b.id)}
+                          className="inline-flex min-h-11 items-center px-1 text-xs text-muted-foreground hover:text-accent"
+                        >
+                          Reschedule
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setActionError(null);
+                            const { error } = await supabase.rpc("cancel_booking", { _booking_id: b.id });
+                            if (error) return setActionError(error.message);
+                            qc.invalidateQueries({ queryKey: ["customer-dashboard-overview"] });
+                          }}
+                          className="inline-flex min-h-11 items-center px-1 text-xs text-muted-foreground hover:text-destructive"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                    {isPast && b.status !== "cancelled" && b.business_id && (
+                      <div className="mt-3 border-t border-border pt-3">
+                        {reviewedRating != null ? (
+                          <p className="text-xs text-muted-foreground">
+                            You reviewed this — {"★".repeat(reviewedRating)}
+                            {"☆".repeat(5 - reviewedRating)}
+                          </p>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setReviewingId(b.id)}
+                            className="inline-flex min-h-11 items-center px-1 text-xs text-accent hover:underline"
+                          >
+                            Leave a review
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {reschedulingId === b.id && b.slots?.id && b.business_id && (
+                      <RescheduleDialog
+                        bookingId={b.id}
+                        businessId={b.business_id}
+                        currentSlotId={b.slots.id}
+                        onClose={() => setReschedulingId(null)}
+                        onDone={() => {
+                          setReschedulingId(null);
                           qc.invalidateQueries({ queryKey: ["customer-dashboard-overview"] });
                         }}
-                        className="inline-flex min-h-11 items-center px-1 text-xs text-muted-foreground hover:text-destructive"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                  {reschedulingId === b.id && b.slots?.id && b.business_id && (
-                    <RescheduleDialog
-                      bookingId={b.id}
-                      businessId={b.business_id}
-                      currentSlotId={b.slots.id}
-                      onClose={() => setReschedulingId(null)}
-                      onDone={() => {
-                        setReschedulingId(null);
-                        qc.invalidateQueries({ queryKey: ["customer-dashboard-overview"] });
-                      }}
-                    />
-                  )}
-                </div>
-              ))}
+                      />
+                    )}
+                    {reviewingId === b.id && b.business_id && userId && (
+                      <ReviewDialog
+                        bookingId={b.id}
+                        businessId={b.business_id}
+                        businessName={b.businesses?.name ?? "this business"}
+                        customerUserId={userId}
+                        onClose={() => setReviewingId(null)}
+                        onDone={() => {
+                          setReviewingId(null);
+                          qc.invalidateQueries({ queryKey: ["customer-dashboard-overview"] });
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             {overviewError && (
               <p className="text-destructive">Couldn't load this information. Try again.</p>
             )}

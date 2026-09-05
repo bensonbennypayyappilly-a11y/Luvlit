@@ -45,11 +45,11 @@ function Pricing() {
 
       <Section heading="Featured placement">
         <p>
-          <strong className="text-foreground">Featured — Custom Location: ₹499/month.</strong> Your
+          <strong className="text-foreground">Featured — Custom Location: ₹{PLANS.featured_city.price}/month.</strong> Your
           business pins to the top of its category in one city you choose.
         </p>
         <p>
-          <strong className="text-foreground">Featured — All India: ₹999/month.</strong> Pinned
+          <strong className="text-foreground">Featured — All India: ₹{PLANS.featured_all_india.price}/month.</strong> Pinned
           nationally in your category.
         </p>
         <p>

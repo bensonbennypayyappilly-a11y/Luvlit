@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
 import { DashboardBackLink } from "@/components/dashboard-back-link";
 import { CardListSkeleton } from "@/components/ui/skeleton-shapes";
-import { CITIES } from "@/lib/constants";
+import { CITIES, PLANS } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/business/dashboard/featured")({
   head: () => ({
@@ -26,11 +26,14 @@ function FeaturedPage() {
   const businessId = business?.id ?? null;
   const qc = useQueryClient();
 
-  const { data: categoryOptions } = useQuery({
+  const { data: categoryOptions, error: categoryOptionsError } = useQuery({
     queryKey: ["dashboard-business-categories", businessId],
     enabled: !!businessId,
-    queryFn: async () =>
-      (await supabase.from("businesses").select("categories").eq("id", businessId!).single()).data?.categories ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("businesses").select("categories").eq("id", businessId!).single();
+      if (error) throw new Error(error.message);
+      return data?.categories ?? [];
+    },
   });
 
   const [scope, setScope] = useState<"city" | "pan_india">("city");
@@ -40,20 +43,21 @@ function FeaturedPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const { data: myPlacements, isLoading: placementsLoading } = useQuery({
+  const { data: myPlacements, isLoading: placementsLoading, error: placementsError, refetch: refetchPlacements } = useQuery({
     queryKey: ["dashboard-my-placements", businessId],
     enabled: !!businessId,
-    queryFn: async () =>
-      (
-        await supabase
-          .from("featured_placements")
-          .select("*")
-          .eq("business_id", businessId!)
-          .order("start_date", { ascending: false })
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("featured_placements")
+        .select("*")
+        .eq("business_id", businessId!)
+        .order("start_date", { ascending: false });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
 
-  const monthlyPrice = scope === "city" ? 499 : 999;
+  const monthlyPrice = scope === "city" ? PLANS.featured_city.price : PLANS.featured_all_india.price;
   const price = duration === "monthly" ? monthlyPrice : monthlyPrice * 10;
 
   async function confirm() {
@@ -124,6 +128,9 @@ function FeaturedPage() {
               <option key={c}>{c}</option>
             ))}
           </select>
+          {categoryOptionsError && (
+            <p className="mt-1.5 text-xs text-destructive">Couldn't load your categories: {categoryOptionsError.message}</p>
+          )}
         </div>
 
         <div>
@@ -133,13 +140,13 @@ function FeaturedPage() {
               onClick={() => setScope("city")}
               className={`rounded-md border px-4 py-2 text-sm ${scope === "city" ? "border-accent bg-accent-soft" : "border-border"}`}
             >
-              Specific city — ₹499/mo
+              Specific city — ₹{PLANS.featured_city.price}/mo
             </button>
             <button
               onClick={() => setScope("pan_india")}
               className={`rounded-md border px-4 py-2 text-sm ${scope === "pan_india" ? "border-accent bg-accent-soft" : "border-border"}`}
             >
-              All India — ₹999/mo
+              All India — ₹{PLANS.featured_all_india.price}/mo
             </button>
           </div>
         </div>
@@ -192,9 +199,21 @@ function FeaturedPage() {
       <div className="mt-8">
         <p className="text-sm font-medium">Your placements</p>
         {placementsLoading && <CardListSkeleton rows={2} />}
+        {placementsError && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 dashboard-card p-4">
+            <p className="text-sm text-destructive">Couldn't load your placements. Try again.</p>
+            <button
+              type="button"
+              onClick={() => refetchPlacements()}
+              className="min-h-11 rounded-md border border-destructive px-4 text-sm font-medium text-destructive hover:bg-destructive/10"
+            >
+              Try again
+            </button>
+          </div>
+        )}
         <div className="mt-3 space-y-2">
-          {!placementsLoading && (myPlacements ?? []).length === 0 && <p className="text-sm text-muted-foreground">None yet.</p>}
-          {!placementsLoading && (myPlacements ?? []).map((p) => (
+          {!placementsLoading && !placementsError && (myPlacements ?? []).length === 0 && <p className="text-sm text-muted-foreground">None yet.</p>}
+          {!placementsLoading && !placementsError && (myPlacements ?? []).map((p) => (
             <div key={p.id} className="dashboard-card flex flex-wrap items-center justify-between gap-2 p-4 text-sm">
               <span>
                 {p.category} · {p.scope === "city" ? p.city : "All India"} · {p.plan_tier}

@@ -227,10 +227,13 @@ function ProfilePage() {
       ).data,
   });
 
-  const { data: categories } = useQuery({
+  const { data: categories, error: categoriesError } = useQuery({
     queryKey: ["categories"],
-    queryFn: async () =>
-      (await supabase.from("categories").select("id,name").eq("is_approved", true).order("name")).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("categories").select("id,name").eq("is_approved", true).order("name");
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
 
   // Whether unchecking "Products" or "Services / Appointments" would hide a dashboard section
@@ -602,6 +605,9 @@ function ProfilePage() {
               <div className="space-y-5">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">Categories</p>
+                  {editingTypes && categoriesError && (
+                    <p className="mt-1.5 text-xs text-destructive">Couldn't load categories: {categoriesError.message}</p>
+                  )}
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {editingTypes
                       ? (categories ?? []).map((c) => (

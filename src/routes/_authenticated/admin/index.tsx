@@ -23,32 +23,36 @@ function AdminIndex() {
   const [merging, setMerging] = useState<string | null>(null);
   const [categoryError, setCategoryError] = useState<string | null>(null);
 
-  const { data: businesses } = useQuery({
+  const { data: businesses, error: businessesError } = useQuery({
     queryKey: ["admin-businesses"],
-    queryFn: async () =>
-      (
-        await supabase
-          .from("businesses")
-          .select("id,name,created_at")
-          .eq("status", "live")
-          .order("created_at", { ascending: false })
-          .limit(20)
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("businesses")
+        .select("id,name,created_at")
+        .eq("status", "live")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
 
-  const { data: categories } = useQuery({
+  const { data: categories, error: categoriesError } = useQuery({
     queryKey: ["admin-pending-categories"],
-    queryFn: async () =>
-      (
-        await supabase.from("categories").select("*").eq("is_approved", false).order("created_at")
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("categories").select("*").eq("is_approved", false).order("created_at");
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
 
-  const { data: approvedCategories } = useQuery({
+  const { data: approvedCategories, error: approvedCategoriesError } = useQuery({
     queryKey: ["admin-approved-categories"],
-    queryFn: async () =>
-      (await supabase.from("categories").select("id,name").eq("is_approved", true).order("name"))
-        .data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("categories").select("id,name").eq("is_approved", true).order("name");
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
 
   const { data: subscriptionStats } = useQuery({
@@ -161,6 +165,9 @@ function AdminIndex() {
 
       <section className="mt-14">
         <h2 className="hairline pt-10 text-2xl">Recently live businesses</h2>
+        {businessesError && (
+          <p className="mt-3 text-sm text-destructive">Couldn't load businesses: {businessesError.message}</p>
+        )}
         <div className="mt-6 space-y-3">
           {(businesses ?? []).map((b) => (
             <Link
@@ -182,6 +189,11 @@ function AdminIndex() {
       <section className="mt-14">
         <h2 className="hairline pt-10 text-2xl">Pending category suggestions</h2>
         {categoryError && <p className="mt-3 text-sm text-destructive">{categoryError}</p>}
+        {(categoriesError || approvedCategoriesError) && (
+          <p className="mt-3 text-sm text-destructive">
+            Couldn't load categories: {(categoriesError ?? approvedCategoriesError)?.message}
+          </p>
+        )}
         <div className="mt-6 space-y-4">
           {(categories ?? []).map((c) => (
             <div key={c.id} className="surface-card p-6">

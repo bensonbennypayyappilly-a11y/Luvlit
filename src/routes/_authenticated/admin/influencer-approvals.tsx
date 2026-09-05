@@ -19,16 +19,17 @@ function InfluencerApprovals() {
   const queryClient = useQueryClient();
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const { data: pending } = useQuery({
+  const { data: pending, error: pendingError, refetch: refetchPending } = useQuery({
     queryKey: ["admin-pending-influencers"],
-    queryFn: async () =>
-      (
-        await supabase
-          .from("influencer_profiles")
-          .select("*")
-          .eq("approval_status", "pending")
-          .order("submitted_at")
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("influencer_profiles")
+        .select("*")
+        .eq("approval_status", "pending")
+        .order("submitted_at");
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
 
   async function approve(id: string) {
@@ -59,9 +60,21 @@ function InfluencerApprovals() {
         Review pending creator applications before they appear in Find an Influencer.
       </p>
       {actionError && <p className="mt-4 text-sm text-destructive">{actionError}</p>}
+      {pendingError && (
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 surface-card p-6">
+          <p className="text-sm text-destructive">Couldn't load pending applications. Try again.</p>
+          <button
+            type="button"
+            onClick={() => refetchPending()}
+            className="min-h-11 rounded-md border border-destructive px-5 text-sm font-medium text-destructive hover:bg-destructive/10"
+          >
+            Try again
+          </button>
+        </div>
+      )}
 
       <div className="mt-12 space-y-5">
-        {(pending ?? []).map((p) => (
+        {!pendingError && (pending ?? []).map((p) => (
           <div key={p.id} className="surface-card p-7">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
@@ -109,7 +122,7 @@ function InfluencerApprovals() {
             </div>
           </div>
         ))}
-        {!pending?.length && (
+        {!pendingError && !pending?.length && (
           <p className="text-muted-foreground">No pending influencer applications.</p>
         )}
       </div>

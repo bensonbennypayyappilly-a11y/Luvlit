@@ -54,11 +54,13 @@ export const Route = createFileRoute("/_authenticated/post-requirement")({
 
 function PostRequirement() {
   const navigate = useNavigate();
-  const { data: categories } = useQuery({
+  const { data: categories, error: categoriesError } = useQuery({
     queryKey: ["categories"],
-    queryFn: async () =>
-      (await supabase.from("categories").select("id,name").eq("is_approved", true).order("name"))
-        .data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("categories").select("id,name").eq("is_approved", true).order("name");
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
   const [form, setForm] = useState({
     title: "",
@@ -82,6 +84,7 @@ function PostRequirement() {
   const [error, setError] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("form");
   const [matchedBusinesses, setMatchedBusinesses] = useState<MatchedBusiness[]>([]);
+  const [matchesConfirmed, setMatchesConfirmed] = useState(true);
 
   function pickCategory(category: string) {
     setForm({
@@ -142,11 +145,15 @@ function PostRequirement() {
 
     // The RPC only returns the new requirement's id — read back who actually qualified (the
     // customer already has read access to leads on their own requirement via existing RLS).
-    const { data: leadRows } = await supabase
+    const { data: leadRows, error: leadsError } = await supabase
       .from("leads")
       .select("match_score,businesses:matched_business_id(id,name,categories)")
       .eq("requirement_id", requirementId)
       .order("match_score", { ascending: false });
+    // The requirement itself is already posted successfully at this point (submitError was
+    // already checked above) — a failure here only means we can't confirm WHO matched, not that
+    // nobody did, so this must never be presented as a confident "no matches yet".
+    setMatchesConfirmed(!leadsError);
     const matches: MatchedBusiness[] = (leadRows ?? [])
       .map((l: any) => (l.businesses ? { id: l.businesses.id, name: l.businesses.name, categories: l.businesses.categories ?? [], score: l.match_score } : null))
       .filter((m: MatchedBusiness | null): m is MatchedBusiness => !!m);
@@ -187,10 +194,11 @@ function PostRequirement() {
           <SiteHeader />
           <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-20 text-center">
             <p className="eyebrow">Requirement posted</p>
-            <h1 className="mt-4 text-4xl">No matches yet</h1>
+            <h1 className="mt-4 text-4xl">{matchesConfirmed ? "No matches yet" : "Requirement posted"}</h1>
             <p className="mt-4 text-muted-foreground">
-              We couldn't find a business that's a genuine fit right now, but your requirement is
-              live and new businesses can still respond.
+              {matchesConfirmed
+                ? "We couldn't find a business that's a genuine fit right now, but your requirement is live and new businesses can still respond."
+                : "Your requirement is live, but we couldn't load your matches just now — check My Requirements shortly to see who's responded."}
             </p>
             <button
               onClick={() => navigate({ to: "/dashboard" })}
@@ -281,6 +289,9 @@ function PostRequirement() {
               <option key={c.id}>{c.name}</option>
             ))}
           </select>
+          {categoriesError && (
+            <p className="text-xs text-destructive">Couldn't load categories: {categoriesError.message}</p>
+          )}
           <textarea
             required
             rows={5}

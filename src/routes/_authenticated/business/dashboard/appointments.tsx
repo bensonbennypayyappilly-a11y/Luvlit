@@ -35,32 +35,38 @@ function AppointmentsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rowError, setRowError] = useState<string | null>(null);
 
-  const { data: staff } = useQuery({
+  const { data: staff, error: staffError } = useQuery({
     queryKey: ["dashboard-staff", businessId],
     enabled: !!businessId,
-    queryFn: async () =>
-      (await supabase.from("staff").select("id,name").eq("business_id", businessId!)).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("staff").select("id,name").eq("business_id", businessId!);
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
 
-  const { data: bookings, isLoading } = useQuery({
+  const { data: bookings, isLoading, error: bookingsError, refetch: refetchBookings } = useQuery({
     queryKey: ["dashboard-bookings", businessId],
     enabled: !!businessId,
     queryFn: async () => {
-      const staffRows = (await supabase.from("staff").select("id,name").eq("business_id", businessId!)).data ?? [];
-      const staffMap = new Map(staffRows.map((s) => [s.id, s.name]));
-      const staffIds = staffRows.map((s) => s.id);
+      const { data: staffRows, error: staffRowsError } = await supabase.from("staff").select("id,name").eq("business_id", businessId!);
+      if (staffRowsError) throw new Error(staffRowsError.message);
+      const staffMap = new Map((staffRows ?? []).map((s) => [s.id, s.name]));
+      const staffIds = (staffRows ?? []).map((s) => s.id);
       if (!staffIds.length) return [] as BookingRow[];
-      const { data: slots } = await supabase
+      const { data: slots, error: slotsError } = await supabase
         .from("slots")
         .select("id,date,start_time,staff_id,capacity,booked_count")
         .in("staff_id", staffIds);
+      if (slotsError) throw new Error(slotsError.message);
       const slotMap = new Map((slots ?? []).map((s) => [s.id, s]));
       const slotIds = (slots ?? []).map((s) => s.id);
       if (!slotIds.length) return [] as BookingRow[];
-      const { data: bookingRows } = await supabase
+      const { data: bookingRows, error: bookingRowsError } = await supabase
         .from("bookings")
         .select("id,customer_name,customer_phone,status,slot_id")
         .in("slot_id", slotIds);
+      if (bookingRowsError) throw new Error(bookingRowsError.message);
       return (bookingRows ?? []).map((b) => {
         const slot = slotMap.get(b.slot_id);
         return {
@@ -136,15 +142,30 @@ function AppointmentsPage() {
           ))}
         </select>
       </div>
+      {staffError && (
+        <p className="mt-2 text-xs text-destructive">Couldn't load your staff list: {staffError.message}</p>
+      )}
 
       {isLoading && <CardListSkeleton />}
-      {!isLoading && byDate.length === 0 && (
+      {!isLoading && !bookingsError && byDate.length === 0 && (
         <p className="mt-6 text-sm text-muted-foreground">No appointments yet.</p>
+      )}
+      {bookingsError && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 dashboard-card p-6">
+          <p className="text-sm text-destructive">Couldn't load your appointments. Try again.</p>
+          <button
+            type="button"
+            onClick={() => refetchBookings()}
+            className="min-h-11 rounded-md border border-destructive px-5 text-sm font-medium text-destructive hover:bg-destructive/10"
+          >
+            Try again
+          </button>
+        </div>
       )}
       {rowError && <p className="mt-3 text-sm text-destructive">{rowError}</p>}
 
       <div className="mt-6 space-y-6">
-        {byDate.map(([date, rows]) => (
+        {!bookingsError && byDate.map(([date, rows]) => (
           <div key={date} className="dashboard-card p-5">
             <p className="text-sm font-medium">
               {date === "Unscheduled" ? (

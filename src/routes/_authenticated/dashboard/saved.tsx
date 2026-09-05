@@ -26,19 +26,20 @@ function Saved() {
   const queryClient = useQueryClient();
   const [removeError, setRemoveError] = useState<string | null>(null);
 
-  const { data } = useQuery({
+  const { data, error, refetch } = useQuery({
     queryKey: ["saved-businesses", userId],
     enabled: !!userId,
-    queryFn: async () =>
-      (
-        await supabase
-          .from("favorites")
-          .select(
-            "id, business_id, businesses(id,name,description,categories,is_eco_friendly,locations(city))",
-          )
-          .eq("user_id", userId!)
-          .order("created_at", { ascending: false })
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("favorites")
+        .select(
+          "id, business_id, businesses(id,name,description,categories,is_eco_friendly,locations(city))",
+        )
+        .eq("user_id", userId!)
+        .order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
   });
 
   async function remove(favoriteId: string) {
@@ -57,22 +58,35 @@ function Saved() {
           Businesses you've favourited, ready whenever you need them.
         </p>
         {removeError && <p className="mt-4 text-sm text-destructive">{removeError}</p>}
+        {error && (
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-4 surface-card p-6">
+            <p className="text-sm text-destructive">Couldn't load your saved businesses. Try again.</p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="min-h-11 rounded-md border border-destructive px-5 text-sm font-medium text-destructive hover:bg-destructive/10"
+            >
+              Try again
+            </button>
+          </div>
+        )}
 
         <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
-          {(data ?? []).map((f) =>
-            f.businesses ? (
-              <div key={f.id} className="relative">
-                <BusinessCard business={f.businesses} />
-                <button
-                  onClick={() => remove(f.id)}
-                  className="absolute right-4 top-4 rounded-full bg-card px-3 py-1 text-xs text-muted-foreground hover:text-destructive"
-                >
-                  Remove
-                </button>
-              </div>
-            ) : null,
-          )}
-          {!data?.length && (
+          {!error &&
+            (data ?? []).map((f) =>
+              f.businesses ? (
+                <div key={f.id} className="relative">
+                  <BusinessCard business={f.businesses} />
+                  <button
+                    onClick={() => remove(f.id)}
+                    className="absolute right-4 top-4 rounded-full bg-card px-3 py-1 text-xs text-muted-foreground hover:text-destructive"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : null,
+            )}
+          {!error && !data?.length && (
             <p className="text-muted-foreground">No favourites yet — browse and save some businesses.</p>
           )}
         </div>

@@ -13,16 +13,21 @@ export function LocationsEditor({ businessId }: { businessId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ address: "", city: "", state: "" });
 
-  const { data: locations } = useQuery({
+  const { data: locations, error: locationsError } = useQuery({
     queryKey: ["builder-locations", businessId],
-    queryFn: async () =>
-      ((await supabase.from("locations").select("*").eq("business_id", businessId).order("is_primary", { ascending: false }))
-        .data ?? []) as Location[],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("locations").select("*").eq("business_id", businessId).order("is_primary", { ascending: false });
+      if (error) throw new Error(error.message);
+      return (data ?? []) as Location[];
+    },
   });
-  const { data: deliveryAreas } = useQuery({
+  const { data: deliveryAreas, error: deliveryAreasError } = useQuery({
     queryKey: ["builder-delivery", businessId],
-    queryFn: async () =>
-      ((await supabase.from("delivery_areas").select("*").eq("business_id", businessId)).data ?? []) as DeliveryArea[],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("delivery_areas").select("*").eq("business_id", businessId);
+      if (error) throw new Error(error.message);
+      return (data ?? []) as DeliveryArea[];
+    },
   });
 
   const panIndia = (deliveryAreas ?? []).some((d) => d.is_pan_india);
@@ -157,6 +162,11 @@ export function LocationsEditor({ businessId }: { businessId: string }) {
         )}
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
+      {(locationsError || deliveryAreasError) && (
+        <p className="text-xs text-destructive">
+          Couldn't load your locations: {(locationsError ?? deliveryAreasError)?.message}
+        </p>
+      )}
     </div>
   );
 }
