@@ -743,6 +743,14 @@ function WebsiteBuilder() {
                     </button>
                   ))}
                 </div>
+                <div className="mt-3">
+                  <ColorField
+                    label="Custom accent colour"
+                    value={draft.brand_accent_color}
+                    defaultColor={ACCENT_COLORS[0].value}
+                    onChange={(hex) => onImmediateChange({ brand_accent_color: hex })}
+                  />
+                </div>
               </div>
               <ColorField
                 label="Page background"

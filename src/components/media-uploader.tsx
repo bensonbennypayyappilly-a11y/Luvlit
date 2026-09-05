@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ImageCropDialog } from "@/components/image-crop-dialog";
 
 export const MEDIA_BUCKET = "business-media";
 
@@ -61,6 +62,20 @@ export const MEDIA_LIMITS = {
 } as const;
 
 export type MediaKind = keyof typeof MEDIA_LIMITS;
+
+/** The crop frame's shape for each image kind — matched to how it's actually displayed on the
+ * live site (business-card.tsx / section-renderer.tsx), not one generic square, so what an owner
+ * frames here is what shows up. No entry for a kind means it's never cropped (the two video
+ * kinds, "short" and "main"). */
+export const CROP_ASPECT: Partial<Record<MediaKind, number>> = {
+  logo: 1,
+  thumbnail: 1,
+  gallery: 1,
+  product: 1,
+  about: 4 / 3,
+  hero: 16 / 9,
+  poster: 3 / 4,
+};
 
 export function isStoragePath(value: string | null | undefined) {
   return !!value && !/^https?:\/\//i.test(value);
@@ -214,6 +229,18 @@ export function MediaUploader({
 }: Props) {
   const previewUrl = useMediaUrl(value, bucket);
   const { upload, error, progress, limits } = useMediaUpload({ businessId, kind, bucket, onUploaded: onChange });
+  const [pendingCrop, setPendingCrop] = useState<File | null>(null);
+  const cropAspect = CROP_ASPECT[kind];
+
+  function handleFile(file: File) {
+    // GIFs skip cropping (and compression, per compressImage's own exception) since redrawing
+    // one to a canvas would only keep its first frame, losing the animation.
+    if (cropAspect && file.type.startsWith("image/") && file.type !== "image/gif") {
+      setPendingCrop(file);
+    } else {
+      void upload(file);
+    }
+  }
 
   return (
     <div className={wrapperClassName}>
@@ -254,7 +281,7 @@ export function MediaUploader({
         onChange={(e) => {
           const file = e.target.files?.[0];
           e.target.value = "";
-          if (file) void upload(file);
+          if (file) handleFile(file);
         }}
         className="mt-4 block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border file:border-accent file:bg-transparent file:px-4 file:py-2 file:text-sm file:text-accent"
       />
@@ -270,6 +297,17 @@ export function MediaUploader({
         </div>
       )}
       {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+      {pendingCrop && cropAspect && (
+        <ImageCropDialog
+          file={pendingCrop}
+          aspect={cropAspect}
+          onCancel={() => setPendingCrop(null)}
+          onCropped={(cropped) => {
+            setPendingCrop(null);
+            void upload(cropped);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -297,6 +335,7 @@ export function HeroMediaUploader({
   const videoPreview = useMediaUrl(value.video);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
+  const [pendingCrop, setPendingCrop] = useState<File | null>(null);
 
   const upload = useCallback(
     async (input: File) => {
@@ -370,7 +409,14 @@ export function HeroMediaUploader({
         onChange={(e) => {
           const file = e.target.files?.[0];
           e.target.value = "";
-          if (file) void upload(file);
+          if (!file) return;
+          // Video hero backgrounds upload as-is; a still photo gets framed first, matching
+          // MediaUploader's own image kinds.
+          if (file.type.startsWith("image/") && file.type !== "image/gif") {
+            setPendingCrop(file);
+          } else {
+            void upload(file);
+          }
         }}
         className="mt-4 block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border file:border-accent file:bg-transparent file:px-4 file:py-2 file:text-sm file:text-accent"
       />
@@ -389,6 +435,17 @@ export function HeroMediaUploader({
         </div>
       )}
       {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+      {pendingCrop && (
+        <ImageCropDialog
+          file={pendingCrop}
+          aspect={CROP_ASPECT.hero!}
+          onCancel={() => setPendingCrop(null)}
+          onCropped={(cropped) => {
+            setPendingCrop(null);
+            void upload(cropped);
+          }}
+        />
+      )}
     </div>
   );
 }

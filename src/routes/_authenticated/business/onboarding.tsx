@@ -23,6 +23,7 @@ import { normalizeUsername, USERNAME_FORMAT_HINT } from "@/lib/username";
 import { useUsernameAvailability } from "@/hooks/use-username-availability";
 import { UsernameStatusLine } from "@/components/username-status";
 import { StepProgress } from "@/components/onboarding/step-progress";
+import { ColorField } from "@/components/website-builder/color-field";
 import {
   CategoriesStepArt,
   ColorStepArt,
@@ -824,6 +825,14 @@ function Onboarding() {
               </button>
             );
           })}
+          <div className="w-full pt-1">
+            <ColorField
+              label="Custom colour"
+              value={form.accent}
+              defaultColor={ACCENT_COLORS[0].value}
+              onChange={(hex) => set({ accent: hex })}
+            />
+          </div>
         </div>
       ),
     },

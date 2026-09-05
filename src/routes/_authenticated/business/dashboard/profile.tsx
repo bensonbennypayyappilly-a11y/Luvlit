@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardBusiness } from "@/hooks/use-dashboard-business";
-import { MEDIA_LIMITS, useMediaUpload, useMediaUrl } from "@/components/media-uploader";
+import { CROP_ASPECT, MEDIA_LIMITS, useMediaUpload, useMediaUrl } from "@/components/media-uploader";
+import { ImageCropDialog } from "@/components/image-crop-dialog";
 import { GalleryEditor } from "@/components/website-builder/gallery-editor";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import {
@@ -259,6 +260,7 @@ function ProfilePage() {
   const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [thumbnailStatus, setThumbnailStatus] = useState<string | null>(null);
   const [confirmThumbDelete, setConfirmThumbDelete] = useState(false);
+  const [pendingThumbCrop, setPendingThumbCrop] = useState<File | null>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
   const [gallery, setGallery] = useState<string[]>([]);
@@ -537,7 +539,9 @@ function ProfilePage() {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     e.target.value = "";
-                    if (file) void uploadThumbnail(file);
+                    if (!file) return;
+                    if (file.type !== "image/gif") setPendingThumbCrop(file);
+                    else void uploadThumbnail(file);
                   }}
                 />
               </div>
@@ -560,6 +564,17 @@ function ProfilePage() {
                 title="Remove your listing thumbnail?"
                 description="Your business card will show your logo or initials instead, until you upload a new one."
               />
+              {pendingThumbCrop && (
+                <ImageCropDialog
+                  file={pendingThumbCrop}
+                  aspect={CROP_ASPECT.thumbnail!}
+                  onCancel={() => setPendingThumbCrop(null)}
+                  onCropped={(cropped) => {
+                    setPendingThumbCrop(null);
+                    void uploadThumbnail(cropped);
+                  }}
+                />
+              )}
             </div>
 
             <SectionCard
