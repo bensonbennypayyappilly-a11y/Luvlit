@@ -12,31 +12,31 @@ export const MEDIA_LIMITS = {
     label: "Business logo (small image, max 2MB)",
   },
   hero: {
-    maxBytes: 20 * 1024 * 1024,
+    maxBytes: 10 * 1024 * 1024,
     maxSeconds: 0,
     accept: "image/*",
     label: "Page hero photo",
   },
   thumbnail: {
-    maxBytes: 8 * 1024 * 1024,
+    maxBytes: 5 * 1024 * 1024,
     maxSeconds: 0,
     accept: "image/*",
     label: "Listing thumbnail",
   },
   gallery: {
-    maxBytes: 10 * 1024 * 1024,
+    maxBytes: 8 * 1024 * 1024,
     maxSeconds: 0,
     accept: "image/*",
     label: "Gallery photo",
   },
   about: {
-    maxBytes: 10 * 1024 * 1024,
+    maxBytes: 8 * 1024 * 1024,
     maxSeconds: 0,
     accept: "image/*",
     label: "About us photo",
   },
   short: {
-    maxBytes: 15 * 1024 * 1024,
+    maxBytes: 12 * 1024 * 1024,
     maxSeconds: 60,
     accept: "video/*",
     label: "Short video (max 60s)",
@@ -54,7 +54,7 @@ export const MEDIA_LIMITS = {
     label: "Event poster",
   },
   product: {
-    maxBytes: 10 * 1024 * 1024,
+    maxBytes: 3 * 1024 * 1024,
     maxSeconds: 0,
     accept: "image/*",
     label: "Product photo",
@@ -421,7 +421,7 @@ export function HeroMediaUploader({
         className="mt-4 block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border file:border-accent file:bg-transparent file:px-4 file:py-2 file:text-sm file:text-accent"
       />
       <p className="mt-2 text-xs text-muted-foreground">
-        A video autoplays on loop as your hero background. Photo max 20MB · video max 20MB / 180s.
+        A video autoplays on loop as your hero background. Photo max 10MB · video max 20MB / 180s.
       </p>
 
       {progress != null && (

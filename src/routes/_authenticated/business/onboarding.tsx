@@ -775,7 +775,7 @@ function Onboarding() {
           </div>
           <div>
             <p className={labelClass}>Short videos (up to 3)</p>
-            <p className="mt-1 text-xs text-muted-foreground">Max 60s / 15MB each.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Max 60s / 12MB each.</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               {[0, 1, 2].map((i) => (
                 <MediaUploader
